@@ -10,9 +10,9 @@ Screens are built ahead of the contract on the in-memory mock (D-012); an F3 lev
 | F1    | Scaffold (Vite, React, TS, Tailwind, PWA, routing, API client, MSW)      | F0 tokens           | done                                |
 | F2    | UI kit + all V1 screens on mock data                                     | F0, F1              | done                                |
 | F3a   | Auth + app shell + role-aware nav                                        | backend L2 contract | done                                |
-| F3b   | Quick-add entry, ledger list, edit/delete, receipt upload, offline queue | backend L3 contract | in-progress (UI + offline queue)    |
-| F3c   | Settlement view + mark settled                                           | backend L4          | in-progress (UI done, mock data)    |
-| F3d   | Dashboard                                                                | backend L5          | in-progress (UI done, mock data)    |
+| F3b   | Quick-add entry, ledger list, edit/delete, receipt upload, offline queue | backend L3 contract | done                                |
+| F3c   | Settlement view + mark settled                                           | backend L4          | done                                |
+| F3d   | Dashboard                                                                | backend L5          | done (budget bars wait for L6)      |
 | F3e   | Budgets & funds                                                          | backend L6          | in-progress (UI done, mock data)    |
 | F3f   | Reports: PDF/CSV/XLSX download, share sheet                              | backend L7          | in-progress (UI done, mock exports) |
 | F4    | Settings: categories, partners, roles, members, invites                  | backend L2–L3       | in-progress (UI done, mock data)    |
@@ -52,13 +52,27 @@ Screens are built ahead of the contract on the in-memory mock (D-012); an F3 lev
 - [x] Mock mode keeps contract shapes (`src/api/mock/l2.ts`); 36 tests; verified live against local backend in Chrome — 2026-10-14
 - [ ] Member role editing (`PATCH /v1/members/{id}` roleIds) and rename; profile edit (`PATCH /v1/me`)
 
-## F3b — Entries · `in-progress`
+## F3b — Entries · `done`
 
-- [x] Quick-add (F-01…F-05) on mock; default mode = last used (F-03) — 2026-10-14
-- [x] Offline queue (F-08): IndexedDB outbox (`src/offline`), idempotency key per opened form, replay oldest-first on `online` + every 30 s, rejected entries kept with Discard, offline banner + "Waiting to sync" rows; verified in Chrome with network emulation — 2026-10-14
-- [ ] F-08 follow-ups: persist the query cache so lists render after an offline reload; upload the stored receipt blob once L3 exposes signed upload URLs; map `fetch` TypeError → `NetworkError` in the real HTTP adapter
-- [ ] Entry edit/delete flow (F-06): row actions are display-only
-- [ ] Switch to L3 contract
+- [x] Quick-add on L3: categories by id, parties from `/v1/transactions/defaults` (+ clinic account), payment-mode enum, recurring prefill by `recurringItemId` — 2026-10-14
+- [x] Edit / delete (F-06): tap an entry; read-only when locked (7-day window, settled); `edit_window_closed` / `entry_settled` messages — 2026-10-14
+- [x] Receipts (F-04): compressed client-side, uploaded after create (`PUT …/receipt`), view via signed URL, replace, remove — 2026-10-14
+- [x] Ledger list: server filters (type, category, mode, person, clinic account), totals for all matches, cursor paging — 2026-10-14
+- [x] Offline (F-08): outbox replays with idempotency key + receipt; entry-form data offline-first and prefetched; session cached so the app reopens offline — 2026-10-14
+- [x] Categories (add, rename, reorder, archive/restore), recurring items (list, log, add) — 2026-10-14
+- [ ] Recurring item edit/archive UI; fund picker on expenses (L6 `fundId`)
+
+## F3c — Settlement · `done`
+
+- [x] `/v1/settlement` position: partner transfers (D-028), staff vs clinic account lines, clinic-account summary, stale-shares warning — 2026-10-14
+- [x] Mark as settled with fingerprint (`settlement_changed` → reload), history, undo latest; settled entries lock — 2026-10-14
+- [x] Profit shares dialog (must total 100%), add partner; CA view-only — 2026-10-14
+
+## F3d — Dashboard · `done`
+
+- [x] Tiles from `/v1/dashboard` with period switch (today / week / month vs the span before) for clinic and own scope — 2026-10-14
+- [x] Expense by category (L5), partner balance from `/v1/settlement`, recurring and attention from L3 — 2026-10-14
+- [ ] Budget alerts and bars from L6 (`expenseByCategory[].budgetPaise`); currently the L6 mock
 
 ## F3f — Reports · `in-progress`
 
@@ -75,9 +89,10 @@ Screens are built ahead of the contract on the in-memory mock (D-012); an F3 lev
 
 ## Session log
 
-| Date       | Session summary                                                                                                                                                                      | Next step                                                                    |
-| ---------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ---------------------------------------------------------------------------- |
-| 2026-10-14 | Created tracker. Design import blocked: DesignSync needs `/design-login`.                                                                                                            | Run `/design-login`, then F0.                                                |
-| 2026-10-14 | F0–F2: imported design, scaffolded PWA, built UI kit and all V1 screens on in-memory mock (D-012). `pnpm check` + `pnpm build` green; screens verified in Chrome at 390 and 1280 px. | F3a when backend L2 contract lands; meanwhile F-08 offline queue design.     |
-| 2026-10-14 | Ports → 5553 (strict) / API 4553. Pushed to `animeshdesh/ATP-UI`. F-08 offline outbox (21 tests). Fixed this tracker, which the F0–F2 commit had left unticked.                      | F-06 entry edit/delete, then F-23 share sheet.                               |
-| 2026-10-14 | F3a: real auth + L2 API (roles, members, invites, audit). Fixed dialog focus-jump bug and invite-before-roles-load bug. Live-verified flows in Chrome.                               | F3b: move ledger, quick-add, categories, recurring to L3 (`docs/LEDGER.md`). |
+| Date       | Session summary                                                                                                                                                                                                                                  | Next step                                                                    |
+| ---------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ---------------------------------------------------------------------------- |
+| 2026-10-14 | Created tracker. Design import blocked: DesignSync needs `/design-login`.                                                                                                                                                                        | Run `/design-login`, then F0.                                                |
+| 2026-10-14 | F0–F2: imported design, scaffolded PWA, built UI kit and all V1 screens on in-memory mock (D-012). `pnpm check` + `pnpm build` green; screens verified in Chrome at 390 and 1280 px.                                                             | F3a when backend L2 contract lands; meanwhile F-08 offline queue design.     |
+| 2026-10-14 | Ports → 5553 (strict) / API 4553. Pushed to `animeshdesh/ATP-UI`. F-08 offline outbox (21 tests). Fixed this tracker, which the F0–F2 commit had left unticked.                                                                                  | F-06 entry edit/delete, then F-23 share sheet.                               |
+| 2026-10-14 | F3a: real auth + L2 API (roles, members, invites, audit). Fixed dialog focus-jump bug and invite-before-roles-load bug. Live-verified flows in Chrome.                                                                                           | F3b: move ledger, quick-add, categories, recurring to L3 (`docs/LEDGER.md`). |
+| 2026-10-14 | F3b ledger, F3c settlement, F3d dashboard on L3–L5. Fixed: offline quick-add with no cached categories, sign-in race that left screens loading, bounce to sign-in when API unreachable. Live-verified on local backend (prod build for offline). | L6 budgets & funds (budget bars, fund picker), L7 reports.                   |

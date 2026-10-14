@@ -1,6 +1,6 @@
 import { ChevronRight } from 'lucide-react';
 import { Link, useNavigate } from 'react-router';
-import { MORE_KEYS, NAV } from '@/app/nav';
+import { MORE_KEYS, NAV, navAllowed } from '@/app/nav';
 import { useAuthedSession, useSession } from '@/app/session';
 import { Avatar, Button } from '@/components/ui';
 
@@ -8,7 +8,7 @@ export function MorePage() {
   const session = useAuthedSession();
   const { can, signOut } = useSession();
   const navigate = useNavigate();
-  const items = MORE_KEYS.filter((k) => !NAV[k].permission || can(NAV[k].permission));
+  const items = MORE_KEYS.filter((k) => navAllowed(NAV[k].permission, (key) => can(key)));
   return (
     <>
       <nav aria-label="More" className="flex flex-col border-t-2 border-divider">

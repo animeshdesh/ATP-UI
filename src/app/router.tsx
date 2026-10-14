@@ -1,6 +1,9 @@
 import type { ReactNode } from 'react';
 import { Navigate, createBrowserRouter, useLocation, type RouteObject } from 'react-router';
-import { Loading } from '@/components/ui';
+import { useQueryClient } from '@tanstack/react-query';
+import { NetworkError } from '@/api';
+import { qk } from '@/api/queries';
+import { Button, Loading } from '@/components/ui';
 import type { PermissionKey } from '@/domain/types';
 import { AuditPage } from '@/features/audit/AuditPage';
 import { ClinicPicker } from '@/features/auth/ClinicPicker';
@@ -17,6 +20,7 @@ import { RolesPage } from '@/features/settings/RolesPage';
 import { SettlementPage } from '@/features/settlement/SettlementPage';
 import { TransactionsPage } from '@/features/transactions/TransactionsPage';
 import { AppShell, type RouteHandle } from '@/layout/AppShell';
+import { NAV, navAllowed } from './nav';
 import { useSession } from './session';
 
 function RequireAuth() {
@@ -29,6 +33,7 @@ function RequireAuth() {
       </div>
     );
   if (clinicPick) return <ClinicPicker pick={clinicPick} />;
+  if (!session && error instanceof NetworkError) return <Unreachable />;
   if (!session)
     return (
       <Navigate
@@ -44,12 +49,39 @@ function RequireAuth() {
   );
 }
 
-function Guard({ permission, children }: { permission: PermissionKey; children: ReactNode }) {
-  const { can } = useSession();
-  return can(permission) ? children : <Navigate to="/" replace />;
+/** Signed in, but the API can't be reached and nothing is cached: don't bounce to sign-in. */
+function Unreachable() {
+  const qc = useQueryClient();
+  return (
+    <div className="flex min-h-dvh flex-col items-start justify-center gap-4 p-6">
+      <img src="/atp-mark.svg" alt="" className="h-12" />
+      <h1 className="text-[28px]">Can't reach the clinic server</h1>
+      <p className="m-0 max-w-[420px] text-[15px] text-neutral-700">
+        Check your internet connection. You're still signed in; try again in a moment.
+      </p>
+      <Button variant="primary" onClick={() => void qc.invalidateQueries({ queryKey: qk.session })}>
+        Try again
+      </Button>
+    </div>
+  );
 }
 
-const page = (nav: RouteHandle['nav'], element: ReactNode, permission?: PermissionKey) => ({
+function Guard({
+  permission,
+  children,
+}: {
+  permission: PermissionKey | PermissionKey[];
+  children: ReactNode;
+}) {
+  const { can } = useSession();
+  return navAllowed(permission, (k) => can(k)) ? children : <Navigate to="/" replace />;
+}
+
+const page = (
+  nav: RouteHandle['nav'],
+  element: ReactNode,
+  permission?: PermissionKey | PermissionKey[],
+) => ({
   handle: { nav } satisfies RouteHandle,
   element: permission ? <Guard permission={permission}>{element}</Guard> : element,
 });
@@ -65,7 +97,7 @@ export const routes: RouteObject[] = [
       { path: 'transactions', ...page('transactions', <TransactionsPage />) },
       {
         path: 'settlement',
-        ...page('settlement', <SettlementPage />, 'finance.settlement.manage'),
+        ...page('settlement', <SettlementPage />, NAV.settlement.permission),
       },
       { path: 'budgets', ...page('budgets', <BudgetsPage />, 'finance.budget.manage') },
       { path: 'recurring', ...page('recurring', <RecurringPage />, 'finance.budget.manage') },

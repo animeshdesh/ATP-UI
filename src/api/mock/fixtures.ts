@@ -176,14 +176,6 @@ export const CATEGORY_SPEND: CategorySpend[] = [
   lastMonthPaise: r(last as number),
 }));
 
-/** Month-to-date partner ledger: what each paid out for the clinic and received from patients. */
-export const PARTNER_LEDGER = [
-  { key: 'Sameer', paid: r(72400), received: r(96300), sharePct: 25 },
-  { key: 'RY', paid: r(18250), received: r(88600), sharePct: 25 },
-  { key: 'RP', paid: r(41900), received: r(52800), sharePct: 25 },
-  { key: 'Santosh', paid: r(12000), received: r(61400), sharePct: 25 },
-];
-
 /** Recurring items: key, name, category, day of month, ₹ expected, description of the October entry that logged it. */
 export const RECURRING_SEED: Array<[string, string, string, number, number, string | null]> = [
   ['watch', 'Watchman salary', 'Salaries', 1, 9000, 'Watchman salary'],

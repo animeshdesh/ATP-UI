@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { daysBetween, longDate, monthToDate, monthYear, todayIso } from './dates';
+import { dateRange, daysBetween, longDate, monthToDate, monthYear, todayIso } from './dates';
 
 describe('dates', () => {
   it('uses the Asia/Kolkata calendar day', () => {
@@ -11,6 +11,9 @@ describe('dates', () => {
     expect(longDate('2026-10-14')).toBe('Wed, 14 Oct 2026');
     expect(monthYear('2026-10-14')).toBe('October 2026');
     expect(monthToDate('2026-10-14')).toBe('1–14 Oct 2026');
+    expect(dateRange('2026-10-01', '2026-10-14')).toBe('1–14 Oct 2026');
+    expect(dateRange('2026-09-28', '2026-10-14')).toBe('28 Sep – 14 Oct 2026');
+    expect(dateRange('2026-10-14', '2026-10-14')).toBe('14 Oct 2026');
   });
 
   it('counts calendar days for the 7-day edit window', () => {

@@ -1,6 +1,13 @@
 /* Real L2 (auth & RBAC): Supabase Auth for sign-in, the backend API for everything else. */
 import type { AuthError } from '@supabase/supabase-js';
 import type {
+  DashboardData,
+  DashboardQuery,
+  Partner,
+  PartnerShares,
+  SetPartnerShares,
+  SettlementPosition,
+  SettlementSummary,
   Category,
   ClinicPerson,
   CreateRecurringItem,
@@ -40,13 +47,47 @@ function authError(e: AuthError): Error {
   return new ApiError(e.status ?? 400, e.message, e.code ?? 'auth_error');
 }
 
+/** Last good session per user, so the app opens offline or while the API restarts (F-08). */
+const SESSION_CACHE = 'atp.session.cache';
+const sessionCache = {
+  read(userId: string): Session | null {
+    try {
+      const v = JSON.parse(localStorage.getItem(SESSION_CACHE) ?? 'null') as Session | null;
+      return v?.user.key === userId ? v : null;
+    } catch {
+      return null;
+    }
+  },
+  write(s: Session | ClinicPick) {
+    try {
+      if ('permissions' in s) localStorage.setItem(SESSION_CACHE, JSON.stringify(s));
+    } catch {
+      /* storage unavailable */
+    }
+  },
+  clear() {
+    try {
+      localStorage.removeItem(SESSION_CACHE);
+    } catch {
+      /* storage unavailable */
+    }
+  },
+};
+
 async function getSession(): Promise<Session | ClinicPick | null> {
   const { data } = await supabase().auth.getSession();
   if (!data.session) return null;
   try {
-    return sessionFromMe(await unwrap(http.GET('/v1/me')));
+    const s = sessionFromMe(await unwrap(http.GET('/v1/me')));
+    sessionCache.write(s);
+    return s;
   } catch (e) {
+    if (e instanceof NetworkError) {
+      const cached = sessionCache.read(data.session.user.id);
+      if (cached) return cached;
+    }
     if (e instanceof ApiError && (e.status === 401 || e.code === 'no_clinic')) {
+      sessionCache.clear();
       await supabase().auth.signOut();
       if (e.code === 'no_clinic')
         throw new ApiError(
@@ -84,6 +125,7 @@ export const realL2 = {
 
   async signOut(): Promise<void> {
     clinicChoice.set(null);
+    sessionCache.clear();
     await supabase().auth.signOut();
   },
 
@@ -154,14 +196,12 @@ export const realL2 = {
   // ── L3 ledger (docs/LEDGER.md) ─────────────────────────────
   getEntryDefaults: (): Promise<EntryDefaults> => unwrap(http.GET('/v1/transactions/defaults')),
   listPeople: (): Promise<ClinicPerson[]> => unwrap(http.GET('/v1/people')),
-  listTransactions: async (q: TransactionQuery = {}): Promise<TransactionPage> =>
-    (await unwrap(http.GET('/v1/transactions', { params: { query: q } }))) as TransactionPage,
-  createTransaction: async (input: NewTransaction): Promise<Transaction> =>
-    (await unwrap(http.POST('/v1/transactions', { body: input }))) as Transaction,
-  updateTransaction: async (id: string, patch: UpdateTransaction): Promise<Transaction> =>
-    (await unwrap(
-      http.PATCH('/v1/transactions/{id}', { params: { path: { id } }, body: patch }),
-    )) as Transaction,
+  listTransactions: (q: TransactionQuery = {}): Promise<TransactionPage> =>
+    unwrap(http.GET('/v1/transactions', { params: { query: q } })),
+  createTransaction: (input: NewTransaction): Promise<Transaction> =>
+    unwrap(http.POST('/v1/transactions', { body: input })),
+  updateTransaction: (id: string, patch: UpdateTransaction): Promise<Transaction> =>
+    unwrap(http.PATCH('/v1/transactions/{id}', { params: { path: { id } }, body: patch })),
   deleteTransaction: async (id: string): Promise<void> => {
     await unwrap(http.DELETE('/v1/transactions/{id}', { params: { path: { id } } }));
   },
@@ -202,4 +242,24 @@ export const realL2 = {
   updateRecurring: async (id: string, patch: UpdateRecurringItem): Promise<void> => {
     await unwrap(http.PATCH('/v1/recurring-items/{id}', { params: { path: { id } }, body: patch }));
   },
+
+  // ── L4 settlement (docs/SETTLEMENT.md) ─────────────────────
+  getSettlement: (to?: string): Promise<SettlementPosition> =>
+    unwrap(http.GET('/v1/settlement', { params: { query: to ? { to } : {} } })),
+  settle: (v: { to: string; fingerprint: string }): Promise<SettlementSummary> =>
+    unwrap(http.POST('/v1/settlements', { body: v })),
+  listSettlements: (): Promise<SettlementSummary[]> => unwrap(http.GET('/v1/settlements')),
+  undoSettlement: async (id: string): Promise<void> => {
+    await unwrap(http.DELETE('/v1/settlements/{id}', { params: { path: { id } } }));
+  },
+  getShares: (): Promise<PartnerShares> => unwrap(http.GET('/v1/partners/shares')),
+  setShares: (v: SetPartnerShares): Promise<PartnerShares> =>
+    unwrap(http.PUT('/v1/partners/shares', { body: v })),
+  listPartners: (): Promise<Partner[]> => unwrap(http.GET('/v1/partners')),
+  addPartner: (memberId: string): Promise<Partner> =>
+    unwrap(http.POST('/v1/partners', { body: { memberId } })),
+
+  // ── L5 dashboard (docs/DASHBOARD.md) ───────────────────────
+  getDashboard: (q: DashboardQuery = {}): Promise<DashboardData> =>
+    unwrap(http.GET('/v1/dashboard', { params: { query: q } })),
 };

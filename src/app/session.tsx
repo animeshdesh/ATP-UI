@@ -25,13 +25,19 @@ interface SessionValue {
 
 const SessionContext = createContext<SessionValue | null>(null);
 
+const userOf = (s: SessionData | undefined) =>
+  s && 'permissions' in s ? `${s.user.key}:${s.clinicId}` : s ? `pick:${s.userName}` : null;
+
 /**
- * Swap the cached session and drop every other query, so nothing from the previous user leaks.
- * `qc.clear()` is not used: it would detach the live session observer.
+ * Swap the cached session. When the user (or clinic) changes, reset every other query so nothing
+ * from the previous user leaks. Reset, not remove: mounted screens refetch instead of being left
+ * observing a removed query. Same user (e.g. the auth-state event and sign-in both loading
+ * /v1/me) changes nothing else.
  */
 export function replaceSession(qc: QueryClient, session: SessionData) {
-  qc.removeQueries({ predicate: (q) => q.queryKey[0] !== qk.session[0] });
+  const changed = userOf(qc.getQueryData<SessionData>(qk.session)) !== userOf(session);
   qc.setQueryData(qk.session, session);
+  if (changed) void qc.resetQueries({ predicate: (q) => q.queryKey[0] !== qk.session[0] });
 }
 
 const isSession = (s: SessionData | undefined): s is Session => !!s && 'permissions' in s;
@@ -45,7 +51,11 @@ export function SessionProvider({ children }: { children: ReactNode }) {
     if (authMode !== 'supabase') return;
     const { data: sub } = supabase().auth.onAuthStateChange((event) => {
       if (event === 'SIGNED_IN' || event === 'SIGNED_OUT' || event === 'USER_UPDATED') {
-        void qc.invalidateQueries({ queryKey: qk.session });
+        // Through replaceSession so a different user (e.g. another tab) resets cached data.
+        api
+          .getSession()
+          .then((next) => replaceSession(qc, next))
+          .catch(() => qc.invalidateQueries({ queryKey: qk.session }));
       }
     });
     return () => sub.subscription.unsubscribe();

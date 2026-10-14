@@ -24,6 +24,7 @@ function asTransaction(item: OutboxItem): Transaction {
     recurringItemId: i.recurringItemId ?? null,
     hasReceipt: !!item.receipt,
     settled: false,
+    fund: null,
     recordedBy: { userId: item.userKey, name: item.display.recordedByName },
     createdAt: at,
     updatedAt: at,

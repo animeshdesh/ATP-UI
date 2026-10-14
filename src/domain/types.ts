@@ -63,14 +63,10 @@ export interface ClinicPick {
 
 // ── L3 (ledger): contract types ──────────────────────────────────
 export type PersonRef = S['PersonRef'];
-/**
- * `party` is PersonRef or null (clinic account). The contract encodes it as
- * allOf[PersonRef, object|null], which generates an unusable type; corrected here.
- */
-export type Transaction = Omit<S['Transaction'], 'party'> & { party: PersonRef | null };
+export type Transaction = S['Transaction'];
 export type NewTransaction = S['NewTransaction'];
 export type UpdateTransaction = S['UpdateTransaction'];
-export type TransactionPage = Omit<S['TransactionPage'], 'items'> & { items: Transaction[] };
+export type TransactionPage = S['TransactionPage'];
 export type EntryDefaults = S['EntryDefaults'];
 export type Category = S['Category'];
 export type RecurringItem = S['RecurringItem'];
@@ -79,6 +75,19 @@ export type UpdateRecurringItem = S['UpdateRecurringItem'];
 /** Clinic member for pickers and filters (`GET /v1/people`). */
 export type ClinicPerson = S['Person'];
 export type ReceiptLink = S['ReceiptLink'];
+export type Partner = S['Partner'];
+
+// ── L4 (settlement) and L5 (dashboard): contract types ──────────────
+export type PartyRef = S['PartyRef'];
+export type SettleTransfer = S['SettleTransfer'];
+export type SettlementPosition = S['SettlementPosition'];
+export type SettlementSummary = S['SettlementSummary'];
+export type SettlementDetail = S['SettlementDetail'];
+export type PartnerShares = S['PartnerShares'];
+export type SetPartnerShares = S['SetPartnerShares'];
+export type PeriodTotals = S['PeriodTotals'];
+export type DashboardData = S['Dashboard'];
+export type DashboardQuery = NonNullable<paths['/v1/dashboard']['get']['parameters']['query']>;
 /** Query for `GET /v1/transactions`. */
 export type TransactionQuery = NonNullable<paths['/v1/transactions']['get']['parameters']['query']>;
 
@@ -98,43 +107,6 @@ export interface CategorySpend {
   spentPaise: number;
   budgetPaise: number;
   lastMonthPaise: number;
-}
-
-export interface Transfer {
-  from: string;
-  to: string;
-  amountPaise: number;
-}
-
-/** Aggregates still served by the mock until backend L4–L6 (D-012). */
-export interface DashboardAggregates {
-  breakdown: CategorySpend[];
-  transfers: Transfer[];
-  settledOn?: string;
-}
-
-export interface PartnerBalance {
-  person: Person;
-  sharePct: number;
-  paidPaise: number;
-  receivedPaise: number;
-  /** Positive: owes the pool. Negative: is owed. */
-  balancePaise: number;
-}
-
-export interface SettlementHistoryItem {
-  period: string;
-  meta: string;
-  amountPaise: number;
-}
-
-export interface Settlement {
-  period: string;
-  clinicNetPaise: number;
-  transfers: Transfer[];
-  partners: PartnerBalance[];
-  settledOn?: string;
-  history: SettlementHistoryItem[];
 }
 
 export interface Fund {

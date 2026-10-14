@@ -19,7 +19,7 @@ describe('app', () => {
     expect(await screen.findByText('₹11,400')).toBeInTheDocument();
     const attention = await screen.findByRole('region', { name: 'Needs attention' });
     expect(await within(attention).findByText('Caretaker salary not logged')).toBeInTheDocument();
-    expect(await within(attention).findByText('Consumables at 107% of budget')).toBeInTheDocument();
+    expect(await within(attention).findByText('Rent at 97% of budget')).toBeInTheDocument();
   });
 
   it('logs a quick-add expense and shows it in transactions', async () => {

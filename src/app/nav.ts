@@ -30,8 +30,8 @@ interface NavItem {
   path: string;
   label: string;
   icon: LucideIcon;
-  /** Shown only with this permission (any scope). */
-  permission?: PermissionKey;
+  /** Shown only with this permission, or any of these (any scope). */
+  permission?: PermissionKey | PermissionKey[];
   section: 'main' | 'settings' | 'mobile';
 }
 
@@ -42,7 +42,7 @@ export const NAV: Record<NavKey, NavItem> = {
     path: '/settlement',
     label: 'Settlement',
     icon: Scale,
-    permission: 'finance.settlement.manage',
+    permission: ['finance.settlement.manage', 'finance.report.view'],
     section: 'main',
   },
   budgets: {
@@ -115,3 +115,12 @@ export const MORE_KEYS: NavKey[] = [
   'roles',
   'audit',
 ];
+
+/** Whether a nav item (or route) is open to the user. */
+export function navAllowed(
+  permission: PermissionKey | PermissionKey[] | undefined,
+  can: (key: PermissionKey) => boolean,
+): boolean {
+  if (!permission) return true;
+  return (Array.isArray(permission) ? permission : [permission]).some((k) => can(k));
+}

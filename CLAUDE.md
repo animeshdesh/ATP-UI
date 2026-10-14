@@ -11,7 +11,7 @@ Mobile-first installable PWA for ATP Rehab staff. React 19 + TypeScript 6.0 + Vi
 
 ## Layout
 
-- `src/api` — the only data surface: `api` (index.ts) picks real or mock per level; query hooks (queries.ts); `client.ts` (openapi-fetch + bearer/`x-clinic-id` middleware, `unwrap` → `ApiError`/`NetworkError`); `real.ts` (L2 on Supabase Auth + API); `mock/l2.ts` (same contract shapes in memory); `mock/server.ts` (L3+ not yet wired, D-012)
+- `src/api` — the only data surface: `api` (index.ts) picks real or mock per level; query hooks (queries.ts); `client.ts` (openapi-fetch + bearer/`x-clinic-id` middleware, `unwrap` → `ApiError`/`NetworkError`); `real.ts` (L2–L5 on Supabase Auth + API); `mock/l2.ts`, `mock/ledger.ts`, `mock/finance.ts` (same contract shapes in memory, for tests); `mock/server.ts` (L6–L7 not yet wired, D-012)
 - `src/app` — router + guards, session/permissions (`useSession().can`), nav config, providers
 - `src/components/ui` — design-system components; `src/layout/AppShell.tsx` — sidebar/top bar/tab bar
 - `src/features/<area>` — screens; `src/domain/types.ts` — provisional domain types

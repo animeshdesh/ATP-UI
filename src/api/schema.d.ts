@@ -74,6 +74,434 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/budgets": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Budget vs spent per expense category for a month (finance.budget.manage or finance.report.view) */
+        get: {
+            parameters: {
+                query?: {
+                    month?: string;
+                };
+                header?: {
+                    /** @description Active clinic. Optional when the user belongs to exactly one clinic. */
+                    "x-clinic-id"?: string;
+                };
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Budgets"];
+                    };
+                };
+                /** @description Bad request */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Unauthenticated */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Forbidden */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+            };
+        };
+        /** Set monthly budgets from a month on (finance.budget.manage); null removes */
+        put: {
+            parameters: {
+                query?: never;
+                header?: {
+                    /** @description Active clinic. Optional when the user belongs to exactly one clinic. */
+                    "x-clinic-id"?: string;
+                };
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["SetBudgets"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Budgets"];
+                    };
+                };
+                /** @description Bad request */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Unauthenticated */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Forbidden */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+            };
+        };
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/funds": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Funds with allocation, top-ups, drawn and balance
+         * @description Amounts need finance.budget.manage or finance.report.view; with only finance.entry.create (to pick a fund on an expense) amounts are 0.
+         */
+        get: {
+            parameters: {
+                query?: {
+                    month?: string;
+                    includeArchived?: "true" | "false";
+                };
+                header?: {
+                    /** @description Active clinic. Optional when the user belongs to exactly one clinic. */
+                    "x-clinic-id"?: string;
+                };
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Fund"][];
+                    };
+                };
+                /** @description Bad request */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Unauthenticated */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Forbidden */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        /** Create a fund (finance.budget.manage) */
+        post: {
+            parameters: {
+                query?: never;
+                header?: {
+                    /** @description Active clinic. Optional when the user belongs to exactly one clinic. */
+                    "x-clinic-id"?: string;
+                };
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["CreateFund"];
+                };
+            };
+            responses: {
+                /** @description Created */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Fund"];
+                    };
+                };
+                /** @description Bad request */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Unauthenticated */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Forbidden */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Conflict */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/funds/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Rename, change rule, opening balance or archive a fund (finance.budget.manage) */
+        patch: {
+            parameters: {
+                query?: never;
+                header?: {
+                    /** @description Active clinic. Optional when the user belongs to exactly one clinic. */
+                    "x-clinic-id"?: string;
+                };
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["UpdateFund"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Fund"];
+                    };
+                };
+                /** @description Bad request */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Unauthenticated */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Forbidden */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Not found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Conflict */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+            };
+        };
+        trace?: never;
+    };
+    "/v1/funds/{id}/topups": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Add money to a fund by hand (finance.budget.manage) */
+        post: {
+            parameters: {
+                query?: never;
+                header?: {
+                    /** @description Active clinic. Optional when the user belongs to exactly one clinic. */
+                    "x-clinic-id"?: string;
+                };
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["FundTopUp"];
+                };
+            };
+            responses: {
+                /** @description Topped up */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Fund"];
+                    };
+                };
+                /** @description Bad request */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Unauthenticated */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Forbidden */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Not found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/categories": {
         parameters: {
             query?: never;
@@ -576,6 +1004,80 @@ export interface paths {
                 };
             };
         };
+        trace?: never;
+    };
+    "/v1/dashboard": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Totals, cash in hand and breakdowns for a period vs a comparison period
+         * @description Needs finance.entry.view or finance.report.view. Own-scope users get figures over their own entries only. Partner balances: GET /v1/settlement; recurring status: GET /v1/recurring-items.
+         */
+        get: {
+            parameters: {
+                query?: {
+                    from?: string;
+                    to?: string;
+                    compareFrom?: string;
+                    compareTo?: string;
+                };
+                header?: {
+                    /** @description Active clinic. Optional when the user belongs to exactly one clinic. */
+                    "x-clinic-id"?: string;
+                };
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Dashboard"];
+                    };
+                };
+                /** @description Bad request */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Unauthenticated */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Forbidden */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
         trace?: never;
     };
     "/health": {
@@ -3041,6 +3543,129 @@ export interface components {
             items: components["schemas"]["AuditEntry"][];
             nextCursor: string | null;
         };
+        BudgetLine: {
+            /** Format: uuid */
+            categoryId: string;
+            name: string;
+            budgetPaise: number | null;
+            spentPaise: number;
+            lastMonthPaise: number;
+            usedBps: number | null;
+            /** @enum {string} */
+            status: "none" | "ok" | "warning" | "over";
+        };
+        Budgets: {
+            /** @example 2026-10 */
+            month: string;
+            categories: components["schemas"]["BudgetLine"][];
+            totals: {
+                budgetPaise: number;
+                spentPaise: number;
+            };
+        };
+        SetBudgets: {
+            /** @example 2026-10 */
+            month?: string;
+            budgets: {
+                /** Format: uuid */
+                categoryId: string;
+                /**
+                 * @description Integer paise (₹1 = 100)
+                 * @example 60000
+                 */
+                amountPaise: number | null;
+            }[];
+        };
+        FundRule: {
+            /** @enum {string} */
+            type: "fixed";
+            /**
+             * @description Integer paise (₹1 = 100)
+             * @example 60000
+             */
+            amountPaise: number;
+        } | {
+            /** @enum {string} */
+            type: "percent";
+            bps: number;
+            /**
+             * @default income
+             * @enum {string}
+             */
+            base: "income" | "net";
+        } | {
+            /** @enum {string} */
+            type: "manual";
+        };
+        Fund: {
+            /** Format: uuid */
+            id: string;
+            name: string;
+            /** @example 2026-10 */
+            startMonth: string;
+            archived: boolean;
+            rule: {
+                /** @enum {string} */
+                type: "fixed";
+                /**
+                 * @description Integer paise (₹1 = 100)
+                 * @example 60000
+                 */
+                amountPaise: number;
+            } | {
+                /** @enum {string} */
+                type: "percent";
+                bps: number;
+                /**
+                 * @default income
+                 * @enum {string}
+                 */
+                base: "income" | "net";
+            } | {
+                /** @enum {string} */
+                type: "manual";
+            } | null;
+            /** @example 2026-10 */
+            ruleEffectiveMonth: string | null;
+            openingBalancePaise: number;
+            allocatedPaise: number;
+            toppedUpPaise: number;
+            drawnPaise: number;
+            allocatedToDatePaise: number;
+            toppedUpToDatePaise: number;
+            drawnToDatePaise: number;
+            balancePaise: number;
+        };
+        CreateFund: {
+            name: string;
+            rule: components["schemas"]["FundRule"];
+            /** @example 2026-10 */
+            startMonth?: string;
+            /** @default 0 */
+            openingBalancePaise: number;
+        };
+        UpdateFund: {
+            name?: string;
+            rule?: components["schemas"]["FundRule"];
+            /** @example 2026-10 */
+            ruleEffectiveMonth?: string;
+            openingBalancePaise?: number;
+            archived?: boolean;
+        };
+        FundTopUp: {
+            /**
+             * @description Integer paise (₹1 = 100)
+             * @example 60000
+             */
+            amountPaise: number;
+            /**
+             * Format: date
+             * @example 2026-10-14
+             */
+            entryDate?: string;
+            /** @default  */
+            note: string;
+        };
         Category: {
             /** Format: uuid */
             id: string;
@@ -3120,6 +3745,70 @@ export interface components {
             dayOfMonth?: number;
             archived?: boolean;
         };
+        PeriodTotals: {
+            count: number;
+            incomePaise: number;
+            expensePaise: number;
+            netPaise: number;
+            cashInPaise: number;
+            cashOutPaise: number;
+            cashInHandPaise: number;
+        };
+        Dashboard: {
+            period: {
+                /**
+                 * Format: date
+                 * @example 2026-10-14
+                 */
+                from: string;
+                /**
+                 * Format: date
+                 * @example 2026-10-14
+                 */
+                to: string;
+            };
+            previous: {
+                /**
+                 * Format: date
+                 * @example 2026-10-14
+                 */
+                from: string;
+                /**
+                 * Format: date
+                 * @example 2026-10-14
+                 */
+                to: string;
+            };
+            /** @enum {string} */
+            scope: "clinic" | "own";
+            totals: components["schemas"]["PeriodTotals"];
+            previousTotals: components["schemas"]["PeriodTotals"];
+            expenseByCategory: {
+                /** Format: uuid */
+                categoryId: string;
+                name: string;
+                type: components["schemas"]["EntryType"];
+                amountPaise: number;
+                previousPaise: number;
+                budgetPaise: number | null;
+            }[];
+            incomeByCategory: {
+                /** Format: uuid */
+                categoryId: string;
+                name: string;
+                type: components["schemas"]["EntryType"];
+                amountPaise: number;
+                previousPaise: number;
+                budgetPaise: number | null;
+            }[];
+            byPaymentMode: {
+                paymentMode: components["schemas"]["PaymentMode"];
+                incomePaise: number;
+                expensePaise: number;
+            }[];
+        };
+        /** @enum {string} */
+        PaymentMode: "cash" | "upi" | "card" | "bank_transfer";
         HealthResponse: {
             /** @enum {string} */
             status: "ok" | "degraded";
@@ -3473,9 +4162,14 @@ export interface components {
             description: string;
             patientName: string | null;
             paymentMode: components["schemas"]["PaymentMode"];
-            party: components["schemas"]["PersonRef"] & (Record<string, never> | null);
+            party: components["schemas"]["PersonRef"] | null;
             /** Format: uuid */
             recurringItemId: string | null;
+            fund: {
+                /** Format: uuid */
+                id: string;
+                name: string;
+            } | null;
             hasReceipt: boolean;
             settled: boolean;
             recordedBy: {
@@ -3487,8 +4181,6 @@ export interface components {
             updatedAt: string;
             canEdit: boolean;
         };
-        /** @enum {string} */
-        PaymentMode: "cash" | "upi" | "card" | "bank_transfer";
         NewTransaction: {
             type: components["schemas"]["EntryType"];
             /**
@@ -3510,6 +4202,8 @@ export interface components {
             partyMemberId?: string | null;
             /** Format: uuid */
             recurringItemId?: string;
+            /** Format: uuid */
+            fundId?: string;
             idempotencyKey?: string;
         };
         UpdateTransaction: {
@@ -3533,6 +4227,8 @@ export interface components {
             partyMemberId?: string | null;
             /** Format: uuid */
             recurringItemId?: string | null;
+            /** Format: uuid */
+            fundId?: string | null;
         };
         TransactionPage: {
             items: components["schemas"]["Transaction"][];

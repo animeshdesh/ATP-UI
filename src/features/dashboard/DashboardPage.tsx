@@ -1,21 +1,28 @@
 import { Check, Lock, TriangleAlert } from 'lucide-react';
 import { useNavigate } from 'react-router';
 import {
-  useDashboardAggregates,
-  useEntryDefaults,
+  useBudgets,
+  useDashboard,
   useRecurring,
+  useSettlement,
   useTransactionPage,
 } from '@/api/queries';
 import { useSession } from '@/app/session';
 import { Button, Loading, SectionHeader, Stat, StatGrid, Tag } from '@/components/ui';
-import type { AttentionItem, DashboardAggregates, RecurringItem } from '@/domain/types';
+import type {
+  AttentionItem,
+  Budgets,
+  DashboardData,
+  PartyRef,
+  RecurringItem,
+} from '@/domain/types';
 import { useEditEntry, useQuickAdd } from '@/features/entry/QuickAddContext';
 import { logPrefill, recurringStatus } from '@/features/recurring/status';
 import { EntryRow } from '@/features/transactions/EntryRow';
 import { inr } from '@/lib/money';
 import { cn } from '@/lib/cn';
 import { PeriodSwitch, usePeriod } from './PeriodSwitch';
-import { change, periodRanges, type Range } from './periods';
+import { change, periodRanges } from './periods';
 
 export function DashboardPage() {
   const { can } = useSession();
@@ -65,81 +72,76 @@ export function DashboardPage() {
   );
 }
 
-/** Totals for a date range (any filters); `limit: 1` because only totals are read. */
-const useTotals = (
-  range: Range,
-  extra: Parameters<typeof useTransactionPage>[0] = {},
-  enabled = true,
-) => useTransactionPage({ ...range, ...extra, limit: 1 }, enabled).data?.totals;
-
 const signed = (paise: number) => (paise < 0 ? '−' : '') + inr(paise);
 
-function ClinicTiles() {
+/** `GET /v1/dashboard` for the selected period and the same span before it (L5). */
+function useDashboardFor(clinic: boolean) {
   const [period] = usePeriod();
-  const { current, previous, vsLabel } = periodRanges(period);
-  const now = useTotals(current);
-  const before = useTotals(previous);
-  const cash = useTotals(current, { paymentMode: 'cash' });
-  if (!now) return <Loading />;
-  const net = now.incomePaise - now.expensePaise;
-  const vs = (a: number, b: number | undefined) =>
-    b === undefined ? undefined : (change(a, b, vsLabel) ?? undefined);
+  const { current, previous, vsLabel } = periodRanges(clinic ? period : 'month');
+  const q = useDashboard({ ...current, compareFrom: previous.from, compareTo: previous.to });
+  return { data: q.data, vsLabel };
+}
+
+function ClinicTiles() {
+  const { data, vsLabel } = useDashboardFor(true);
+  if (!data) return <Loading />;
+  const { totals: now, previousTotals: before } = data;
+  const vs = (a: number, b: number) => change(a, b, vsLabel) ?? undefined;
   return (
     <StatGrid>
       <Stat
         label="Income"
         value={inr(now.incomePaise)}
-        sub={vs(now.incomePaise, before?.incomePaise)}
+        sub={vs(now.incomePaise, before.incomePaise)}
         income
       />
       <Stat
         label="Expense"
         value={inr(now.expensePaise)}
-        sub={vs(now.expensePaise, before?.expensePaise)}
+        sub={vs(now.expensePaise, before.expensePaise)}
       />
-      <Stat
-        label="Net"
-        value={signed(net)}
-        sub={before ? vs(net, before.incomePaise - before.expensePaise) : undefined}
-      />
+      <Stat label="Net" value={signed(now.netPaise)} sub={vs(now.netPaise, before.netPaise)} />
       <Stat
         label="Cash in hand"
-        value={cash ? signed(cash.incomePaise - cash.expensePaise) : '–'}
-        sub={cash && `Cash in ${inr(cash.incomePaise)} − out ${inr(cash.expensePaise)}`}
+        value={signed(now.cashInHandPaise)}
+        sub={`Cash in ${inr(now.cashInPaise)} − out ${inr(now.cashOutPaise)}`}
       />
     </StatGrid>
   );
 }
 
-/** Therapist / front desk: the API scopes totals to entries they recorded or hold. */
+/** Therapist / front desk: the API scopes every figure to entries they recorded or hold. */
 function OwnTiles() {
   const { session } = useSession();
-  const { current } = periodRanges('month');
-  const mine = useTotals(current);
-  const defaults = useEntryDefaults();
-  const cash = useTotals(
-    current,
-    { paymentMode: 'cash', memberId: defaults.data?.myMemberId ?? '' },
-    !!defaults.data,
-  );
-  if (!mine) return <Loading />;
+  const { data } = useDashboardFor(false);
+  if (!data) return <Loading />;
+  const t = data.totals;
   return (
     <StatGrid>
-      <Stat label="Entries logged" value={mine.count} sub="This month" />
-      <Stat label="Income logged" value={inr(mine.incomePaise)} sub="Patient payments" income />
-      <Stat label="Expense logged" value={inr(mine.expensePaise)} sub="Paid for the clinic" />
+      <Stat label="Entries logged" value={t.count} sub="This month" />
+      <Stat label="Income logged" value={inr(t.incomePaise)} sub="Patient payments" income />
+      <Stat label="Expense logged" value={inr(t.expensePaise)} sub="Paid for the clinic" />
       <Stat
         label="Cash you hold"
-        value={cash ? signed(cash.incomePaise - cash.expensePaise) : '–'}
+        value={signed(t.cashInHandPaise)}
         sub={session?.role === 'frontdesk' ? 'Collected at desk' : 'Net cash on you'}
       />
     </StatGrid>
   );
 }
 
+/** Budget is L6 (still mock): join it to this period's L5 spend by category name. */
+function budgetRows(data: DashboardData | undefined, budgets: Budgets | undefined) {
+  return (budgets?.categories ?? []).map((b) => ({
+    name: b.name,
+    budgetPaise: b.budgetPaise,
+    spentPaise: data?.expenseByCategory.find((c) => c.name === b.name)?.amountPaise ?? 0,
+  }));
+}
+
 function attentionItems(
   recurring: RecurringItem[],
-  agg: DashboardAggregates | undefined,
+  budgets: ReturnType<typeof budgetRows>,
 ): AttentionItem[] {
   return [
     ...recurring
@@ -150,8 +152,8 @@ function attentionItems(
         sub: `Recurring · ${inr(r.expectedAmountPaise)} ${recurringStatus(r).label.replace('Overdue · due', 'was due')}`,
         action: { label: 'Log now', kind: 'log-recurring', item: r },
       })),
-    ...(agg?.breakdown ?? [])
-      .filter((c) => c.spentPaise / c.budgetPaise >= 0.8)
+    ...budgets
+      .filter((c) => c.budgetPaise > 0 && c.spentPaise / c.budgetPaise >= 0.8)
       .map<AttentionItem>((c) => {
         const p = c.spentPaise / c.budgetPaise;
         return {
@@ -168,11 +170,15 @@ function ClinicSections() {
   const navigate = useNavigate();
   const openAdd = useQuickAdd();
   const { can } = useSession();
-  const [period] = usePeriod();
-  const agg = useDashboardAggregates(period).data;
+  const { data } = useDashboardFor(true);
+  const budgets = useBudgets().data;
+  const canSeeSettlement = can('finance.settlement.manage') || can('finance.report.view', 'all');
+  const settlement = useSettlement(canSeeSettlement).data;
   const recurring = useRecurring().data ?? [];
-  const attention = attentionItems(recurring, agg);
-  const maxSpent = Math.max(...(agg?.breakdown ?? []).map((b) => b.spentPaise), 1);
+  const attention = attentionItems(recurring, budgetRows(data, budgets));
+  const breakdown = data?.expenseByCategory ?? [];
+  const maxSpent = Math.max(...breakdown.map((b) => b.amountPaise), 1);
+  const partyName = (p: PartyRef) => (p.kind === 'clinic' ? 'Clinic account' : p.name);
   const pending = recurring.filter((r) => !r.logged);
   const logged = recurring.length - pending.length;
   const allowed = (a: AttentionItem['action']) =>
@@ -224,22 +230,27 @@ function ClinicSections() {
 
       <div className="grid grid-cols-[repeat(auto-fit,minmax(min(100%,340px),1fr))] gap-5 lg:gap-7">
         <section className="flex flex-col">
-          <SectionHeader title="Expense by category" aside="vs last month" />
-          {(agg?.breakdown ?? []).map((b) => {
-            const mom = b.lastMonthPaise
-              ? Math.round(((b.spentPaise - b.lastMonthPaise) / b.lastMonthPaise) * 100)
+          <SectionHeader title="Expense by category" aside="vs previous period" />
+          {breakdown.length === 0 && (
+            <div className="py-3 text-sm text-neutral-700">No expenses in this period.</div>
+          )}
+          {breakdown.map((b) => {
+            const mom = b.previousPaise
+              ? Math.round(((b.amountPaise - b.previousPaise) / b.previousPaise) * 100)
               : null;
             return (
               <div
-                key={b.name}
+                key={b.categoryId}
                 className="grid grid-cols-[minmax(0,1fr)_auto] gap-x-3 gap-y-1 border-b border-rule py-2.5"
               >
                 <div className="text-sm">{b.name}</div>
-                <div className="text-right text-sm font-extrabold tabular">{inr(b.spentPaise)}</div>
+                <div className="text-right text-sm font-extrabold tabular">
+                  {inr(b.amountPaise)}
+                </div>
                 <div className="h-2 self-center bg-accent-100">
                   <div
                     className="h-2 bg-accent"
-                    style={{ width: `${((b.spentPaise / maxSpent) * 100).toFixed(1)}%` }}
+                    style={{ width: `${((b.amountPaise / maxSpent) * 100).toFixed(1)}%` }}
                   />
                 </div>
                 <div
@@ -267,19 +278,20 @@ function ClinicSections() {
                 )
               }
             />
-            {agg?.settledOn ? (
+            {settlement && settlement.transfers.length === 0 ? (
               <div className="flex items-center gap-2 py-3 text-sm">
                 <Check aria-hidden size={16} className="text-accent-700" />
-                All partners settled.
+                {settlement.entryCount === 0 ? 'All partners settled.' : 'Everyone is even.'}
               </div>
             ) : (
-              (agg?.transfers ?? []).map((t) => (
+              (settlement?.transfers ?? []).map((t, i) => (
                 <div
-                  key={t.from + t.to}
+                  key={i}
                   className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-2 border-b border-rule py-2.5"
                 >
                   <div className="text-sm">
-                    {t.from} <span className="text-neutral-600">pays</span> {t.to}
+                    {partyName(t.from)} <span className="text-neutral-600">pays</span>{' '}
+                    {partyName(t.to)}
                   </div>
                   <div className="font-extrabold tabular">{inr(t.amountPaise)}</div>
                 </div>

@@ -8,6 +8,7 @@ import {
 } from '@tanstack/react-query';
 import type {
   CreateRecurringItem,
+  DashboardQuery,
   EntryType,
   NewTransaction,
   Role,
@@ -26,8 +27,11 @@ export const qk = {
   transactions: (q: TransactionQuery = {}) => ['transactions', q] as const,
   entryDefaults: ['entry-defaults'] as const,
   people: ['people'] as const,
-  dashboard: (period: string) => ['dashboard', period] as const,
+  dashboard: (q: DashboardQuery) => ['dashboard', q] as const,
   settlement: ['settlement'] as const,
+  settlementHistory: ['settlement', 'history'] as const,
+  shares: ['settlement', 'shares'] as const,
+  partners: ['settlement', 'partners'] as const,
   budgets: ['budgets'] as const,
   recurring: (month = '') => ['recurring', month] as const,
   report: (month: string) => ['report', month] as const,
@@ -85,10 +89,19 @@ export const usePeople = () =>
     staleTime: 5 * 60_000,
     networkMode: 'offlineFirst',
   });
-export const useDashboardAggregates = (period: string) =>
-  useQuery({ queryKey: qk.dashboard(period), queryFn: () => api.getDashboardAggregates(period) });
-export const useSettlement = () =>
-  useQuery({ queryKey: qk.settlement, queryFn: api.getSettlement });
+export const useDashboard = (q: DashboardQuery) =>
+  useQuery({
+    queryKey: qk.dashboard(q),
+    queryFn: () => api.getDashboard(q),
+    placeholderData: (p) => p,
+  });
+/** Open (unsettled) position up to today. */
+export const useSettlement = (enabled = true) =>
+  useQuery({ queryKey: qk.settlement, queryFn: () => api.getSettlement(), enabled });
+export const useSettlementHistory = () =>
+  useQuery({ queryKey: qk.settlementHistory, queryFn: api.listSettlements });
+export const useShares = () => useQuery({ queryKey: qk.shares, queryFn: api.getShares });
+export const usePartners = () => useQuery({ queryKey: qk.partners, queryFn: api.listPartners });
 export const useBudgets = () => useQuery({ queryKey: qk.budgets, queryFn: api.getBudgets });
 export const useRecurring = (month?: string) =>
   useQuery({ queryKey: qk.recurring(month), queryFn: () => api.listRecurring(month) });
@@ -233,14 +246,29 @@ export function useReceiptMutations() {
   };
 }
 
-export function useMarkSettled() {
+/** Settling locks entries (settled, canEdit false), so the whole ledger refreshes. */
+export function useSettle() {
   const invalidate = useLedgerInvalidation();
-  return useMutation({ mutationFn: api.markSettled, onSuccess: invalidate });
+  return useMutation({ mutationFn: api.settle, onSuccess: invalidate });
 }
 
 export function useUndoSettlement() {
   const invalidate = useLedgerInvalidation();
   return useMutation({ mutationFn: api.undoSettlement, onSuccess: invalidate });
+}
+
+export function useSetShares() {
+  const invalidate = useLedgerInvalidation();
+  return useMutation({ mutationFn: api.setShares, onSuccess: invalidate });
+}
+
+export function useAddPartner() {
+  const invalidate = useLedgerInvalidation();
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: api.addPartner,
+    onSuccess: () => Promise.all([invalidate(), qc.invalidateQueries({ queryKey: qk.people })]),
+  });
 }
 
 export function useCategoryMutations() {

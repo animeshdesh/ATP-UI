@@ -1,6 +1,6 @@
 import { LogOut, Plus } from 'lucide-react';
 import { NavLink, Outlet, useLocation, useMatches, useNavigate } from 'react-router';
-import { MORE_KEYS, NAV, TABS, navLabel, type NavKey } from '@/app/nav';
+import { MORE_KEYS, NAV, TABS, navAllowed, navLabel, type NavKey } from '@/app/nav';
 import { useAuthedSession, useSession } from '@/app/session';
 import { Avatar, Button } from '@/components/ui';
 import { useQuickAdd } from '@/features/entry/QuickAddContext';
@@ -52,8 +52,7 @@ export function AppShell() {
   usePrefetchEntryData(canAdd);
 
   const visible = (k: NavKey) => {
-    const p = NAV[k].permission;
-    return !p || can(p);
+    return navAllowed(NAV[k].permission, (key) => can(key));
   };
   const mainKeys = (Object.keys(NAV) as NavKey[]).filter(
     (k) => NAV[k].section === 'main' && visible(k),

@@ -109,6 +109,7 @@ function seedTransactions(cats: Category[]): StoredTxn[] {
         recurringItemId: recurring ? `rec-${recurring[0]}` : null,
         hasReceipt: !!receipt,
         settled: false,
+        fund: null,
         recordedBy: { userId: rec, name: PEOPLE[rec]!.fullName },
         recordedByKey: rec,
         createdAt: ts(date),
@@ -299,6 +300,7 @@ export const mockLedger = {
       recurringItemId: input.recurringItemId ?? null,
       hasReceipt: false,
       settled: false,
+      fund: null,
       recordedBy: { userId: me(), name: PEOPLE[me()]!.fullName },
       recordedByKey: me(),
       createdAt: now,
@@ -487,3 +489,7 @@ export const mockLedger = {
     return latency(undefined);
   },
 };
+
+/** Shared with the L4/L5 mocks (finance.ts), which compute from the same entries. */
+export const ledgerDb = () => db;
+export type { StoredTxn };

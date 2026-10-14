@@ -25,26 +25,30 @@ const asUtc = (iso: string) => {
 const fmt = (iso: string, opts: Intl.DateTimeFormatOptions) =>
   new Intl.DateTimeFormat('en-IN', { timeZone: 'UTC', ...opts }).format(asUtc(iso));
 
+/** Design abbreviations (en-IN would give "Sept"). */
+const MON = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+const mon = (iso: string) => MON[parts(iso).m - 1]!;
+const weekday = (iso: string) => fmt(iso, { weekday: 'short' });
+
 /** "Wed, 14 Oct 2026" */
 export const longDate = (iso: string) => `${shortWeekday(iso)} ${parts(iso).y}`;
 
 /** "Wed, 14 Oct" */
-export const shortWeekday = (iso: string) =>
-  fmt(iso, { weekday: 'short', day: 'numeric', month: 'short' });
+export const shortWeekday = (iso: string) => `${weekday(iso)}, ${parts(iso).d} ${mon(iso)}`;
 
 /** "October 2026" */
 export const monthYear = (iso: string) => fmt(iso, { month: 'long', year: 'numeric' });
 
 /** "Oct" */
-export const monthShort = (iso: string) => fmt(iso, { month: 'short' });
+export const monthShort = mon;
 
 /** "14" → zero-padded day of month */
 export const dayOfMonth = (iso: string) => String(parts(iso).d).padStart(2, '0');
 
 /** "1–14 Oct 2026": month start to the given day */
 export const monthToDate = (iso: string) => {
-  const { d } = parts(iso);
-  return `1–${d} ${fmt(iso, { month: 'short', year: 'numeric' })}`;
+  const { d, y } = parts(iso);
+  return `1–${d} ${mon(iso)} ${y}`;
 };
 
 export function daysBetween(fromIso: string, toIso: string): number {
@@ -76,4 +80,14 @@ export const monthStart = (iso: string) => `${iso.slice(0, 7)}-01`;
 export function weekStart(iso: string): string {
   const dow = (asUtc(iso).getUTCDay() + 6) % 7;
   return addDays(iso, -dow);
+}
+
+/** "1–14 Oct 2026", "28 Sep – 14 Oct 2026", or "14 Oct 2026" for a single day. */
+export function dateRange(from: string, to: string): string {
+  const a = parts(from);
+  const b = parts(to);
+  if (from === to) return `${b.d} ${mon(to)} ${b.y}`;
+  if (a.y === b.y && a.m === b.m) return `${a.d}–${b.d} ${mon(to)} ${b.y}`;
+  if (a.y === b.y) return `${a.d} ${mon(from)} – ${b.d} ${mon(to)} ${b.y}`;
+  return `${a.d} ${mon(from)} ${a.y} – ${b.d} ${mon(to)} ${b.y}`;
 }
