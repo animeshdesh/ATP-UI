@@ -15,7 +15,7 @@ Promote `main` → `production` with a reviewed PR, like the backend.
 
 - Git integration on `animeshdesh/ATP-UI`, root directory `/`, production branch `production`.
 - Build command `pnpm build`, output directory `dist`.
-- Node 24 (`.nvmrc`). If the build image doesn't pick it up, set `NODE_VERSION=24`. The repo pins pnpm 12 through `packageManager`; check the first build log that Pages used it (otherwise set `PNPM_VERSION`). **Unverified until the first build.**
+- Set `NODE_VERSION=24` and `PNPM_VERSION=12.10.1` as Pages environment variables in both environments (don't rely on the build image honouring `.nvmrc` / `packageManager`). Confirm both versions in the first build log.
 - Environment variables, per environment (all public, plain variables):
   - `VITE_API_URL`: absolute https URL from the table above
   - `VITE_SUPABASE_URL`, `VITE_SUPABASE_PUBLISHABLE_KEY`: that environment's Supabase project (Singapore)
@@ -35,6 +35,7 @@ Promote `main` → `production` with a reviewed PR, like the backend.
 ```sh
 curl -sI https://staging.<domain>/ | grep -i cache-control            # no-cache
 curl -sI https://staging.<domain>/assets/<a real file> | grep -i cache  # immutable
+curl -sI https://staging.<domain>/workbox-<hash>.js | grep -i cache    # immutable (else move workbox under /assets via the PWA plugin)
 curl -sI https://staging.<domain>/assets/missing.js                     # 404, no-store
 curl -sI https://staging.<domain>/invite/abc                            # 200 (app shell)
 ```
