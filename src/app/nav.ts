@@ -49,7 +49,7 @@ export const NAV: Record<NavKey, NavItem> = {
     path: '/budgets',
     label: 'Budgets & funds',
     icon: PiggyBank,
-    permission: 'finance.budget.manage',
+    permission: ['finance.budget.manage', 'finance.report.view'],
     section: 'main',
   },
   recurring: {

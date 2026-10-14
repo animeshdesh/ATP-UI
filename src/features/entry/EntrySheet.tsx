@@ -16,6 +16,7 @@ import {
   useCreateTransaction,
   useDeleteTransaction,
   useEntryDefaults,
+  useFunds,
   useReceiptMutations,
   useUpdateTransaction,
 } from '@/api/queries';
@@ -62,6 +63,8 @@ export function EntrySheet(props: Props) {
   const online = useOnline();
   const { data: defaults } = useEntryDefaults();
   const { data: categories } = useCategories();
+  // Active funds an expense can be drawn from (names are enough; amounts may be hidden).
+  const funds = (useFunds().data ?? []).filter((f) => !f.archived || f.id === editing?.fund?.id);
   const create = useCreateTransaction();
   const update = useUpdateTransaction();
   const remove = useDeleteTransaction();
@@ -86,6 +89,7 @@ export function EntrySheet(props: Props) {
   });
   const [date, setDate] = useState<string | null>(editing?.entryDate ?? null);
   const [patient, setPatient] = useState(editing?.patientName ?? '');
+  const [fundId, setFundId] = useState<string>(editing?.fund?.id ?? '');
   const [description, setDescription] = useState(
     editing?.description ?? prefill?.description ?? '',
   );
@@ -159,6 +163,7 @@ export function EntrySheet(props: Props) {
         idempotencyKey: props.entryKey,
         ...(isIncome && patient.trim() ? { patientName: patient.trim() } : {}),
         ...(prefill?.recurringItemId ? { recurringItemId: prefill.recurringItemId } : {}),
+        ...(!isIncome && fundId ? { fundId } : {}),
       },
     });
     onClose();
@@ -172,7 +177,11 @@ export function EntrySheet(props: Props) {
   const saveEdit = async (txn: Transaction) => {
     await update.mutateAsync({
       id: txn.id,
-      patch: { ...fields(), patientName: isIncome ? patient.trim() || null : null },
+      patch: {
+        ...fields(),
+        patientName: isIncome ? patient.trim() || null : null,
+        fundId: !isIncome && fundId ? fundId : null,
+      },
     });
     if (receipt) await receipts.upload.mutateAsync({ id: txn.id, file: receipt });
     else if (removeReceipt) await receipts.remove.mutateAsync(txn.id);
@@ -387,6 +396,26 @@ export function EntrySheet(props: Props) {
             )}
           </Field>
         </div>
+
+        {!isIncome && funds.length > 0 && (
+          <Field label="Draw from fund (optional)" kicker>
+            {(id) => (
+              <Select
+                id={id}
+                value={fundId}
+                onChange={(e) => setFundId(e.target.value)}
+                className="min-h-[46px]"
+              >
+                <option value="">Not from a fund</option>
+                {funds.map((f) => (
+                  <option key={f.id} value={f.id}>
+                    {f.name}
+                  </option>
+                ))}
+              </Select>
+            )}
+          </Field>
+        )}
 
         {isIncome && (
           <Field label="Patient name" kicker>

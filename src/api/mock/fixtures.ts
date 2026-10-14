@@ -2,7 +2,7 @@
  * Seed data ported from the design prototype (design/clinic-os.js). Amounts in paise.
  * Mock date context: Wed 14 Oct 2026.
  */
-import type { CategorySpend, Fund, Person, RoleKey } from '@/domain/types';
+import type { FundRule, Person, RoleKey } from '@/domain/types';
 
 export const MOCK_TODAY = '2026-10-14';
 export const oct = (d: number) => `2026-10-${String(d).padStart(2, '0')}`;
@@ -159,23 +159,6 @@ export const SEED_ENTRIES: Seed[] = [
   [1, 'out', 'Salaries', 'Staff salary', null, 'Bank transfer', 21000, 'Clinic', 'Sameer'],
 ];
 
-export const CATEGORY_SPEND: CategorySpend[] = [
-  ['Rent', 60000, 62000, 60000],
-  ['Salaries', 38000, 40000, 38000],
-  ['Consumables', 21400, 20000, 14650],
-  ['Equipment', 12500, 25000, 0],
-  ['Utilities', 6850, 9000, 7420],
-  ['Travel (home visits)', 4900, 6000, 3800],
-  ['Marketing', 3200, 5000, 5000],
-  ['Maintenance', 2100, 4000, 900],
-  ['Miscellaneous', 1600, 3000, 2130],
-].map(([name, spent, budget, last]) => ({
-  name: name as string,
-  spentPaise: r(spent as number),
-  budgetPaise: r(budget as number),
-  lastMonthPaise: r(last as number),
-}));
-
 /** Recurring items: key, name, category, day of month, ₹ expected, description of the October entry that logged it. */
 export const RECURRING_SEED: Array<[string, string, string, number, number, string | null]> = [
   ['watch', 'Watchman salary', 'Salaries', 1, 9000, 'Watchman salary'],
@@ -187,26 +170,44 @@ export const RECURRING_SEED: Array<[string, string, string, number, number, stri
   ['waste', 'Biomedical waste pickup', 'Maintenance', 20, 700, null],
 ];
 
-export const FUNDS: Fund[] = [
+/** Monthly expense budgets in ₹ (design prototype). */
+export const BUDGET_SEED: Array<[string, number]> = [
+  ['Rent', 62000],
+  ['Salaries', 40000],
+  ['Consumables', 20000],
+  ['Equipment', 25000],
+  ['Utilities', 9000],
+  ['Travel (home visits)', 6000],
+  ['Marketing', 5000],
+  ['Maintenance', 4000],
+  ['Miscellaneous', 3000],
+];
+
+/** Funds (design prototype). The TENS unit expense is drawn from the equipment fund. */
+export const FUND_SEED: Array<{
+  id: string;
+  name: string;
+  rule: FundRule;
+  openingRupees: number;
+  topUpRupees?: number;
+}> = [
   {
+    id: 'fund-equipment',
     name: 'Equipment fund',
-    rule: '10% of monthly net',
-    balancePaise: r(142300),
-    allocatedPaise: r(17860),
-    drawnPaise: r(12500),
+    rule: { type: 'percent', bps: 1000, base: 'net' },
+    openingRupees: 136940,
   },
   {
+    id: 'fund-emergency',
     name: 'Emergency reserve',
-    rule: '₹10,000 fixed each month',
-    balancePaise: r(85000),
-    allocatedPaise: r(10000),
-    drawnPaise: 0,
+    rule: { type: 'fixed', amountPaise: r(10000) },
+    openingRupees: 75000,
   },
   {
+    id: 'fund-expansion',
     name: 'Clinic expansion',
-    rule: 'Manual top-ups',
-    balancePaise: r(240000),
-    allocatedPaise: 0,
-    drawnPaise: 0,
+    rule: { type: 'manual' },
+    openingRupees: 0,
+    topUpRupees: 240000,
   },
 ];

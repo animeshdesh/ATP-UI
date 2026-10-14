@@ -3,6 +3,13 @@
  * mock ledger (ledger.ts). Mirrors backend docs/SETTLEMENT.md (D-028) and docs/DASHBOARD.md.
  */
 import type {
+  BudgetLine,
+  Budgets,
+  CreateFund,
+  Fund,
+  FundTopUp,
+  SetBudgets,
+  UpdateFund,
   DashboardData,
   DashboardQuery,
   Partner,
@@ -49,6 +56,10 @@ function requireView() {
     mockScope('finance.settlement.manage') === 'none' &&
     mockScope('finance.report.view') === 'none'
   )
+    throw new ApiError(403, 'Not allowed', 'forbidden');
+}
+function requireBudgetManage() {
+  if (mockScope('finance.budget.manage') === 'none')
     throw new ApiError(403, 'Not allowed', 'forbidden');
 }
 function requireManage() {
@@ -343,6 +354,7 @@ export const mockFinance = {
           type,
           amountPaise: amt(cur, categoryId),
           previousPaise: amt(prev, categoryId),
+          budgetPaise: type === 'expense' ? (ledgerDb().budgets.get(categoryId) ?? null) : null,
         }))
         .sort((a, b) => b.amountPaise - a.amountPaise);
     };
@@ -365,5 +377,168 @@ export const mockFinance = {
           .reduce((a, t) => a + t.amountPaise, 0),
       })),
     } as DashboardData);
+  },
+
+  // ── L6 budgets & funds ────────────────────────────────────
+  async getBudgets(month = MOCK_TODAY.slice(0, 7)): Promise<Budgets> {
+    if (
+      mockScope('finance.budget.manage') === 'none' &&
+      mockScope('finance.report.view') === 'none'
+    )
+      throw new ApiError(403, 'Not allowed', 'forbidden');
+    const L = ledgerDb();
+    const prev = addMonths(`${month}-01`, -1).slice(0, 7);
+    const spent = (m: string, id: string) =>
+      L.transactions
+        .filter(
+          (t) =>
+            !t.deleted && t.type === 'expense' && t.categoryId === id && t.entryDate.startsWith(m),
+        )
+        .reduce((a, t) => a + t.amountPaise, 0);
+    const categories: BudgetLine[] = L.categories
+      .filter((c) => c.type === 'expense' && !c.archived)
+      .sort((a, b) => a.sortOrder - b.sortOrder)
+      .map((c) => {
+        const budget = L.budgets.get(c.id) ?? null;
+        const s = spent(month, c.id);
+        const usedBps = budget ? Math.round((s * 10000) / budget) : null;
+        return {
+          categoryId: c.id,
+          name: c.name,
+          budgetPaise: budget,
+          spentPaise: s,
+          lastMonthPaise: spent(prev, c.id),
+          usedBps,
+          status:
+            usedBps === null
+              ? 'none'
+              : usedBps >= 10000
+                ? 'over'
+                : usedBps >= 8000
+                  ? 'warning'
+                  : 'ok',
+        };
+      });
+    return latency({
+      month,
+      categories,
+      totals: {
+        budgetPaise: categories.reduce((a, c) => a + (c.budgetPaise ?? 0), 0),
+        spentPaise: categories.reduce((a, c) => a + c.spentPaise, 0),
+      },
+    });
+  },
+  async setBudgets(v: SetBudgets): Promise<Budgets> {
+    requireBudgetManage();
+    const L = ledgerDb();
+    for (const b of v.budgets) {
+      const c = L.categories.find((x) => x.id === b.categoryId);
+      if (!c || c.type !== 'expense')
+        throw new ApiError(400, 'Budgets are for expense categories only.', 'bad_request');
+      if (b.amountPaise === null) L.budgets.delete(b.categoryId);
+      else L.budgets.set(b.categoryId, b.amountPaise);
+    }
+    return mockFinance.getBudgets(v.month);
+  },
+  async listFunds(month = MOCK_TODAY.slice(0, 7), includeArchived = false): Promise<Fund[]> {
+    const full =
+      mockScope('finance.budget.manage') !== 'none' || mockScope('finance.report.view') !== 'none';
+    if (!full && mockScope('finance.entry.create') === 'none')
+      throw new ApiError(403, 'Not allowed', 'forbidden');
+    const L = ledgerDb();
+    const inMonth = (t: StoredTxn) => !t.deleted && t.entryDate.startsWith(month);
+    const income = L.transactions
+      .filter((t) => inMonth(t) && t.type === 'income')
+      .reduce((a, t) => a + t.amountPaise, 0);
+    const expense = L.transactions
+      .filter((t) => inMonth(t) && t.type === 'expense')
+      .reduce((a, t) => a + t.amountPaise, 0);
+    return latency(
+      L.funds
+        .filter((f) => includeArchived || !f.archived)
+        .map<Fund>((f) => {
+          const rule = f.rule;
+          const allocated =
+            rule.type === 'fixed'
+              ? rule.amountPaise
+              : rule.type === 'percent'
+                ? Math.floor(
+                    ((rule.base === 'net' ? Math.max(0, income - expense) : income) * rule.bps) /
+                      10000,
+                  )
+                : 0;
+          const toppedUp = L.topups
+            .filter((x) => x.fundId === f.id && x.entryDate.startsWith(month))
+            .reduce((a, x) => a + x.amountPaise, 0);
+          const drawn = L.transactions
+            .filter((t) => inMonth(t) && t.fund?.id === f.id)
+            .reduce((a, t) => a + t.amountPaise, 0);
+          const amounts = {
+            openingBalancePaise: f.openingBalancePaise,
+            allocatedPaise: allocated,
+            toppedUpPaise: toppedUp,
+            drawnPaise: drawn,
+            allocatedToDatePaise: allocated,
+            toppedUpToDatePaise: toppedUp,
+            drawnToDatePaise: drawn,
+            balancePaise: f.openingBalancePaise + allocated + toppedUp - drawn,
+          };
+          const zero = Object.fromEntries(
+            Object.keys(amounts).map((k) => [k, 0]),
+          ) as typeof amounts;
+          return {
+            id: f.id,
+            name: f.name,
+            startMonth: f.startMonth,
+            archived: f.archived,
+            rule: full ? rule : null,
+            ruleEffectiveMonth: full ? f.ruleEffectiveMonth : null,
+            ...(full ? amounts : zero),
+          } as Fund;
+        }),
+    );
+  },
+  async createFund(v: CreateFund): Promise<Fund> {
+    requireBudgetManage();
+    const L = ledgerDb();
+    if (L.funds.some((f) => f.name.toLowerCase() === v.name.toLowerCase()))
+      throw new ApiError(409, `${v.name} already exists`, 'conflict');
+    const id = `fund-${++fin.seq}`;
+    L.funds = [
+      ...L.funds,
+      {
+        id,
+        name: v.name,
+        rule: v.rule,
+        startMonth: v.startMonth ?? MOCK_TODAY.slice(0, 7),
+        ruleEffectiveMonth: v.startMonth ?? MOCK_TODAY.slice(0, 7),
+        openingBalancePaise: v.openingBalancePaise ?? 0,
+        archived: false,
+      },
+    ];
+    return (await mockFinance.listFunds(undefined, true)).find((f) => f.id === id)!;
+  },
+  async updateFund(id: string, v: UpdateFund): Promise<Fund> {
+    requireBudgetManage();
+    const f = ledgerDb().funds.find((x) => x.id === id);
+    if (!f) throw new ApiError(404, 'Fund not found', 'not_found');
+    if (v.name) f.name = v.name;
+    if (v.rule) {
+      f.rule = v.rule;
+      f.ruleEffectiveMonth = v.ruleEffectiveMonth ?? MOCK_TODAY.slice(0, 7);
+    }
+    if (v.openingBalancePaise !== undefined) f.openingBalancePaise = v.openingBalancePaise;
+    if (v.archived !== undefined) f.archived = v.archived;
+    return (await mockFinance.listFunds(undefined, true)).find((x) => x.id === id)!;
+  },
+  async topUpFund(id: string, v: FundTopUp): Promise<Fund> {
+    requireBudgetManage();
+    const L = ledgerDb();
+    if (!L.funds.some((f) => f.id === id)) throw new ApiError(404, 'Fund not found', 'not_found');
+    L.topups = [
+      ...L.topups,
+      { fundId: id, amountPaise: v.amountPaise, entryDate: v.entryDate ?? MOCK_TODAY },
+    ];
+    return (await mockFinance.listFunds(undefined, true)).find((x) => x.id === id)!;
   },
 };

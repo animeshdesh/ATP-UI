@@ -1,21 +1,9 @@
 import { Check, Lock, TriangleAlert } from 'lucide-react';
 import { useNavigate } from 'react-router';
-import {
-  useBudgets,
-  useDashboard,
-  useRecurring,
-  useSettlement,
-  useTransactionPage,
-} from '@/api/queries';
+import { useDashboard, useRecurring, useSettlement, useTransactionPage } from '@/api/queries';
 import { useSession } from '@/app/session';
 import { Button, Loading, SectionHeader, Stat, StatGrid, Tag } from '@/components/ui';
-import type {
-  AttentionItem,
-  Budgets,
-  DashboardData,
-  PartyRef,
-  RecurringItem,
-} from '@/domain/types';
+import type { AttentionItem, DashboardData, PartyRef, RecurringItem } from '@/domain/types';
 import { useEditEntry, useQuickAdd } from '@/features/entry/QuickAddContext';
 import { logPrefill, recurringStatus } from '@/features/recurring/status';
 import { EntryRow } from '@/features/transactions/EntryRow';
@@ -130,13 +118,11 @@ function OwnTiles() {
   );
 }
 
-/** Budget is L6 (still mock): join it to this period's L5 spend by category name. */
-function budgetRows(data: DashboardData | undefined, budgets: Budgets | undefined) {
-  return (budgets?.categories ?? []).map((b) => ({
-    name: b.name,
-    budgetPaise: b.budgetPaise,
-    spentPaise: data?.expenseByCategory.find((c) => c.name === b.name)?.amountPaise ?? 0,
-  }));
+/** Expense categories with a monthly budget (L6 fills `budgetPaise` on the dashboard). */
+function budgetRows(data: DashboardData | undefined) {
+  return (data?.expenseByCategory ?? []).flatMap((c) =>
+    c.budgetPaise ? [{ name: c.name, budgetPaise: c.budgetPaise, spentPaise: c.amountPaise }] : [],
+  );
 }
 
 function attentionItems(
@@ -171,11 +157,10 @@ function ClinicSections() {
   const openAdd = useQuickAdd();
   const { can } = useSession();
   const { data } = useDashboardFor(true);
-  const budgets = useBudgets().data;
   const canSeeSettlement = can('finance.settlement.manage') || can('finance.report.view', 'all');
   const settlement = useSettlement(canSeeSettlement).data;
   const recurring = useRecurring().data ?? [];
-  const attention = attentionItems(recurring, budgetRows(data, budgets));
+  const attention = attentionItems(recurring, budgetRows(data));
   const breakdown = data?.expenseByCategory ?? [];
   const maxSpent = Math.max(...breakdown.map((b) => b.amountPaise), 1);
   const partyName = (p: PartyRef) => (p.kind === 'clinic' ? 'Clinic account' : p.name);

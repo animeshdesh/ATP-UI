@@ -49,6 +49,7 @@ export function EntryRow({ txn, detailed, onOpen, status }: Props) {
           <div className="mt-0.5 flex flex-wrap gap-x-2.5 gap-y-1 text-xs text-neutral-600">
             <span>Recorded by {txn.recordedBy.name}</span>
             {txn.patientName && <span>Patient: {txn.patientName}</span>}
+            {txn.fund && <span>From {txn.fund.name}</span>}
             {txn.hasReceipt && (
               <span className="flex items-center gap-[3px] text-accent-700">
                 <Paperclip aria-hidden size={12} />

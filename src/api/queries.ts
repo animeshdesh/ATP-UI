@@ -7,7 +7,11 @@ import {
   type QueryClient,
 } from '@tanstack/react-query';
 import type {
+  CreateFund,
   CreateRecurringItem,
+  FundTopUp,
+  SetBudgets,
+  UpdateFund,
   DashboardQuery,
   EntryType,
   NewTransaction,
@@ -32,7 +36,8 @@ export const qk = {
   settlementHistory: ['settlement', 'history'] as const,
   shares: ['settlement', 'shares'] as const,
   partners: ['settlement', 'partners'] as const,
-  budgets: ['budgets'] as const,
+  budgets: (month = '') => ['budgets', month] as const,
+  funds: (month = '') => ['funds', month] as const,
   recurring: (month = '') => ['recurring', month] as const,
   report: (month: string) => ['report', month] as const,
   categories: (includeArchived = false) => ['categories', includeArchived] as const,
@@ -102,7 +107,15 @@ export const useSettlementHistory = () =>
   useQuery({ queryKey: qk.settlementHistory, queryFn: api.listSettlements });
 export const useShares = () => useQuery({ queryKey: qk.shares, queryFn: api.getShares });
 export const usePartners = () => useQuery({ queryKey: qk.partners, queryFn: api.listPartners });
-export const useBudgets = () => useQuery({ queryKey: qk.budgets, queryFn: api.getBudgets });
+export const useBudgets = (month?: string) =>
+  useQuery({ queryKey: qk.budgets(month), queryFn: () => api.getBudgets(month) });
+/** Funds for the month; entry-create-only users get names (for the fund picker). */
+export const useFunds = (month?: string) =>
+  useQuery({
+    queryKey: qk.funds(month),
+    queryFn: () => api.listFunds(month),
+    networkMode: 'offlineFirst',
+  });
 export const useRecurring = (month?: string) =>
   useQuery({ queryKey: qk.recurring(month), queryFn: () => api.listRecurring(month) });
 export const useReportPreview = (month: string) =>
@@ -149,6 +162,8 @@ export const useAuditLog = (table: string) =>
 
 const LEDGER_KEYS = [
   'transactions',
+  'budgets',
+  'funds',
   'dashboard',
   'recurring',
   'categories',
@@ -260,6 +275,26 @@ export function useUndoSettlement() {
 export function useSetShares() {
   const invalidate = useLedgerInvalidation();
   return useMutation({ mutationFn: api.setShares, onSuccess: invalidate });
+}
+
+export function useBudgetMutations() {
+  const qc = useQueryClient();
+  const done = () =>
+    Promise.all(
+      ['budgets', 'funds', 'dashboard'].map((k) => qc.invalidateQueries({ queryKey: [k] })),
+    );
+  return {
+    setBudgets: useMutation({ mutationFn: (v: SetBudgets) => api.setBudgets(v), onSuccess: done }),
+    createFund: useMutation({ mutationFn: (v: CreateFund) => api.createFund(v), onSuccess: done }),
+    updateFund: useMutation({
+      mutationFn: (v: { id: string; patch: UpdateFund }) => api.updateFund(v.id, v.patch),
+      onSuccess: done,
+    }),
+    topUp: useMutation({
+      mutationFn: (v: { id: string; topUp: FundTopUp }) => api.topUpFund(v.id, v.topUp),
+      onSuccess: done,
+    }),
+  };
 }
 
 export function useAddPartner() {

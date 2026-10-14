@@ -99,7 +99,7 @@ export const routes: RouteObject[] = [
         path: 'settlement',
         ...page('settlement', <SettlementPage />, NAV.settlement.permission),
       },
-      { path: 'budgets', ...page('budgets', <BudgetsPage />, 'finance.budget.manage') },
+      { path: 'budgets', ...page('budgets', <BudgetsPage />, NAV.budgets.permission) },
       { path: 'recurring', ...page('recurring', <RecurringPage />, 'finance.budget.manage') },
       { path: 'reports', ...page('reports', <ReportsPage />, 'finance.report.view') },
       {

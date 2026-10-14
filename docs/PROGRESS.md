@@ -12,8 +12,8 @@ Screens are built ahead of the contract on the in-memory mock (D-012); an F3 lev
 | F3a   | Auth + app shell + role-aware nav                                        | backend L2 contract | done                                |
 | F3b   | Quick-add entry, ledger list, edit/delete, receipt upload, offline queue | backend L3 contract | done                                |
 | F3c   | Settlement view + mark settled                                           | backend L4          | done                                |
-| F3d   | Dashboard                                                                | backend L5          | done (budget bars wait for L6)      |
-| F3e   | Budgets & funds                                                          | backend L6          | in-progress (UI done, mock data)    |
+| F3d   | Dashboard                                                                | backend L5          | done                                |
+| F3e   | Budgets & funds                                                          | backend L6          | done                                |
 | F3f   | Reports: PDF/CSV/XLSX download, share sheet                              | backend L7          | in-progress (UI done, mock exports) |
 | F4    | Settings: categories, partners, roles, members, invites                  | backend L2–L3       | in-progress (UI done, mock data)    |
 
@@ -60,7 +60,8 @@ Screens are built ahead of the contract on the in-memory mock (D-012); an F3 lev
 - [x] Ledger list: server filters (type, category, mode, person, clinic account), totals for all matches, cursor paging — 2026-10-14
 - [x] Offline (F-08): outbox replays with idempotency key + receipt; entry-form data offline-first and prefetched; session cached so the app reopens offline — 2026-10-14
 - [x] Categories (add, rename, reorder, archive/restore), recurring items (list, log, add) — 2026-10-14
-- [ ] Recurring item edit/archive UI; fund picker on expenses (L6 `fundId`)
+- [x] Fund picker on expenses (`fundId`), fund shown on entries — 2026-10-14
+- [ ] Recurring item edit/archive UI
 
 ## F3c — Settlement · `done`
 
@@ -72,7 +73,14 @@ Screens are built ahead of the contract on the in-memory mock (D-012); an F3 lev
 
 - [x] Tiles from `/v1/dashboard` with period switch (today / week / month vs the span before) for clinic and own scope — 2026-10-14
 - [x] Expense by category (L5), partner balance from `/v1/settlement`, recurring and attention from L3 — 2026-10-14
-- [ ] Budget alerts and bars from L6 (`expenseByCategory[].budgetPaise`); currently the L6 mock
+- [x] Budget alerts from L6 (`expenseByCategory[].budgetPaise`) — 2026-10-14
+
+## F3e — Budgets & funds · `done`
+
+- [x] `/v1/budgets`: per-category status (none / ok / warning / over), 80% marker, totals; Edit budgets (PUT, from this month on) — 2026-10-14
+- [x] `/v1/funds`: rule in words, month figures, balance; New fund (percent / fixed / manual, opening balance), Top up, Archive — 2026-10-14
+- [x] CA can view budgets (`finance.report.view`); edits need `finance.budget.manage` — 2026-10-14
+- [ ] Fund rule edit (`PATCH` rule + effective month), month picker for past months
 
 ## F3f — Reports · `in-progress`
 
@@ -96,3 +104,4 @@ Screens are built ahead of the contract on the in-memory mock (D-012); an F3 lev
 | 2026-10-14 | Ports → 5553 (strict) / API 4553. Pushed to `animeshdesh/ATP-UI`. F-08 offline outbox (21 tests). Fixed this tracker, which the F0–F2 commit had left unticked.                                                                                  | F-06 entry edit/delete, then F-23 share sheet.                               |
 | 2026-10-14 | F3a: real auth + L2 API (roles, members, invites, audit). Fixed dialog focus-jump bug and invite-before-roles-load bug. Live-verified flows in Chrome.                                                                                           | F3b: move ledger, quick-add, categories, recurring to L3 (`docs/LEDGER.md`). |
 | 2026-10-14 | F3b ledger, F3c settlement, F3d dashboard on L3–L5. Fixed: offline quick-add with no cached categories, sign-in race that left screens loading, bounce to sign-in when API unreachable. Live-verified on local backend (prod build for offline). | L6 budgets & funds (budget bars, fund picker), L7 reports.                   |
+| 2026-10-14 | F3e budgets & funds on L6 (+ fund picker, dashboard budget alerts). 51 tests; live-verified.                                                                                                                                                     | F3f reports on L7 (PDF/CSV/XLSX, share sheet).                               |

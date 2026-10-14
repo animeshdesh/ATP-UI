@@ -1,6 +1,12 @@
 /* Real L2 (auth & RBAC): Supabase Auth for sign-in, the backend API for everything else. */
 import type { AuthError } from '@supabase/supabase-js';
 import type {
+  Budgets,
+  CreateFund,
+  Fund,
+  FundTopUp,
+  SetBudgets,
+  UpdateFund,
   DashboardData,
   DashboardQuery,
   Partner,
@@ -262,4 +268,25 @@ export const realL2 = {
   // ── L5 dashboard (docs/DASHBOARD.md) ───────────────────────
   getDashboard: (q: DashboardQuery = {}): Promise<DashboardData> =>
     unwrap(http.GET('/v1/dashboard', { params: { query: q } })),
+
+  // ── L6 budgets & funds (docs/BUDGETS.md) ───────────────────
+  getBudgets: (month?: string): Promise<Budgets> =>
+    unwrap(http.GET('/v1/budgets', { params: { query: month ? { month } : {} } })),
+  setBudgets: (v: SetBudgets): Promise<Budgets> => unwrap(http.PUT('/v1/budgets', { body: v })),
+  listFunds: (month?: string, includeArchived = false): Promise<Fund[]> =>
+    unwrap(
+      http.GET('/v1/funds', {
+        params: {
+          query: {
+            ...(month ? { month } : {}),
+            ...(includeArchived ? { includeArchived: 'true' as const } : {}),
+          },
+        },
+      }),
+    ),
+  createFund: (v: CreateFund): Promise<Fund> => unwrap(http.POST('/v1/funds', { body: v })),
+  updateFund: (id: string, v: UpdateFund): Promise<Fund> =>
+    unwrap(http.PATCH('/v1/funds/{id}', { params: { path: { id } }, body: v })),
+  topUpFund: (id: string, v: FundTopUp): Promise<Fund> =>
+    unwrap(http.POST('/v1/funds/{id}/topups', { params: { path: { id } }, body: v })),
 };

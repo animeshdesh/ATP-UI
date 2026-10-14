@@ -28,6 +28,8 @@ import {
   MOCK_TODAY,
   PARTNER_KEYS,
   PEOPLE,
+  BUDGET_SEED,
+  FUND_SEED,
   RECURRING_SEED,
   SEED_ENTRIES,
   oct,
@@ -120,16 +122,52 @@ function seedTransactions(cats: Category[]): StoredTxn[] {
   );
 }
 
+/** L6 state lives here too: entries draw from funds, and budgets key off categories. */
+function seedL6(categories: Category[], transactions: StoredTxn[]) {
+  const budgets = new Map<string, number>(
+    BUDGET_SEED.map(([name, rupees]) => [categories.find((c) => c.name === name)!.id, r(rupees)]),
+  );
+  const funds = FUND_SEED.map((f) => ({
+    id: f.id,
+    name: f.name,
+    rule: f.rule,
+    ruleEffectiveMonth: MOCK_TODAY.slice(0, 7),
+    startMonth: MOCK_TODAY.slice(0, 7),
+    openingBalancePaise: r(f.openingRupees),
+    archived: false,
+  }));
+  const topups = FUND_SEED.filter((f) => f.topUpRupees).map((f) => ({
+    fundId: f.id,
+    amountPaise: r(f.topUpRupees!),
+    entryDate: oct(2),
+  }));
+  const tens = transactions.find((t) => t.description === 'TENS unit');
+  if (tens) tens.fund = { id: 'fund-equipment', name: 'Equipment fund' };
+  return { budgets, funds, topups };
+}
+
 function fresh() {
   const categories = seedCategories();
+  const transactions = seedTransactions(categories);
   return {
     categories,
     recurring: seedRecurring(categories),
-    transactions: seedTransactions(categories),
+    transactions,
+    ...seedL6(categories, transactions),
     lastMode: {} as Record<string, PaymentMode>,
     idempotency: new Map<string, string>(),
     seq: 100,
   };
+}
+
+/** `fundId` on an entry: expenses only, active funds (docs/BUDGETS.md). */
+function fundFor(fundId: string | null | undefined, type: EntryType) {
+  if (!fundId) return null;
+  if (type !== 'expense')
+    throw new ApiError(400, 'Only expenses can be drawn from a fund.', 'bad_request');
+  const f = db.funds.find((x) => x.id === fundId && !x.archived);
+  if (!f) throw new ApiError(400, 'Fund not found or archived.', 'bad_request');
+  return { id: f.id, name: f.name };
 }
 
 let db = fresh();
@@ -298,9 +336,9 @@ export const mockLedger = {
       paymentMode: input.paymentMode ?? db.lastMode[me()] ?? 'cash',
       ...partyFor(input.partyMemberId),
       recurringItemId: input.recurringItemId ?? null,
+      fund: fundFor(input.fundId, input.type),
       hasReceipt: false,
       settled: false,
-      fund: null,
       recordedBy: { userId: me(), name: PEOPLE[me()]!.fullName },
       recordedByKey: me(),
       createdAt: now,
@@ -346,6 +384,8 @@ export const mockLedger = {
     if (patch.paymentMode) t.paymentMode = patch.paymentMode;
     if (patch.partyMemberId !== undefined) Object.assign(t, partyFor(patch.partyMemberId));
     if (patch.recurringItemId !== undefined) t.recurringItemId = patch.recurringItemId;
+    if (patch.fundId !== undefined) t.fund = fundFor(patch.fundId, t.type);
+    else if (t.type !== 'expense') t.fund = null;
     t.updatedAt = new Date().toISOString();
     recordAudit({
       action: 'update',

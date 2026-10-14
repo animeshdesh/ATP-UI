@@ -1,10 +1,8 @@
 /*
- * In-memory stand-in for backend levels not in the contract yet: L6 budgets, L7 reports (D-012).
- * L2: l2.ts · L3: ledger.ts · L4/L5: finance.ts.
+ * In-memory stand-in for backend levels not in the contract yet: L7 reports (D-012).
+ * L2: l2.ts · L3: ledger.ts · L4–L6: finance.ts.
  */
-import { monthYear } from '@/lib/dates';
-import type { Budgets, ReportPreview } from '@/domain/types';
-import { CATEGORY_SPEND, FUNDS, MOCK_TODAY } from './fixtures';
+import type { ReportPreview } from '@/domain/types';
 import { resetMockFinance } from './finance';
 import { resetMockL2 } from './l2';
 import { resetMockLedger } from './ledger';
@@ -20,11 +18,6 @@ const latency = <T>(value: T, ms = 120): Promise<T> =>
   new Promise((resolve) => setTimeout(() => resolve(structuredClone(value)), ms));
 
 export const mockServer = {
-  // ── Budgets (L6) ─────────────────────────────────────────
-  async getBudgets(): Promise<Budgets> {
-    return latency({ month: monthYear(MOCK_TODAY), categories: CATEGORY_SPEND, funds: FUNDS });
-  },
-
   // ── Reports (L7) ─────────────────────────────────────────
   async getReportPreview(month: string): Promise<ReportPreview> {
     return latency({

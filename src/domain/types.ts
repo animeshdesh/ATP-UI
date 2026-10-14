@@ -87,6 +87,16 @@ export type PartnerShares = S['PartnerShares'];
 export type SetPartnerShares = S['SetPartnerShares'];
 export type PeriodTotals = S['PeriodTotals'];
 export type DashboardData = S['Dashboard'];
+// ── L6 (budgets & funds): contract types ─────────────────────────
+export type Budgets = S['Budgets'];
+export type BudgetLine = S['BudgetLine'];
+export type SetBudgets = S['SetBudgets'];
+export type Fund = S['Fund'];
+export type FundRule = S['FundRule'];
+export type CreateFund = S['CreateFund'];
+export type UpdateFund = S['UpdateFund'];
+export type FundTopUp = S['FundTopUp'];
+
 export type DashboardQuery = NonNullable<paths['/v1/dashboard']['get']['parameters']['query']>;
 /** Query for `GET /v1/transactions`. */
 export type TransactionQuery = NonNullable<paths['/v1/transactions']['get']['parameters']['query']>;
@@ -100,27 +110,6 @@ export interface AttentionItem {
   action:
     | { label: string; kind: 'log-recurring'; item: RecurringItem }
     | { label: string; kind: 'budgets' };
-}
-
-export interface CategorySpend {
-  name: string;
-  spentPaise: number;
-  budgetPaise: number;
-  lastMonthPaise: number;
-}
-
-export interface Fund {
-  name: string;
-  rule: string;
-  balancePaise: number;
-  allocatedPaise: number;
-  drawnPaise: number;
-}
-
-export interface Budgets {
-  month: string;
-  categories: CategorySpend[];
-  funds: Fund[];
 }
 
 // ── L2 (auth & RBAC): contract types ─────────────────────────────
