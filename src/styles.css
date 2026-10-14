@@ -1,0 +1,135 @@
+@import 'tailwindcss';
+
+/*
+ * ATP Clinic OS design tokens, from claude.ai/design project
+ * b36a94e7 (design/assets/modernist.css + the ATP overrides in design/ATP Clinic OS.dc.html).
+ * The palette is closed: only these colors exist as utilities.
+ */
+@theme {
+  --color-*: initial;
+  --color-white: #ffffff;
+  --color-ink: #201e1d;
+  --color-canvas: #f1f1fe;
+  --color-backdrop: #e4e4f2;
+  --color-surface: #ffffff;
+
+  --color-accent: #06aeef;
+  --color-accent-100: #e3f5fd;
+  --color-accent-200: #c6ebfb;
+  --color-accent-300: #9bdcf8;
+  --color-accent-400: #4fc6f3;
+  --color-accent-500: #06aeef;
+  --color-accent-600: #0093cc;
+  --color-accent-700: #0072a0;
+  --color-accent-800: #06587c;
+  --color-accent-900: #0b3a52;
+
+  --color-neutral-100: #f8f4f4;
+  --color-neutral-200: #eae7e7;
+  --color-neutral-300: #d7d3d3;
+  --color-neutral-400: #bab6b6;
+  --color-neutral-500: #9b9797;
+  --color-neutral-600: #7d7979;
+  --color-neutral-700: #605d5d;
+  --color-neutral-800: #444141;
+  --color-neutral-900: #2d2b2b;
+
+  /* Status: over budget / overdue / deleted, and near limit / edited */
+  --color-danger: #e5391b;
+  --color-danger-bg: #ffe4de;
+  --color-danger-fg: #9a1a00;
+  --color-warn: #e8a317;
+  --color-warn-bg: #fff1d1;
+  --color-warn-fg: #7a4f00;
+
+  /* Hairline row separators and heavier section dividers */
+  --color-rule: color-mix(in srgb, #201e1d 14%, transparent);
+  --color-divider: color-mix(in srgb, #201e1d 40%, transparent);
+  --color-scrim: color-mix(in srgb, #201e1d 45%, transparent);
+
+  --font-sans: 'Archivo', system-ui, sans-serif;
+  --font-mono: ui-monospace, Menlo, monospace;
+
+  --shadow-md: 0 3px 10px color-mix(in srgb, #2d2b2b 16%, transparent);
+  --shadow-lg: 0 12px 32px color-mix(in srgb, #2d2b2b 22%, transparent);
+
+  --animate-sheet-up: sheet-up 180ms ease-out;
+  --animate-sheet-left: sheet-left 180ms ease-out;
+  --animate-fade-in: fade-in 150ms ease-out;
+
+  @keyframes sheet-up {
+    from {
+      transform: translateY(24px);
+      opacity: 0;
+    }
+  }
+  @keyframes sheet-left {
+    from {
+      transform: translateX(32px);
+      opacity: 0;
+    }
+  }
+  @keyframes fade-in {
+    from {
+      opacity: 0;
+    }
+  }
+}
+
+@layer base {
+  html,
+  body,
+  #root {
+    height: 100%;
+  }
+  body {
+    margin: 0;
+    background: var(--color-canvas);
+    color: var(--color-ink);
+    font-family: var(--font-sans);
+    font-size: 15px;
+    line-height: 1.45;
+    -webkit-tap-highlight-color: transparent;
+  }
+  h1,
+  h2,
+  h3,
+  h4 {
+    font-weight: 800;
+    letter-spacing: -0.01em;
+    line-height: 1.12;
+    margin: 0;
+  }
+  a {
+    color: var(--color-accent-700);
+  }
+  a:hover {
+    color: var(--color-accent-800);
+  }
+  button {
+    cursor: pointer;
+  }
+  button:disabled {
+    cursor: not-allowed;
+  }
+  :focus-visible {
+    outline: 2px solid var(--color-accent-700);
+    outline-offset: 2px;
+  }
+  ::selection {
+    background: color-mix(in srgb, var(--color-accent) 30%, transparent);
+  }
+}
+
+@utility tabular {
+  font-variant-numeric: tabular-nums;
+}
+
+/* 11px uppercase label used above stats, fields and groups */
+@utility kicker {
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  font-weight: 600;
+  color: var(--color-neutral-700);
+}

@@ -1,0 +1,377 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700;800&display=swap">
+<link rel="stylesheet" href="assets/modernist.css">
+<link rel="stylesheet" href="https://unpkg.com/lucide-static@0.460.0/font/lucide.css">
+<script src="clinic-os.js"></script>
+<style>:root{--color-bg:#F1F1FE;--color-surface:#FFFFFF;--color-accent:#06AEEF;--color-accent-100:#E3F5FD;--color-accent-200:#C6EBFB;--color-accent-300:#9BDCF8;--color-accent-400:#4FC6F3;--color-accent-500:#06AEEF;--color-accent-600:#0093CC;--color-accent-700:#0072A0;--color-accent-800:#06587C;--color-accent-900:#0B3A52;--rule:color-mix(in srgb,#201e1d 14%,transparent)}body{margin:0;background:#E4E4F2;font-family:"Archivo",system-ui,sans-serif}a{color:#0072A0}a:hover{color:#06587C}input,select,button,textarea{font-family:inherit}button{cursor:pointer}h1,h2,h3,h4{font-family:"Archivo",system-ui,sans-serif;font-weight:800;letter-spacing:-.01em}</style>
+</helmet>
+<div style="min-height:100vh;display:flex;flex-direction:column;font-family:'Archivo',system-ui,sans-serif;color:#201e1d">
+<sc-if value="{{ showChrome }}" hint-placeholder-val="{{ true }}">
+<div style="display:flex;flex-wrap:wrap;gap:12px 24px;align-items:center;padding:12px 24px;background:#fff;border-bottom:2px solid var(--color-divider)">
+<div style="display:flex;align-items:center;gap:10px;margin-right:auto"><img src="assets/atp-mark.svg" alt="" style="height:26px"><div style="font-weight:800;font-size:15px">ATP Clinic OS</div><div style="font-size:12px;color:var(--color-neutral-700)">V1 Finance · clickable prototype</div></div>
+<div style="display:flex;align-items:center;gap:8px;font-size:12px;color:var(--color-neutral-700)">Device<div style="display:inline-flex;border:2px solid var(--color-text)"><sc-for list="{{ devSeg }}" as="o"><button onClick="{{ o.onClick }}" style="border:0;border-left:{{ o.bl }};background:{{ o.bg }};color:var(--color-text);padding:6px 12px;font-size:13px;font-weight:600;white-space:nowrap">{{ o.label }}</button></sc-for></div></div>
+<div style="display:flex;align-items:center;gap:8px;font-size:12px;color:var(--color-neutral-700)">Role<div style="display:inline-flex;border:2px solid var(--color-text)"><sc-for list="{{ roleSeg }}" as="o"><button onClick="{{ o.onClick }}" style="border:0;border-left:{{ o.bl }};background:{{ o.bg }};color:var(--color-text);padding:6px 12px;font-size:13px;font-weight:600;white-space:nowrap">{{ o.label }}</button></sc-for></div></div>
+<div style="display:flex;align-items:center;gap:8px;font-size:12px;color:var(--color-neutral-700)">Screen<select value="{{ screen }}" onChange="{{ onScreenSel }}" style="border:2px solid var(--color-text);background:#fff;padding:6px 8px;font-size:13px;border-radius:0"><sc-for list="{{ screenOpts }}" as="o"><option value="{{ o.v }}">{{ o.l }}</option></sc-for></select></div>
+<a href="ATP Clinic OS Screens.dc.html" style="font-size:13px;font-weight:600">All screens →</a>
+</div>
+</sc-if>
+<div style="flex:1;display:flex;justify-content:center;align-items:flex-start;padding:{{ stagePad }}">
+<div style="position:relative;flex:none;width:{{ fw }};height:{{ fh }};box-sizing:border-box;background:var(--color-bg);border:{{ fBorder }};border-radius:{{ fRadius }};overflow:hidden;display:flex;flex-direction:column;box-shadow:var(--shadow-lg)">
+<sc-if value="{{ isDesktop }}" hint-placeholder-val="{{ false }}">
+<div style="height:38px;flex:none;display:flex;align-items:center;gap:12px;padding:0 14px;background:#fff;border-bottom:1px solid var(--rule)"><div style="display:flex;gap:6px"><div style="width:10px;height:10px;border-radius:50%;background:var(--color-neutral-300)"></div><div style="width:10px;height:10px;border-radius:50%;background:var(--color-neutral-300)"></div><div style="width:10px;height:10px;border-radius:50%;background:var(--color-neutral-300)"></div></div><div style="flex:1;max-width:420px;display:flex;align-items:center;gap:6px;background:var(--color-bg);padding:4px 10px;font-size:12px;color:var(--color-neutral-700)"><i class="icon-lock" style="font-size:12px"></i>os.atpxrehab.com/{{ screen }}</div></div>
+</sc-if>
+<sc-if value="{{ isMobile }}" hint-placeholder-val="{{ true }}">
+<div style="height:44px;flex:none;display:flex;align-items:center;justify-content:space-between;padding:0 28px;font-size:14px;font-weight:600"><span>9:41</span><span style="display:flex;gap:6px;font-size:15px"><i class="icon-signal"></i><i class="icon-wifi"></i><i class="icon-battery-full"></i></span></div>
+</sc-if>
+<div style="flex:1;display:flex;min-height:0">
+<sc-if value="{{ showSidebar }}" hint-placeholder-val="{{ false }}">
+<div style="width:236px;flex:none;display:flex;flex-direction:column;background:#fff;border-right:2px solid var(--color-divider)">
+<div style="padding:18px 20px 16px;border-bottom:2px solid var(--color-divider);display:flex;flex-direction:column;gap:6px"><img src="assets/atp-logo.svg" alt="ATP Rehab" style="height:54px;align-self:flex-start"><div style="font-size:11px;letter-spacing:.08em;text-transform:uppercase;font-weight:600;color:var(--color-neutral-700)">Clinic OS · Karvenagar</div></div>
+<div style="flex:1;overflow-y:auto;padding:12px 0;display:flex;flex-direction:column">
+<sc-for list="{{ navMain }}" as="n" hint-placeholder-count="6"><button onClick="{{ n.onClick }}" style="display:flex;align-items:center;gap:12px;border:0;border-left:4px solid {{ n.bar }};background:{{ n.bg }};color:{{ n.fg }};padding:10px 16px;font-size:14px;font-weight:{{ n.w }};text-align:left;min-height:42px"><i class="{{ n.icon }}" style="font-size:17px"></i>{{ n.label }}</button></sc-for>
+<sc-if value="{{ hasSettingsNav }}" hint-placeholder-val="{{ true }}">
+<div style="margin:14px 20px 6px;font-size:11px;letter-spacing:.08em;text-transform:uppercase;font-weight:600;color:var(--color-neutral-600)">Settings</div>
+<sc-for list="{{ navSet }}" as="n" hint-placeholder-count="3"><button onClick="{{ n.onClick }}" style="display:flex;align-items:center;gap:12px;border:0;border-left:4px solid {{ n.bar }};background:{{ n.bg }};color:{{ n.fg }};padding:10px 16px;font-size:14px;font-weight:{{ n.w }};text-align:left;min-height:42px"><i class="{{ n.icon }}" style="font-size:17px"></i>{{ n.label }}</button></sc-for>
+</sc-if>
+</div>
+<div style="border-top:2px solid var(--color-divider);padding:14px 16px 6px;display:flex;align-items:center;gap:10px">
+<div style="width:36px;height:36px;flex:none;background:var(--color-accent);display:grid;place-items:center;font-weight:800;font-size:13px">{{ meIni }}</div>
+<div style="flex:1;min-width:0"><div style="font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ meName }}</div><div style="font-size:12px;color:var(--color-neutral-700)">{{ roleLabel }}</div></div>
+<button onClick="{{ signOut }}" title="Sign out" style="border:0;background:transparent;width:36px;height:36px;font-size:17px;color:var(--color-neutral-700)" style-hover="background:var(--color-accent-100)"><i class="icon-log-out"></i></button>
+</div>
+<div style="padding:4px 16px 12px;font-size:11px;color:var(--color-neutral-600)">Built by Avyanta Labs</div>
+</div>
+</sc-if>
+<div style="flex:1;display:flex;flex-direction:column;min-width:0;min-height:0">
+<sc-if value="{{ showTopbar }}" hint-placeholder-val="{{ false }}">
+<div style="flex:none;display:flex;align-items:center;gap:16px;padding:18px 32px;border-bottom:2px solid var(--color-divider)">
+<div style="margin-right:auto"><h2 style="margin:0;font-size:26px">{{ title }}</h2><div style="font-size:13px;color:var(--color-neutral-700)">{{ subtitle }}</div></div>
+<sc-if value="{{ showPeriod }}" hint-placeholder-val="{{ true }}"><div style="display:inline-flex;border:2px solid var(--color-text);background:#fff"><sc-for list="{{ periodSeg }}" as="o"><button onClick="{{ o.onClick }}" style="border:0;border-left:{{ o.bl }};background:{{ o.bg }};color:var(--color-text);padding:8px 14px;font-size:13px;font-weight:600;white-space:nowrap">{{ o.label }}</button></sc-for></div></sc-if>
+<button onClick="{{ openAdd }}" style="display:flex;align-items:center;gap:8px;border:2px solid var(--color-text);background:var(--color-accent);color:var(--color-text);padding:9px 16px;font-size:14px;font-weight:800" style-hover="background:var(--color-accent-400)"><i class="icon-plus" style="font-size:17px"></i>Add entry</button>
+</div>
+</sc-if>
+<sc-if value="{{ showMobileHeader }}" hint-placeholder-val="{{ true }}">
+<div style="flex:none;padding:6px 18px 14px;border-bottom:2px solid var(--color-divider);display:flex;align-items:flex-end;gap:12px">
+<div style="flex:1;min-width:0"><div style="display:flex;align-items:center;gap:8px;margin-bottom:6px"><img src="assets/atp-mark.svg" alt="" style="height:20px"><span style="font-size:11px;letter-spacing:.08em;text-transform:uppercase;font-weight:600;color:var(--color-neutral-700)">{{ subtitle }}</span></div><h2 style="margin:0;font-size:28px">{{ title }}</h2></div>
+<div style="width:40px;height:40px;flex:none;background:var(--color-accent);display:grid;place-items:center;font-weight:800;font-size:13px">{{ meIni }}</div>
+</div>
+</sc-if>
+<div style="flex:1;overflow-y:auto;scrollbar-width:{{ sbw }};padding:{{ cPad }};display:flex;flex-direction:column;gap:{{ gapLg }}">
+
+<sc-if value="{{ on.login }}" hint-placeholder-val="{{ false }}">
+<div style="flex:1;display:flex;margin:{{ authMargin }}">
+<sc-if value="{{ isDesktop }}" hint-placeholder-val="{{ false }}"><div style="flex:1;background:var(--color-accent);display:flex;flex-direction:column;justify-content:space-between;padding:48px"><div style="background:#fff;padding:20px;align-self:flex-start"><img src="assets/atp-logo.svg" alt="ATP Rehab" style="height:120px"></div><div><div style="font-size:44px;font-weight:800;line-height:1.05;max-width:460px">Every rupee in and out of the clinic, in one place.</div><div style="margin-top:14px;font-size:14px">Lane No. 2, Bhagyoday Colony, Karvenagar, Pune</div></div></div></sc-if>
+<div style="flex:1;display:flex;flex-direction:column;justify-content:center;padding:{{ authPad }};max-width:520px;width:100%;box-sizing:border-box">
+<sc-if value="{{ isMobile }}" hint-placeholder-val="{{ true }}"><img src="assets/atp-logo.svg" alt="ATP Rehab" style="height:96px;align-self:flex-start;margin-bottom:32px"></sc-if>
+<h1 style="margin:0 0 6px;font-size:34px">Sign in</h1>
+<div style="font-size:14px;color:var(--color-neutral-700);margin-bottom:28px">ATP Rehab Clinic OS · staff only</div>
+<div style="display:flex;flex-direction:column;gap:16px">
+<label style="display:flex;flex-direction:column;gap:6px;font-size:13px;font-weight:600">Phone or email<input value="+91 98220 41736" style="min-height:48px;padding:0 12px;font-size:16px;background:#fff;border:2px solid var(--color-text);border-radius:0"></label>
+<label style="display:flex;flex-direction:column;gap:6px;font-size:13px;font-weight:600">Password<input type="password" value="password123" style="min-height:48px;padding:0 12px;font-size:16px;background:#fff;border:2px solid var(--color-text);border-radius:0"></label>
+<label style="display:flex;align-items:center;gap:10px;font-size:14px"><input type="checkbox" checked style="width:20px;height:20px;accent-color:#06AEEF">Keep me signed in on this device</label>
+<button onClick="{{ signIn }}" style="display:flex;align-items:center;justify-content:space-between;border:2px solid var(--color-text);background:var(--color-accent);color:var(--color-text);padding:14px 16px;font-size:16px;font-weight:800;min-height:52px" style-hover="background:var(--color-accent-400)">Sign in<i class="icon-arrow-right" style="font-size:18px"></i></button>
+<button onClick="{{ signIn }}" style="display:flex;align-items:center;gap:10px;border:2px solid var(--color-text);background:transparent;color:var(--color-text);padding:14px 16px;font-size:15px;font-weight:600;min-height:52px" style-hover="background:var(--color-accent-100)"><i class="icon-mail" style="font-size:18px"></i>Email me a magic link instead</button>
+<button onClick="{{ goInvite }}" style="border:0;background:transparent;color:var(--color-accent-700);padding:6px 0;font-size:14px;text-align:left;text-decoration:underline">Have an invite? Set your password</button>
+</div>
+<div style="margin-top:36px;padding-top:14px;border-top:2px solid var(--color-divider);font-size:12px;color:var(--color-neutral-600)">Built by Avyanta Labs for ATP Rehab</div>
+</div>
+</div>
+</sc-if>
+
+<sc-if value="{{ on.invite }}" hint-placeholder-val="{{ false }}">
+<div style="flex:1;display:flex;margin:{{ authMargin }}">
+<sc-if value="{{ isDesktop }}" hint-placeholder-val="{{ false }}"><div style="flex:1;background:var(--color-accent);display:flex;flex-direction:column;justify-content:space-between;padding:48px"><div style="background:#fff;padding:20px;align-self:flex-start"><img src="assets/atp-logo.svg" alt="ATP Rehab" style="height:120px"></div><div style="font-size:44px;font-weight:800;line-height:1.05;max-width:460px">Welcome to the team.</div></div></sc-if>
+<div style="flex:1;display:flex;flex-direction:column;justify-content:center;padding:{{ authPad }};max-width:520px;width:100%;box-sizing:border-box">
+<sc-if value="{{ isMobile }}" hint-placeholder-val="{{ true }}"><img src="assets/atp-mark.svg" alt="" style="height:56px;align-self:flex-start;margin-bottom:28px"></sc-if>
+<div style="font-size:11px;letter-spacing:.08em;text-transform:uppercase;font-weight:700;color:var(--color-accent-700);margin-bottom:8px">Invitation</div>
+<h1 style="margin:0 0 10px;font-size:32px">Set your password</h1>
+<div style="font-size:15px;line-height:1.5;margin-bottom:24px;padding:14px 16px;background:#fff;border:2px solid var(--color-text)">Dr. Sameer Ushkewar added you to <b>ATP Rehab</b> as <b>Therapist</b>.</div>
+<div style="display:flex;flex-direction:column;gap:16px">
+<label style="display:flex;flex-direction:column;gap:6px;font-size:13px;font-weight:600">Your name<input value="Dr. Anjali Deshmukh" style="min-height:48px;padding:0 12px;font-size:16px;background:#fff;border:2px solid var(--color-text);border-radius:0"></label>
+<label style="display:flex;flex-direction:column;gap:6px;font-size:13px;font-weight:600">Phone<input value="+91 97654 22018" disabled style="min-height:48px;padding:0 12px;font-size:16px;background:transparent;border:2px solid var(--color-divider);border-radius:0"></label>
+<label style="display:flex;flex-direction:column;gap:6px;font-size:13px;font-weight:600">New password<input type="password" value="abcdefghij" style="min-height:48px;padding:0 12px;font-size:16px;background:#fff;border:2px solid var(--color-text);border-radius:0"></label>
+<div style="font-size:12px;color:var(--color-neutral-700)">At least 8 characters. You'll stay signed in on this device.</div>
+<button onClick="{{ acceptInvite }}" style="display:flex;align-items:center;justify-content:space-between;border:2px solid var(--color-text);background:var(--color-accent);color:var(--color-text);padding:14px 16px;font-size:16px;font-weight:800;min-height:52px" style-hover="background:var(--color-accent-400)">Join ATP Rehab<i class="icon-arrow-right" style="font-size:18px"></i></button>
+</div>
+</div>
+</div>
+</sc-if>
+
+<sc-if value="{{ on.dashboard }}" hint-placeholder-val="{{ true }}">
+<sc-if value="{{ periodInContent }}" hint-placeholder-val="{{ true }}"><div style="display:flex;border:2px solid var(--color-text);background:#fff"><sc-for list="{{ periodSeg }}" as="o"><button onClick="{{ o.onClick }}" style="flex:1;border:0;border-left:{{ o.bl }};background:{{ o.bg }};color:var(--color-text);padding:10px 8px;font-size:13px;font-weight:600;min-height:44px;white-space:nowrap">{{ o.label }}</button></sc-for></div></sc-if>
+<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:2px;background:var(--color-text);border:2px solid var(--color-text)">
+<sc-for list="{{ tiles }}" as="t" hint-placeholder-count="4"><div style="background:#fff;padding:14px 16px;display:flex;flex-direction:column;gap:4px;min-height:96px"><div style="font-size:11px;letter-spacing:.08em;text-transform:uppercase;font-weight:600;color:var(--color-neutral-700)">{{ t.label }}</div><div style="font-size:{{ tileFs }};font-weight:800;font-variant-numeric:tabular-nums;letter-spacing:-.02em;color:{{ t.color }}">{{ t.value }}</div><div style="font-size:12px;color:var(--color-neutral-700);margin-top:auto">{{ t.sub }}</div></div></sc-for>
+</div>
+<sc-if value="{{ isOwner }}" hint-placeholder-val="{{ true }}">
+<div style="display:flex;flex-direction:column;border:2px solid var(--color-text);background:#fff">
+<div style="padding:10px 16px;border-bottom:2px solid var(--color-text);font-size:11px;letter-spacing:.08em;text-transform:uppercase;font-weight:800;display:flex;align-items:center;gap:8px"><i class="icon-triangle-alert" style="font-size:15px"></i>Needs attention</div>
+<sc-for list="{{ attention }}" as="a" hint-placeholder-count="3"><div style="display:flex;align-items:center;gap:12px;padding:12px 16px;border-bottom:1px solid var(--rule)"><div style="width:6px;align-self:stretch;flex:none;background:{{ a.tone }}"></div><div style="flex:1;min-width:0"><div style="font-size:14px;font-weight:600">{{ a.text }}</div><div style="font-size:12px;color:var(--color-neutral-700)">{{ a.sub }}</div></div><button onClick="{{ a.onClick }}" style="border:2px solid var(--color-text);background:transparent;padding:8px 12px;font-size:13px;font-weight:600;min-height:44px;white-space:nowrap" style-hover="background:var(--color-accent-100)">{{ a.cta }}</button></div></sc-for>
+</div>
+<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,340px),1fr));gap:{{ gapLg }}">
+<div style="display:flex;flex-direction:column">
+<div style="display:flex;align-items:baseline;justify-content:space-between;padding-bottom:8px;border-bottom:2px solid var(--color-divider)"><h4 style="margin:0;font-size:18px">Expense by category</h4><span style="font-size:12px;color:var(--color-neutral-700)">vs September</span></div>
+<sc-for list="{{ breakdown }}" as="b" hint-placeholder-count="6"><div style="display:grid;grid-template-columns:minmax(0,1fr) auto;gap:4px 12px;padding:10px 0;border-bottom:1px solid var(--rule)"><div style="font-size:14px">{{ b.name }}</div><div style="font-size:14px;font-weight:800;font-variant-numeric:tabular-nums;text-align:right">{{ b.spentL }}</div><div style="height:8px;background:var(--color-accent-100);align-self:center"><div style="height:8px;width:{{ b.relW }};background:var(--color-accent)"></div></div><div style="font-size:12px;text-align:right;color:{{ b.momColor }};font-variant-numeric:tabular-nums">{{ b.mom }}</div></div></sc-for>
+</div>
+<div style="display:flex;flex-direction:column;gap:{{ gapLg }}">
+<div style="display:flex;flex-direction:column">
+<div style="display:flex;align-items:baseline;justify-content:space-between;padding-bottom:8px;border-bottom:2px solid var(--color-divider)"><h4 style="margin:0;font-size:18px">Partner balance</h4><button onClick="{{ goSettlement }}" style="border:0;background:transparent;color:var(--color-accent-700);font-size:13px;font-weight:600;padding:4px 0">Settle up →</button></div>
+<sc-if value="{{ notSettled }}" hint-placeholder-val="{{ true }}"><sc-for list="{{ transfers }}" as="t" hint-placeholder-count="3"><div style="display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px;padding:10px 0;border-bottom:1px solid var(--rule);align-items:center"><div style="font-size:14px">{{ t.from }} <span style="color:var(--color-neutral-600)">pays</span> {{ t.to }}</div><div style="font-weight:800;font-variant-numeric:tabular-nums">{{ t.amt }}</div></div></sc-for></sc-if>
+<sc-if value="{{ settled }}" hint-placeholder-val="{{ false }}"><div style="padding:12px 0;font-size:14px;display:flex;gap:8px;align-items:center"><i class="icon-check" style="color:var(--color-accent-700)"></i>All partners settled on 14 Oct.</div></sc-if>
+</div>
+<div style="display:flex;flex-direction:column">
+<div style="display:flex;align-items:baseline;justify-content:space-between;padding-bottom:8px;border-bottom:2px solid var(--color-divider)"><h4 style="margin:0;font-size:18px">Recurring this month</h4><button onClick="{{ goRecurring }}" style="border:0;background:transparent;color:var(--color-accent-700);font-size:13px;font-weight:600;padding:4px 0">{{ recurSummary }} →</button></div>
+<sc-for list="{{ recurDash }}" as="r" hint-placeholder-count="3"><div style="display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px;padding:10px 0;border-bottom:1px solid var(--rule);align-items:center"><div><div style="font-size:14px">{{ r.name }}</div><div style="font-size:12px;color:var(--color-neutral-700)">{{ r.amtL }} · day {{ r.day }}</div></div><span style="font-size:12px;font-weight:600;padding:3px 8px;background:{{ r.tagBg }};color:{{ r.tagFg }}">{{ r.status }}</span></div></sc-for>
+</div>
+</div>
+</div>
+</sc-if>
+<sc-if value="{{ notOwner }}" hint-placeholder-val="{{ false }}"><div style="font-size:13px;color:var(--color-neutral-700);display:flex;gap:8px;align-items:center"><i class="icon-lock" style="font-size:14px"></i>You see entries you recorded. Clinic totals, budgets and settlement are visible to Owners.</div></sc-if>
+<div style="display:flex;flex-direction:column">
+<div style="display:flex;align-items:baseline;justify-content:space-between;padding-bottom:8px;border-bottom:2px solid var(--color-divider)"><h4 style="margin:0;font-size:18px">{{ recentTitle }}</h4><button onClick="{{ goTransactions }}" style="border:0;background:transparent;color:var(--color-accent-700);font-size:13px;font-weight:600;padding:4px 0">View all →</button></div>
+<sc-for list="{{ recent }}" as="r" hint-placeholder-count="5"><div style="display:grid;grid-template-columns:40px minmax(0,1fr) auto;gap:12px;align-items:center;padding:11px 0;border-bottom:1px solid var(--rule);background:{{ r.bg }}"><div style="line-height:1.1;font-variant-numeric:tabular-nums"><div style="font-weight:800;font-size:18px">{{ r.day }}</div><div style="font-size:11px;color:var(--color-neutral-700)">Oct</div></div><div style="min-width:0"><div style="font-size:15px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ r.title }}</div><div style="font-size:12px;color:var(--color-neutral-700);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ r.sub }}</div></div><div style="font-weight:800;font-size:15px;font-variant-numeric:tabular-nums;color:{{ r.amtColor }}">{{ r.amtLabel }}</div></div></sc-for>
+</div>
+</sc-if>
+
+<sc-if value="{{ on.transactions }}" hint-placeholder-val="{{ false }}">
+<div style="display:flex;flex-direction:column;gap:10px">
+<div style="display:flex;align-items:center;gap:10px;background:#fff;border:2px solid var(--color-text);padding:0 12px"><i class="icon-search" style="font-size:17px;color:var(--color-neutral-700)"></i><input value="{{ search }}" onChange="{{ onSearch }}" placeholder="Search description, patient, person" style="flex:1;min-width:0;border:0;outline:none;background:transparent;min-height:46px;font-size:15px"></div>
+<div style="display:flex;flex-wrap:wrap;gap:8px">
+<div style="display:inline-flex;border:2px solid var(--color-text);background:#fff"><sc-for list="{{ typeSeg }}" as="o"><button onClick="{{ o.onClick }}" style="border:0;border-left:{{ o.bl }};background:{{ o.bg }};color:var(--color-text);padding:8px 12px;font-size:13px;font-weight:600;min-height:40px;white-space:nowrap">{{ o.label }}</button></sc-for></div>
+<select value="{{ fCat }}" onChange="{{ onFCat }}" style="border:2px solid var(--color-text);background:#fff;padding:8px;font-size:13px;min-height:44px;border-radius:0"><sc-for list="{{ catOpts }}" as="o"><option value="{{ o.v }}">{{ o.l }}</option></sc-for></select>
+<select value="{{ fMode }}" onChange="{{ onFMode }}" style="border:2px solid var(--color-text);background:#fff;padding:8px;font-size:13px;min-height:44px;border-radius:0"><sc-for list="{{ modeOpts }}" as="o"><option value="{{ o.v }}">{{ o.l }}</option></sc-for></select>
+<sc-if value="{{ isOwner }}" hint-placeholder-val="{{ true }}"><select value="{{ fUser }}" onChange="{{ onFUser }}" style="border:2px solid var(--color-text);background:#fff;padding:8px;font-size:13px;min-height:44px;border-radius:0"><sc-for list="{{ userOpts }}" as="o"><option value="{{ o.v }}">{{ o.l }}</option></sc-for></select></sc-if>
+</div>
+</div>
+<div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:2px;background:var(--color-text);border:2px solid var(--color-text)">
+<div style="background:#fff;padding:10px 12px"><div style="font-size:11px;letter-spacing:.08em;text-transform:uppercase;font-weight:600;color:var(--color-neutral-700)">Entries</div><div style="font-size:18px;font-weight:800;font-variant-numeric:tabular-nums">{{ txCount }}</div></div>
+<div style="background:#fff;padding:10px 12px"><div style="font-size:11px;letter-spacing:.08em;text-transform:uppercase;font-weight:600;color:var(--color-neutral-700)">In</div><div style="font-size:18px;font-weight:800;font-variant-numeric:tabular-nums;color:var(--color-accent-700)">{{ txIn }}</div></div>
+<div style="background:#fff;padding:10px 12px"><div style="font-size:11px;letter-spacing:.08em;text-transform:uppercase;font-weight:600;color:var(--color-neutral-700)">Out</div><div style="font-size:18px;font-weight:800;font-variant-numeric:tabular-nums">{{ txOut }}</div></div>
+</div>
+<div style="display:flex;flex-direction:column">
+<sc-for list="{{ txRows }}" as="r" hint-placeholder-count="8"><div style="display:grid;grid-template-columns:40px minmax(0,1fr) auto;gap:12px;align-items:center;padding:12px 0;border-bottom:1px solid var(--rule);background:{{ r.bg }}">
+<div style="line-height:1.1;font-variant-numeric:tabular-nums"><div style="font-weight:800;font-size:18px">{{ r.day }}</div><div style="font-size:11px;color:var(--color-neutral-700)">Oct</div></div>
+<div style="min-width:0"><div style="font-size:15px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ r.title }}</div><div style="font-size:12px;color:var(--color-neutral-700)">{{ r.sub }}</div><div style="font-size:12px;color:var(--color-neutral-600);display:flex;flex-wrap:wrap;gap:4px 10px;margin-top:2px"><span>{{ r.rec }}</span><sc-if value="{{ r.hasPatient }}"><span>{{ r.patient }}</span></sc-if><sc-if value="{{ r.receipt }}"><span style="display:flex;align-items:center;gap:3px;color:var(--color-accent-700)"><i class="icon-paperclip" style="font-size:12px"></i>Receipt</span></sc-if></div></div>
+<div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px"><div style="font-weight:800;font-size:15px;font-variant-numeric:tabular-nums;color:{{ r.amtColor }}">{{ r.amtLabel }}</div><sc-if value="{{ r.editable }}"><span style="font-size:12px;color:var(--color-neutral-700);display:flex;align-items:center;gap:4px"><i class="icon-pencil" style="font-size:12px"></i>Edit</span></sc-if><sc-if value="{{ r.locked }}"><span style="font-size:12px;color:var(--color-neutral-600);display:flex;align-items:center;gap:4px"><i class="icon-lock" style="font-size:12px"></i>Locked</span></sc-if></div>
+</div></sc-for>
+<sc-if value="{{ txEmpty }}" hint-placeholder-val="{{ false }}"><div style="padding:28px 0;font-size:14px;color:var(--color-neutral-700)">No entries match these filters.</div></sc-if>
+</div>
+<div style="font-size:12px;color:var(--color-neutral-700)">You can edit or delete your own entries for 7 days. Owners can edit any entry. Every change goes to the audit log.</div>
+</sc-if>
+
+<sc-if value="{{ on.settlement }}" hint-placeholder-val="{{ false }}">
+<div style="display:flex;flex-direction:column;border:2px solid var(--color-text);background:#fff">
+<div style="padding:14px 16px;border-bottom:2px solid var(--color-text);display:flex;align-items:baseline;justify-content:space-between;gap:12px;flex-wrap:wrap"><h4 style="margin:0;font-size:18px">Settle up · 1–14 Oct</h4><span style="font-size:12px;color:var(--color-neutral-700)">Fewest payments to clear all balances</span></div>
+<sc-if value="{{ notSettled }}" hint-placeholder-val="{{ true }}">
+<sc-for list="{{ transfers }}" as="t" hint-placeholder-count="3"><div style="display:grid;grid-template-columns:minmax(0,1fr) 24px minmax(0,1fr) auto;gap:10px;align-items:center;padding:14px 16px;border-bottom:1px solid var(--rule)"><div style="font-size:14px;font-weight:600">{{ t.from }}</div><i class="icon-arrow-right" style="font-size:18px;color:var(--color-accent-700)"></i><div style="font-size:14px;font-weight:600">{{ t.to }}</div><div style="font-size:17px;font-weight:800;font-variant-numeric:tabular-nums">{{ t.amt }}</div></div></sc-for>
+<div style="padding:14px 16px;display:flex;flex-wrap:wrap;gap:10px"><button onClick="{{ markSettled }}" style="flex:1;display:flex;align-items:center;justify-content:space-between;gap:16px;border:2px solid var(--color-text);background:var(--color-accent);color:var(--color-text);padding:12px 16px;font-size:15px;font-weight:800;min-height:48px;min-width:200px" style-hover="background:var(--color-accent-400)">Mark as settled<i class="icon-check" style="font-size:18px"></i></button><button style="flex:1;display:flex;align-items:center;gap:8px;border:2px solid var(--color-text);background:transparent;padding:12px 16px;font-size:14px;font-weight:600;min-height:48px;min-width:200px" style-hover="background:var(--color-accent-100)"><i class="icon-message-circle" style="font-size:17px"></i>Share on WhatsApp</button></div>
+</sc-if>
+<sc-if value="{{ settled }}" hint-placeholder-val="{{ false }}"><div style="padding:18px 16px;display:flex;gap:12px;align-items:flex-start"><i class="icon-circle-check" style="font-size:22px;color:var(--color-accent-700)"></i><div><div style="font-size:15px;font-weight:700">Settled on 14 Oct 2026</div><div style="font-size:13px;color:var(--color-neutral-700)">Settlement transactions recorded. Running balances reset to ₹0.</div><button onClick="{{ undoSettle }}" style="margin-top:8px;border:0;background:transparent;padding:0;color:var(--color-accent-700);font-size:13px;text-decoration:underline">Undo</button></div></div></sc-if>
+</div>
+<div style="display:flex;flex-direction:column">
+<div style="display:flex;align-items:baseline;justify-content:space-between;padding-bottom:8px;border-bottom:2px solid var(--color-divider);gap:12px"><h4 style="margin:0;font-size:18px">Partners</h4><span style="font-size:12px;color:var(--color-neutral-700)">Clinic net {{ settleNet }} · equal shares</span></div>
+<sc-for list="{{ partnerRows }}" as="p" hint-placeholder-count="4"><div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(100px,1fr));gap:8px 16px;padding:14px 0;border-bottom:1px solid var(--rule);align-items:center">
+<div style="display:flex;align-items:center;gap:10px;grid-column:1 / -1;min-width:0"><div style="width:34px;height:34px;flex:none;border:2px solid var(--color-text);display:grid;place-items:center;font-weight:800;font-size:12px">{{ p.ini }}</div><div style="min-width:0"><div style="font-size:14px;font-weight:600">{{ p.name }}</div><div style="font-size:12px;color:var(--color-neutral-700)">Profit share {{ p.share }}</div></div></div>
+<div><div style="font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--color-neutral-700)">Paid out</div><div style="font-size:14px;font-weight:600;font-variant-numeric:tabular-nums">{{ p.paid }}</div></div>
+<div><div style="font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--color-neutral-700)">Received</div><div style="font-size:14px;font-weight:600;font-variant-numeric:tabular-nums">{{ p.recv }}</div></div>
+<div><div style="font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--color-neutral-700)">{{ p.balLabel }}</div><div style="font-size:15px;font-weight:800;font-variant-numeric:tabular-nums;color:{{ p.balColor }}">{{ p.bal }}</div></div>
+</div></sc-for>
+<div style="display:flex;flex-wrap:wrap;gap:10px;padding-top:12px"><button style="display:flex;align-items:center;gap:8px;border:2px solid var(--color-text);background:transparent;padding:10px 14px;font-size:14px;font-weight:600;min-height:44px" style-hover="background:var(--color-accent-100)"><i class="icon-user-plus" style="font-size:16px"></i>Add partner</button><button style="display:flex;align-items:center;gap:8px;border:2px solid var(--color-text);background:transparent;padding:10px 14px;font-size:14px;font-weight:600;min-height:44px" style-hover="background:var(--color-accent-100)"><i class="icon-percent" style="font-size:16px"></i>Edit profit shares</button></div>
+</div>
+<div style="display:flex;flex-direction:column">
+<div style="padding-bottom:8px;border-bottom:2px solid var(--color-divider)"><h4 style="margin:0;font-size:18px">History</h4></div>
+<sc-for list="{{ settleHistory }}" as="h" hint-placeholder-count="2"><div style="display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px;padding:12px 0;border-bottom:1px solid var(--rule)"><div><div style="font-size:14px;font-weight:600">{{ h.period }}</div><div style="font-size:12px;color:var(--color-neutral-700)">{{ h.meta }}</div></div><div style="font-size:14px;font-weight:800;font-variant-numeric:tabular-nums">{{ h.amt }}</div></div></sc-for>
+</div>
+</sc-if>
+
+<sc-if value="{{ on.budgets }}" hint-placeholder-val="{{ false }}">
+<div style="display:flex;flex-direction:column">
+<div style="display:flex;align-items:baseline;justify-content:space-between;padding-bottom:8px;border-bottom:2px solid var(--color-divider);gap:12px;flex-wrap:wrap"><h4 style="margin:0;font-size:18px">Monthly budgets · October</h4><span style="font-size:12px;color:var(--color-neutral-700)">Warning at 80%, alert at 100%</span></div>
+<sc-for list="{{ budgetRows }}" as="b" hint-placeholder-count="9"><div style="display:grid;grid-template-columns:minmax(0,1fr) auto;gap:6px 12px;padding:12px 0;border-bottom:1px solid var(--rule);align-items:center">
+<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap"><span style="font-size:15px;font-weight:600">{{ b.name }}</span><span style="font-size:11px;font-weight:600;padding:2px 7px;background:{{ b.tagBg }};color:{{ b.tagFg }}">{{ b.status }}</span></div>
+<div style="font-size:14px;font-variant-numeric:tabular-nums;text-align:right;white-space:nowrap"><b>{{ b.spentL }}</b> <span style="color:var(--color-neutral-700)">/ {{ b.budgetL }}</span></div>
+<div style="height:10px;background:var(--color-neutral-200);position:relative"><div style="height:10px;width:{{ b.barW }};background:{{ b.barC }}"></div><div style="position:absolute;left:80%;top:-3px;bottom:-3px;width:2px;background:var(--color-neutral-500)"></div></div>
+<div style="font-size:12px;font-weight:600;font-variant-numeric:tabular-nums;text-align:right;color:{{ b.tagFg }}">{{ b.pctL }}</div>
+</div></sc-for>
+</div>
+<div style="display:flex;flex-direction:column;gap:12px">
+<div style="display:flex;align-items:baseline;justify-content:space-between;padding-bottom:8px;border-bottom:2px solid var(--color-divider);gap:12px"><h4 style="margin:0;font-size:18px">Funds</h4><button style="border:0;background:transparent;color:var(--color-accent-700);font-size:13px;font-weight:600;padding:4px 0">+ New fund</button></div>
+<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:2px;background:var(--color-text);border:2px solid var(--color-text)">
+<sc-for list="{{ funds }}" as="f" hint-placeholder-count="3"><div style="background:#fff;padding:14px 16px;display:flex;flex-direction:column;gap:6px"><div style="display:flex;align-items:center;gap:8px"><i class="icon-piggy-bank" style="font-size:17px;color:var(--color-accent-700)"></i><span style="font-size:15px;font-weight:700">{{ f.name }}</span></div><div style="font-size:12px;color:var(--color-neutral-700)">{{ f.rule }}</div><div style="font-size:24px;font-weight:800;font-variant-numeric:tabular-nums">{{ f.bal }}</div><div style="font-size:12px;color:var(--color-neutral-700);font-variant-numeric:tabular-nums">This month: +{{ f.alloc }} · drawn {{ f.drawn }}</div></div></sc-for>
+</div>
+<div style="font-size:12px;color:var(--color-neutral-700)">Expenses can be drawn against a fund from the entry form.</div>
+</div>
+</sc-if>
+
+<sc-if value="{{ on.recurring }}" hint-placeholder-val="{{ false }}">
+<div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:2px;background:var(--color-text);border:2px solid var(--color-text)">
+<sc-for list="{{ recurStats }}" as="t"><div style="background:#fff;padding:10px 12px"><div style="font-size:11px;letter-spacing:.08em;text-transform:uppercase;font-weight:600;color:var(--color-neutral-700)">{{ t.label }}</div><div style="font-size:20px;font-weight:800;font-variant-numeric:tabular-nums;color:{{ t.color }}">{{ t.value }}</div></div></sc-for>
+</div>
+<div style="display:flex;flex-direction:column">
+<sc-for list="{{ recurRows }}" as="r" hint-placeholder-count="7"><div style="display:grid;grid-template-columns:48px minmax(0,1fr) auto;gap:12px;align-items:center;padding:12px 0;border-bottom:1px solid var(--rule)">
+<div style="width:48px;height:48px;box-sizing:border-box;border:2px solid var(--color-text);display:flex;flex-direction:column;align-items:center;justify-content:center;line-height:1"><span style="font-size:18px;font-weight:800;font-variant-numeric:tabular-nums">{{ r.dayP }}</span><span style="font-size:10px;text-transform:uppercase;color:var(--color-neutral-700)">Oct</span></div>
+<div style="min-width:0"><div style="font-size:15px;font-weight:600">{{ r.name }}</div><div style="font-size:12px;color:var(--color-neutral-700)">{{ r.cat }} · expected {{ r.amtL }}</div><span style="display:inline-block;margin-top:4px;font-size:11px;font-weight:600;padding:2px 7px;background:{{ r.tagBg }};color:{{ r.tagFg }}">{{ r.status }}</span></div>
+<sc-if value="{{ r.canLog }}"><button onClick="{{ r.onLog }}" style="border:2px solid var(--color-text);background:{{ r.btnBg }};color:var(--color-text);padding:8px 12px;font-size:13px;font-weight:700;min-height:44px;white-space:nowrap" style-hover="background:var(--color-accent-400)">Log now</button></sc-if>
+<sc-if value="{{ r.done }}"><i class="icon-circle-check" style="font-size:22px;color:var(--color-accent-700);padding:0 10px"></i></sc-if>
+</div></sc-for>
+</div>
+<div style="font-size:12px;color:var(--color-neutral-700)">Recurring items come from categories marked recurring, with an expected amount and day of month. Set them up in <a href="#" onClick="{{ goCategoriesLink }}">Categories</a>.</div>
+</sc-if>
+
+<sc-if value="{{ on.reports }}" hint-placeholder-val="{{ false }}">
+<div style="display:flex;align-items:center;gap:8px"><button style="width:44px;height:44px;flex:none;border:2px solid var(--color-text);background:#fff;font-size:18px"><i class="icon-chevron-left"></i></button><div style="flex:1;min-height:44px;box-sizing:border-box;display:flex;align-items:center;padding:0 14px;border:2px solid var(--color-text);background:#fff;font-size:16px;font-weight:800">September 2026</div><button style="width:44px;height:44px;flex:none;border:2px solid var(--color-text);background:#fff;font-size:18px"><i class="icon-chevron-right"></i></button></div>
+<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,340px),1fr));gap:{{ gapLg }};align-items:start">
+<div style="display:flex;flex-direction:column;gap:14px">
+<button onClick="{{ genPdf }}" style="display:flex;align-items:center;justify-content:space-between;border:2px solid var(--color-text);background:var(--color-accent);color:var(--color-text);padding:14px 16px;font-size:16px;font-weight:800;min-height:56px" style-hover="background:var(--color-accent-400)"><span style="display:flex;align-items:center;gap:10px"><i class="icon-file-text" style="font-size:19px"></i>Generate CA report (PDF)</span><i class="icon-download" style="font-size:18px"></i></button>
+<div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:2px;background:var(--color-text);border:2px solid var(--color-text)">
+<sc-for list="{{ exportBtns }}" as="e"><button onClick="{{ e.onClick }}" style="display:flex;align-items:center;gap:10px;border:0;background:#fff;color:var(--color-text);padding:12px 14px;font-size:14px;font-weight:600;min-height:48px;text-align:left" style-hover="background:var(--color-accent-100)"><i class="{{ e.icon }}" style="font-size:17px"></i>{{ e.label }}</button></sc-for>
+</div>
+<div style="display:flex;flex-direction:column;gap:8px;padding-top:6px"><div style="font-size:13px;font-weight:600">Receipt photos in the PDF</div><div style="display:flex;border:2px solid var(--color-text);background:#fff"><sc-for list="{{ receiptSeg }}" as="o"><button onClick="{{ o.onClick }}" style="flex:1;border:0;border-left:{{ o.bl }};background:{{ o.bg }};color:var(--color-text);padding:10px;font-size:13px;font-weight:600;min-height:44px;white-space:nowrap">{{ o.label }}</button></sc-for></div></div>
+<div style="display:flex;align-items:center;gap:12px;padding:12px 0;border-top:2px solid var(--color-divider);border-bottom:1px solid var(--rule)"><div style="flex:1"><div style="font-size:14px;font-weight:600">Email the CA on the 1st</div><div style="font-size:12px;color:var(--color-neutral-700)">accounts@kulkarnica.in · previous month</div></div><button onClick="{{ toggleAutoEmail }}" aria-label="Toggle auto email" style="width:48px;height:28px;border:2px solid var(--color-text);background:{{ autoBg }};padding:0;position:relative;flex:none"><span style="position:absolute;top:2px;left:{{ autoKnob }};width:20px;height:20px;background:var(--color-text)"></span></button></div>
+</div>
+<div style="background:#fff;border:1px solid var(--rule);box-shadow:var(--shadow-md);padding:22px 22px 16px;display:flex;flex-direction:column;gap:12px;font-size:11px">
+<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px;border-bottom:2px solid var(--color-text);padding-bottom:10px"><img src="assets/atp-logo.svg" alt="ATP Rehab" style="height:44px"><div style="text-align:right"><div style="font-size:14px;font-weight:800">Monthly statement</div><div style="color:var(--color-neutral-700)">1–30 September 2026</div></div></div>
+<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;font-variant-numeric:tabular-nums"><div><div style="color:var(--color-neutral-700)">Income</div><div style="font-size:15px;font-weight:800">₹2,98,500</div></div><div><div style="color:var(--color-neutral-700)">Expense</div><div style="font-size:15px;font-weight:800">₹1,31,900</div></div><div><div style="color:var(--color-neutral-700)">Net</div><div style="font-size:15px;font-weight:800">₹1,66,600</div></div></div>
+<div><div style="font-weight:800;margin-bottom:4px;text-transform:uppercase;letter-spacing:.06em;font-size:10px">Category totals</div><sc-for list="{{ reportCats }}" as="c"><div style="display:flex;justify-content:space-between;padding:2px 0;border-bottom:1px solid var(--rule);font-variant-numeric:tabular-nums"><span>{{ c.n }}</span><span>{{ c.v }}</span></div></sc-for></div>
+<div><div style="font-weight:800;margin-bottom:4px;text-transform:uppercase;letter-spacing:.06em;font-size:10px">Transactions (148)</div><div style="display:grid;grid-template-columns:40px 1fr 40px 56px;gap:2px 6px;color:var(--color-neutral-700)"><span>Date</span><span>Category · description</span><span>Mode</span><span style="text-align:right">Amount</span></div><sc-for list="{{ reportTx }}" as="t"><div style="display:grid;grid-template-columns:40px 1fr 40px 56px;gap:2px 6px;padding:2px 0;border-bottom:1px solid var(--rule);font-variant-numeric:tabular-nums"><span>{{ t.d }}</span><span style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ t.c }}</span><span>{{ t.m }}</span><span style="text-align:right">{{ t.a }}</span></div></sc-for><div style="color:var(--color-neutral-600);padding-top:3px">… 142 more rows · receipts {{ receiptsMode }}</div></div>
+<div><div style="font-weight:800;margin-bottom:4px;text-transform:uppercase;letter-spacing:.06em;font-size:10px">Partner settlement</div><div>Settled 2 Oct 2026 · 3 payments · ₹31,240</div></div>
+<div style="border-top:1px solid var(--rule);padding-top:6px;color:var(--color-neutral-600);display:flex;justify-content:space-between;gap:8px"><span>Generated by Dr. Sameer Ushkewar</span><span>Page 1 of 6</span></div>
+</div>
+</div>
+</sc-if>
+
+<sc-if value="{{ on.categories }}" hint-placeholder-val="{{ false }}">
+<div style="display:flex;border:2px solid var(--color-text);background:#fff;align-self:flex-start"><sc-for list="{{ catTabSeg }}" as="o"><button onClick="{{ o.onClick }}" style="border:0;border-left:{{ o.bl }};background:{{ o.bg }};color:var(--color-text);padding:10px 18px;font-size:14px;font-weight:600;min-height:44px;white-space:nowrap">{{ o.label }}</button></sc-for></div>
+<div style="display:flex;gap:8px"><input value="{{ newCat }}" onChange="{{ onNewCat }}" placeholder="New category name" style="flex:1;min-width:0;border:2px solid var(--color-text);background:#fff;padding:0 12px;min-height:46px;font-size:15px;border-radius:0"><button onClick="{{ addCat }}" style="border:2px solid var(--color-text);background:var(--color-accent);color:var(--color-text);padding:0 18px;font-size:14px;font-weight:800;min-height:46px" style-hover="background:var(--color-accent-400)">Add</button></div>
+<div style="display:flex;flex-direction:column;border-top:2px solid var(--color-divider)">
+<sc-for list="{{ catRows }}" as="c" hint-placeholder-count="9"><div style="display:grid;grid-template-columns:24px minmax(0,1fr) auto;gap:10px;align-items:center;padding:8px 0;border-bottom:1px solid var(--rule)"><i class="icon-grip-vertical" style="font-size:17px;color:var(--color-neutral-500);cursor:grab"></i><div style="min-width:0"><div style="font-size:15px;font-weight:600">{{ c.name }}</div><sc-if value="{{ c.hasRec }}"><div style="font-size:12px;color:var(--color-accent-700);display:flex;align-items:center;gap:4px"><i class="icon-repeat" style="font-size:12px"></i>{{ c.rec }}</div></sc-if></div><div style="display:flex;gap:2px"><button title="Edit" style="width:44px;height:44px;border:0;background:transparent;font-size:16px;color:var(--color-text)" style-hover="background:var(--color-accent-100)"><i class="icon-pencil"></i></button><button onClick="{{ c.onArchive }}" title="Archive" style="width:44px;height:44px;border:0;background:transparent;font-size:16px;color:var(--color-text)" style-hover="background:var(--color-accent-100)"><i class="icon-archive"></i></button></div></div></sc-for>
+</div>
+<sc-if value="{{ hasArchived }}" hint-placeholder-val="{{ true }}">
+<div style="display:flex;flex-direction:column"><div style="font-size:11px;letter-spacing:.08em;text-transform:uppercase;font-weight:600;color:var(--color-neutral-700);padding-bottom:6px;border-bottom:2px solid var(--color-divider)">Archived · kept on past entries</div>
+<sc-for list="{{ archRows }}" as="c"><div style="display:flex;align-items:center;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--rule)"><span style="font-size:14px;color:var(--color-neutral-700)">{{ c.name }}</span><button onClick="{{ c.onRestore }}" style="border:0;background:transparent;color:var(--color-accent-700);font-size:13px;font-weight:600;padding:12px 8px">Restore</button></div></sc-for></div>
+</sc-if>
+</sc-if>
+
+<sc-if value="{{ on.roles }}" hint-placeholder-val="{{ false }}">
+<div style="display:flex;border:2px solid var(--color-text);background:#fff;align-self:flex-start"><sc-for list="{{ roleTabSeg }}" as="o"><button onClick="{{ o.onClick }}" style="border:0;border-left:{{ o.bl }};background:{{ o.bg }};color:var(--color-text);padding:10px 16px;font-size:14px;font-weight:600;min-height:44px;white-space:nowrap">{{ o.label }}</button></sc-for></div>
+<sc-if value="{{ roleTabRoles }}" hint-placeholder-val="{{ true }}">
+<div style="overflow-x:auto;border:2px solid var(--color-text);background:#fff;flex:none">
+<div style="min-width:640px">
+<div style="display:grid;grid-template-columns:minmax(200px,1.6fr) repeat(4,minmax(96px,1fr));border-bottom:2px solid var(--color-text)"><div style="padding:10px 14px;font-size:11px;letter-spacing:.08em;text-transform:uppercase;font-weight:600;color:var(--color-neutral-700);align-self:end">Permission</div><sc-for list="{{ roleCols }}" as="c"><div style="padding:10px 8px;border-left:1px solid var(--rule)"><div style="font-size:13px;font-weight:800">{{ c.name }}</div><div style="font-size:11px;color:var(--color-neutral-700)">{{ c.users }}</div></div></sc-for></div>
+<sc-for list="{{ permRows }}" as="p" hint-placeholder-count="12">
+<sc-if value="{{ p.isGroup }}"><div style="padding:8px 14px;background:var(--color-bg);font-size:11px;letter-spacing:.08em;text-transform:uppercase;font-weight:800;border-bottom:1px solid var(--rule)">{{ p.label }}</div></sc-if>
+<sc-if value="{{ p.isPerm }}"><div style="display:grid;grid-template-columns:minmax(200px,1.6fr) repeat(4,minmax(96px,1fr));border-bottom:1px solid var(--rule);opacity:{{ p.op }}"><div style="padding:8px 14px"><div style="font-size:13px;font-weight:600">{{ p.label }}</div><div style="font-size:11px;color:var(--color-neutral-600);font-family:ui-monospace,Menlo,monospace">{{ p.key }}</div></div><sc-for list="{{ p.cells }}" as="c"><button onClick="{{ c.onClick }}" style="border:0;border-left:1px solid var(--rule);background:transparent;padding:6px 8px;display:flex;align-items:center"><span style="display:inline-flex;align-items:center;font-size:12px;font-weight:700;padding:4px 8px;background:{{ c.bg }};color:{{ c.fg }};border:{{ c.bd }}">{{ c.v }}</span></button></sc-for></div></sc-if>
+</sc-for>
+</div>
+</div>
+<div style="display:flex;flex-wrap:wrap;gap:10px;align-items:center"><button style="display:flex;align-items:center;gap:8px;border:2px solid var(--color-text);background:transparent;padding:10px 14px;font-size:14px;font-weight:600;min-height:44px" style-hover="background:var(--color-accent-100)"><i class="icon-plus" style="font-size:16px"></i>New role</button><span style="font-size:12px;color:var(--color-neutral-700);flex:1;min-width:200px">Tap a cell to cycle All → Own → None. Owner access can't be reduced. Later-version permissions are set now and switch on when those modules ship.</span></div>
+</sc-if>
+<sc-if value="{{ roleTabUsers }}" hint-placeholder-val="{{ false }}">
+<button onClick="{{ openInvite }}" style="align-self:flex-start;display:flex;align-items:center;gap:10px;border:2px solid var(--color-text);background:var(--color-accent);color:var(--color-text);padding:12px 16px;font-size:15px;font-weight:800;min-height:48px" style-hover="background:var(--color-accent-400)"><i class="icon-user-plus" style="font-size:17px"></i>Invite user</button>
+<div style="display:flex;flex-direction:column;border-top:2px solid var(--color-divider)">
+<sc-for list="{{ users }}" as="u" hint-placeholder-count="7"><div style="display:grid;grid-template-columns:40px minmax(0,1fr) auto;gap:12px;align-items:center;padding:12px 0;border-bottom:1px solid var(--rule)"><div style="width:40px;height:40px;box-sizing:border-box;background:{{ u.avBg }};border:2px solid var(--color-text);display:grid;place-items:center;font-weight:800;font-size:13px">{{ u.ini }}</div><div style="min-width:0"><div style="font-size:15px;font-weight:600">{{ u.name }}</div><div style="font-size:12px;color:var(--color-neutral-700);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ u.contact }}</div><div style="display:flex;gap:4px;margin-top:4px;flex-wrap:wrap"><sc-for list="{{ u.roles }}" as="r"><span style="font-size:11px;font-weight:600;padding:2px 7px;background:var(--color-accent-100);color:var(--color-accent-800)">{{ r }}</span></sc-for></div></div><span style="font-size:12px;font-weight:600;color:{{ u.stFg }}">{{ u.status }}</span></div></sc-for>
+</div>
+</sc-if>
+</sc-if>
+
+<sc-if value="{{ on.audit }}" hint-placeholder-val="{{ false }}">
+<div style="display:flex;border:2px solid var(--color-text);background:#fff;align-self:flex-start"><sc-for list="{{ auditSeg }}" as="o"><button onClick="{{ o.onClick }}" style="border:0;border-left:{{ o.bl }};background:{{ o.bg }};color:var(--color-text);padding:10px 16px;font-size:14px;font-weight:600;min-height:44px;white-space:nowrap">{{ o.label }}</button></sc-for></div>
+<div style="display:flex;flex-direction:column;border-top:2px solid var(--color-divider)">
+<sc-for list="{{ auditRows }}" as="a" hint-placeholder-count="8"><div style="display:grid;grid-template-columns:minmax(0,1fr) auto;gap:6px 12px;padding:12px 0;border-bottom:1px solid var(--rule)">
+<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap"><span style="font-size:11px;font-weight:800;padding:2px 7px;background:{{ a.tagBg }};color:{{ a.tagFg }};text-transform:uppercase;letter-spacing:.04em">{{ a.action }}</span><span style="font-size:14px;font-weight:600">{{ a.entity }}</span></div>
+<div style="font-size:12px;color:var(--color-neutral-700);text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap">{{ a.t }}</div>
+<div style="grid-column:1 / -1;display:flex;flex-wrap:wrap;align-items:center;gap:6px;font-size:13px"><sc-if value="{{ a.hasBefore }}"><span style="text-decoration:line-through;color:var(--color-neutral-600)">{{ a.before }}</span><i class="icon-arrow-right" style="font-size:13px;color:var(--color-neutral-600)"></i></sc-if><span style="font-weight:600">{{ a.after }}</span></div>
+<div style="grid-column:1 / -1;font-size:12px;color:var(--color-neutral-700)">by {{ a.u }}</div>
+</div></sc-for>
+</div>
+<div style="font-size:12px;color:var(--color-neutral-700)">Financial entries are soft-deleted and stay in this log with their last values.</div>
+</sc-if>
+
+<sc-if value="{{ on.more }}" hint-placeholder-val="{{ false }}">
+<div style="display:flex;flex-direction:column;border-top:2px solid var(--color-divider)">
+<sc-for list="{{ moreItems }}" as="n" hint-placeholder-count="6"><button onClick="{{ n.onClick }}" style="display:flex;align-items:center;gap:14px;border:0;border-bottom:1px solid var(--rule);background:transparent;padding:14px 0;font-size:16px;font-weight:600;text-align:left;min-height:56px;color:var(--color-text)"><i class="{{ n.icon }}" style="font-size:20px;width:24px"></i><span style="flex:1">{{ n.label }}</span><i class="icon-chevron-right" style="font-size:18px;color:var(--color-neutral-500)"></i></button></sc-for>
+</div>
+<div style="display:flex;align-items:center;gap:12px;padding:14px;border:2px solid var(--color-text);background:#fff"><div style="width:40px;height:40px;background:var(--color-accent);display:grid;place-items:center;font-weight:800;font-size:13px">{{ meIni }}</div><div style="flex:1"><div style="font-size:15px;font-weight:600">{{ meName }}</div><div style="font-size:12px;color:var(--color-neutral-700)">{{ roleLabel }}</div></div><button onClick="{{ signOut }}" style="border:2px solid var(--color-text);background:transparent;padding:8px 12px;font-size:13px;font-weight:600;min-height:44px">Sign out</button></div>
+<div style="font-size:12px;color:var(--color-neutral-600)">ATP Rehab Clinic OS · Built by Avyanta Labs</div>
+</sc-if>
+</div>
+<sc-if value="{{ showTabs }}" hint-placeholder-val="{{ true }}">
+<div style="flex:none;display:flex;align-items:stretch;border-top:2px solid var(--color-text);background:#fff;padding-bottom:18px">
+<sc-for list="{{ tabs }}" as="t" hint-placeholder-count="5">
+<sc-if value="{{ t.isAdd }}"><div style="flex:1;display:flex;justify-content:center;align-items:center;padding:6px 0"><button onClick="{{ openAdd }}" aria-label="Add entry" style="width:60px;height:52px;border:2px solid var(--color-text);background:var(--color-accent);color:var(--color-text);font-size:26px;display:grid;place-items:center" style-hover="background:var(--color-accent-400)"><i class="icon-plus"></i></button></div></sc-if>
+<sc-if value="{{ t.notAdd }}"><button onClick="{{ t.onClick }}" style="flex:1;border:0;border-top:4px solid {{ t.bar }};margin-top:-2px;background:transparent;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;padding:8px 0;min-height:60px;color:{{ t.fg }};font-size:11px;font-weight:{{ t.w }}"><i class="{{ t.icon }}" style="font-size:21px"></i>{{ t.label }}</button></sc-if>
+</sc-for>
+</div>
+</sc-if>
+</div>
+</div>
+<sc-if value="{{ sheet }}" hint-placeholder-val="{{ false }}">
+<div onClick="{{ closeAdd }}" style="position:absolute;inset:0;background:color-mix(in srgb,#201e1d 45%,transparent)"></div>
+<div style="position:absolute;left:{{ sp.left }};right:0;bottom:0;top:{{ sp.top }};background:var(--color-bg);border-top:{{ sp.bt }};border-left:{{ sp.bl }};display:flex;flex-direction:column;box-shadow:var(--shadow-lg)">
+<div style="flex:none;display:flex;align-items:center;gap:10px;padding:14px 18px;border-bottom:2px solid var(--color-text)"><div style="flex:1"><div style="font-size:20px;font-weight:800">New entry</div><div style="font-size:12px;color:var(--color-neutral-700)">Recorded by {{ meShort }} · Wed, 14 Oct</div></div><button onClick="{{ closeAdd }}" aria-label="Close" style="width:44px;height:44px;border:2px solid var(--color-text);background:transparent;font-size:20px;display:grid;place-items:center;color:var(--color-text)"><i class="icon-x"></i></button></div>
+<div style="flex:1;overflow-y:auto;padding:16px 18px;display:flex;flex-direction:column;gap:16px">
+<div style="display:grid;grid-template-columns:1fr 1fr;border:2px solid var(--color-text);background:#fff"><sc-for list="{{ qTypeSeg }}" as="o"><button onClick="{{ o.onClick }}" style="border:0;border-left:{{ o.bl }};background:{{ o.bg }};color:var(--color-text);padding:12px;font-size:15px;font-weight:800;min-height:48px;display:flex;align-items:center;justify-content:center;gap:8px"><i class="{{ o.icon }}" style="font-size:17px"></i>{{ o.label }}</button></sc-for></div>
+<div style="display:flex;align-items:baseline;gap:6px;border-bottom:4px solid var(--color-accent);padding-bottom:4px"><span style="font-size:34px;font-weight:800;color:var(--color-neutral-600)">₹</span><input value="{{ q.amt }}" onChange="{{ onAmt }}" inputmode="numeric" placeholder="0" aria-label="Amount" style="flex:1;min-width:0;border:0;outline:none;background:transparent;font-size:44px;font-weight:800;font-variant-numeric:tabular-nums;letter-spacing:-.02em;padding:0;color:var(--color-text)"></div>
+<div style="display:flex;flex-direction:column;gap:8px"><div style="font-size:11px;letter-spacing:.08em;text-transform:uppercase;font-weight:600;color:var(--color-neutral-700)">{{ qCatLabel }}</div>
+<div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px"><sc-for list="{{ qCats }}" as="c"><button onClick="{{ c.onClick }}" style="border:2px solid {{ c.bd }};background:{{ c.bg }};color:var(--color-text);padding:8px;font-size:13px;font-weight:600;min-height:46px;text-align:left;line-height:1.2">{{ c.name }}</button></sc-for></div></div>
+<div style="display:flex;flex-direction:column;gap:8px"><div style="font-size:11px;letter-spacing:.08em;text-transform:uppercase;font-weight:600;color:var(--color-neutral-700)">Payment mode</div>
+<div style="display:grid;grid-template-columns:repeat(4,minmax(0,1fr));border:2px solid var(--color-text);background:#fff"><sc-for list="{{ qModes }}" as="m"><button onClick="{{ m.onClick }}" style="border:0;border-left:{{ m.bl }};background:{{ m.bg }};color:var(--color-text);padding:8px 4px;font-size:13px;font-weight:600;min-height:46px">{{ m.label }}</button></sc-for></div><div style="font-size:12px;color:var(--color-neutral-700)">Defaults to your last-used mode.</div></div>
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+<div style="display:flex;flex-direction:column;gap:6px"><div style="font-size:11px;letter-spacing:.08em;text-transform:uppercase;font-weight:600;color:var(--color-neutral-700)">Date</div><div style="display:flex;align-items:center;gap:8px;border:2px solid var(--color-text);background:#fff;padding:0 10px;min-height:46px;box-sizing:border-box;font-size:14px;font-weight:600"><i class="icon-calendar" style="font-size:15px"></i>Today</div></div>
+<div style="display:flex;flex-direction:column;gap:6px"><div style="font-size:11px;letter-spacing:.08em;text-transform:uppercase;font-weight:600;color:var(--color-neutral-700)">{{ qByLabel }}</div><select value="{{ q.by }}" onChange="{{ onBy }}" style="border:2px solid var(--color-text);background:#fff;padding:0 8px;min-height:46px;font-size:14px;font-weight:600;border-radius:0;color:var(--color-text)"><sc-for list="{{ qByOpts }}" as="o"><option value="{{ o.v }}">{{ o.l }}</option></sc-for></select></div>
+</div>
+<sc-if value="{{ qIsIncome }}"><div style="display:flex;flex-direction:column;gap:6px"><div style="font-size:11px;letter-spacing:.08em;text-transform:uppercase;font-weight:600;color:var(--color-neutral-700)">Patient name</div><input value="{{ q.patient }}" onChange="{{ onPatient }}" placeholder="e.g. Atharva Kale" style="border:2px solid var(--color-text);background:#fff;padding:0 12px;min-height:46px;font-size:15px;border-radius:0"></div></sc-if>
+<sc-if value="{{ qMoreClosed }}"><button onClick="{{ toggleQMore }}" style="align-self:flex-start;border:0;background:transparent;padding:8px 0;color:var(--color-accent-700);font-size:14px;font-weight:600;display:flex;align-items:center;gap:6px"><i class="icon-plus" style="font-size:15px"></i>Description, receipt photo</button></sc-if>
+<sc-if value="{{ q.more }}">
+<div style="display:flex;flex-direction:column;gap:6px"><div style="font-size:11px;letter-spacing:.08em;text-transform:uppercase;font-weight:600;color:var(--color-neutral-700)">Description (optional)</div><input value="{{ q.desc }}" onChange="{{ onDesc }}" placeholder="What was it for?" style="border:2px solid var(--color-text);background:#fff;padding:0 12px;min-height:46px;font-size:15px;border-radius:0"></div>
+<button onClick="{{ toggleReceipt }}" style="display:flex;align-items:center;gap:12px;border:2px dashed {{ rcBd }};background:{{ rcBg }};padding:12px 14px;min-height:56px;text-align:left;color:var(--color-text)"><i class="{{ rcIcon }}" style="font-size:20px"></i><span style="flex:1"><span style="display:block;font-size:14px;font-weight:600">{{ rcLabel }}</span><span style="display:block;font-size:12px;color:var(--color-neutral-700)">{{ rcSub }}</span></span></button>
+</sc-if>
+</div>
+<div style="flex:none;padding:12px 18px 22px;border-top:2px solid var(--color-text);background:#fff;display:flex;flex-direction:column;gap:6px">
+<sc-if value="{{ qErr }}"><div style="font-size:12px;color:#9A1A00;font-weight:600">{{ qErrMsg }}</div></sc-if>
+<button onClick="{{ save }}" style="display:flex;align-items:center;justify-content:space-between;border:2px solid var(--color-text);background:{{ saveBg }};color:var(--color-text);padding:14px 16px;font-size:16px;font-weight:800;min-height:56px" style-hover="background:var(--color-accent-400)"><span>{{ saveLabel }}</span><i class="icon-check" style="font-size:20px"></i></button>
+</div>
+</div>
+</sc-if>
+
+<sc-if value="{{ inviteOpen }}" hint-placeholder-val="{{ false }}">
+<div style="position:absolute;inset:0;background:color-mix(in srgb,#201e1d 45%,transparent);display:grid;place-items:center;padding:18px">
+<div style="width:min(440px,100%);background:var(--color-bg);border:2px solid var(--color-text);box-shadow:var(--shadow-lg);display:flex;flex-direction:column">
+<div style="padding:14px 18px;border-bottom:2px solid var(--color-text);display:flex;align-items:center"><div style="flex:1;font-size:20px;font-weight:800">Invite user</div><button onClick="{{ closeInvite }}" aria-label="Close" style="width:44px;height:44px;border:0;background:transparent;font-size:20px;color:var(--color-text)"><i class="icon-x"></i></button></div>
+<div style="padding:16px 18px;display:flex;flex-direction:column;gap:14px">
+<label style="display:flex;flex-direction:column;gap:6px;font-size:13px;font-weight:600">Name<input placeholder="Full name" style="border:2px solid var(--color-text);background:#fff;padding:0 12px;min-height:46px;font-size:15px;border-radius:0"></label>
+<label style="display:flex;flex-direction:column;gap:6px;font-size:13px;font-weight:600">Phone or email<input placeholder="+91 or name@email.com" style="border:2px solid var(--color-text);background:#fff;padding:0 12px;min-height:46px;font-size:15px;border-radius:0"></label>
+<div style="display:flex;flex-direction:column;gap:6px"><div style="font-size:13px;font-weight:600">Roles</div><div style="display:flex;flex-wrap:wrap;gap:6px"><sc-for list="{{ inviteRoleChips }}" as="c"><button onClick="{{ c.onClick }}" style="border:2px solid var(--color-text);background:{{ c.bg }};color:var(--color-text);padding:8px 12px;font-size:13px;font-weight:600;min-height:44px">{{ c.label }}</button></sc-for></div></div>
+<div style="font-size:12px;color:var(--color-neutral-700)">They get a link on WhatsApp or email to set their own password.</div>
+</div>
+<div style="padding:12px 18px 16px;display:flex;gap:8px;justify-content:flex-end"><button onClick="{{ closeInvite }}" style="border:2px solid var(--color-text);background:transparent;padding:10px 16px;font-size:14px;font-weight:600;min-height:44px;color:var(--color-text)">Cancel</button><button onClick="{{ sendInvite }}" style="border:2px solid var(--color-text);background:var(--color-accent);color:var(--color-text);padding:10px 16px;font-size:14px;font-weight:800;min-height:44px">Send invite</button></div>
+</div>
+</div>
+</sc-if>
+
+<sc-if value="{{ hasToast }}" hint-placeholder-val="{{ false }}">
+<div style="position:absolute;left:50%;transform:translateX(-50%);bottom:{{ toastBottom }};background:var(--color-text);color:#fff;padding:12px 16px;font-size:14px;font-weight:600;display:flex;align-items:center;gap:10px;box-shadow:var(--shadow-lg);white-space:nowrap"><i class="icon-circle-check" style="font-size:18px;color:var(--color-accent)"></i>{{ toast }}</div>
+</sc-if>
+</div>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;device&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;Mobile&quot;,&quot;Desktop&quot;],&quot;default&quot;:&quot;Mobile&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;role&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;Owner&quot;,&quot;Therapist&quot;,&quot;Front desk&quot;],&quot;default&quot;:&quot;Owner&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;screen&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;login&quot;,&quot;invite&quot;,&quot;dashboard&quot;,&quot;transactions&quot;,&quot;settlement&quot;,&quot;budgets&quot;,&quot;recurring&quot;,&quot;reports&quot;,&quot;categories&quot;,&quot;roles&quot;,&quot;users&quot;,&quot;audit&quot;,&quot;more&quot;],&quot;default&quot;:&quot;dashboard&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;sheet&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false,&quot;tsType&quot;:&quot;boolean&quot;},&quot;invite&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false,&quot;tsType&quot;:&quot;boolean&quot;},&quot;chrome&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;}}">
+class Component extends DCLogic {
+  constructor(p){super(p);this.state=window.ClinicOS?{...window.ClinicOS.initState(p),boot:false}:{boot:true};}
+  componentDidMount(){if(this.state.boot){this._b=setInterval(()=>{if(window.ClinicOS){clearInterval(this._b);this.setState({...window.ClinicOS.initState(this.props),boot:false});}},40);}}
+  componentWillUnmount(){clearInterval(this._b);clearTimeout(this._t);}
+  componentDidUpdate(prev){if(!this.state.boot&&window.ClinicOS)window.ClinicOS.propsChanged(this,prev);}
+  renderVals(){if(this.state.boot||!window.ClinicOS)return {on:{}};return window.ClinicOS.compute(this);}
+}
+</script>
+</body>
+</html>

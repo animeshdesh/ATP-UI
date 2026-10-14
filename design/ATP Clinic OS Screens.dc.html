@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<meta name="design_doc_mode" content="canvas">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700;800&display=swap">
+<style>body{margin:0;background:#E4E4F2;font-family:"Archivo",system-ui,sans-serif;color:#201e1d}a{color:#0072A0}a:hover{color:#06587C}</style>
+</helmet>
+<div style="padding:64px;display:flex;flex-direction:column;gap:80px;width:max-content">
+<div style="display:flex;align-items:flex-end;gap:32px;border-bottom:2px solid #201e1d;padding-bottom:24px">
+<img src="assets/atp-logo.svg" alt="ATP Rehab" style="height:110px;background:#fff;padding:12px">
+<div><div style="font-size:48px;font-weight:800;letter-spacing:-.02em">Clinic OS · V1 Finance</div><div style="font-size:18px;color:#605d5d;margin-top:6px">UI mockups from PRD v0.2 · Mobile + desktop · Owner, Therapist, Front desk · Built by Avyanta Labs</div><div style="margin-top:10px;font-size:16px"><a href="ATP Clinic OS.dc.html">Open the clickable prototype →</a></div></div>
+</div>
+
+<section style="display:flex;flex-direction:column;gap:24px">
+<div style="font-size:28px;font-weight:800">1 · Sign in & invite</div>
+<div style="display:flex;gap:40px;align-items:flex-start">
+<div id="1a" style="display:flex;flex-direction:column;gap:12px"><div style="display:flex;gap:10px;align-items:center"><span style="background:#06AEEF;padding:3px 9px;font-weight:800;font-size:14px">1a</span><span style="font-size:16px;font-weight:600">Sign in · mobile</span></div><dc-import name="ATP Clinic OS" chrome="{{ false }}" device="Mobile" role="Owner" screen="login" hint-size="410px,864px"></dc-import></div>
+<div id="1b" style="display:flex;flex-direction:column;gap:12px"><div style="display:flex;gap:10px;align-items:center"><span style="background:#06AEEF;padding:3px 9px;font-weight:800;font-size:14px">1b</span><span style="font-size:16px;font-weight:600">Accept invite · mobile</span></div><dc-import name="ATP Clinic OS" chrome="{{ false }}" device="Mobile" role="Therapist" screen="invite" hint-size="410px,864px"></dc-import></div>
+<div id="1c" style="display:flex;flex-direction:column;gap:12px"><div style="display:flex;gap:10px;align-items:center"><span style="background:#06AEEF;padding:3px 9px;font-weight:800;font-size:14px">1c</span><span style="font-size:16px;font-weight:600">Sign in · desktop</span></div><dc-import name="ATP Clinic OS" chrome="{{ false }}" device="Desktop" role="Owner" screen="login" hint-size="1282px,802px"></dc-import></div>
+</div>
+</section>
+
+<section style="display:flex;flex-direction:column;gap:24px">
+<div style="font-size:28px;font-weight:800">2 · Owner · mobile</div>
+<div style="display:flex;gap:40px;align-items:flex-start;flex-wrap:wrap;max-width:2900px">
+<div id="2a" style="display:flex;flex-direction:column;gap:12px"><div style="display:flex;gap:10px;align-items:center"><span style="background:#06AEEF;padding:3px 9px;font-weight:800;font-size:14px">2a</span><span style="font-size:16px;font-weight:600">Dashboard</span></div><dc-import name="ATP Clinic OS" chrome="{{ false }}" device="Mobile" role="Owner" screen="dashboard" hint-size="410px,864px"></dc-import></div>
+<div id="2b" style="display:flex;flex-direction:column;gap:12px"><div style="display:flex;gap:10px;align-items:center"><span style="background:#06AEEF;padding:3px 9px;font-weight:800;font-size:14px">2b</span><span style="font-size:16px;font-weight:600">Quick-add entry (15s)</span></div><dc-import name="ATP Clinic OS" chrome="{{ false }}" device="Mobile" role="Owner" screen="dashboard" sheet="{{ true }}" hint-size="410px,864px"></dc-import></div>
+<div id="2c" style="display:flex;flex-direction:column;gap:12px"><div style="display:flex;gap:10px;align-items:center"><span style="background:#06AEEF;padding:3px 9px;font-weight:800;font-size:14px">2c</span><span style="font-size:16px;font-weight:600">Transactions + filters</span></div><dc-import name="ATP Clinic OS" chrome="{{ false }}" device="Mobile" role="Owner" screen="transactions" hint-size="410px,864px"></dc-import></div>
+<div id="2d" style="display:flex;flex-direction:column;gap:12px"><div style="display:flex;gap:10px;align-items:center"><span style="background:#06AEEF;padding:3px 9px;font-weight:800;font-size:14px">2d</span><span style="font-size:16px;font-weight:600">Partner settlement</span></div><dc-import name="ATP Clinic OS" chrome="{{ false }}" device="Mobile" role="Owner" screen="settlement" hint-size="410px,864px"></dc-import></div>
+<div id="2e" style="display:flex;flex-direction:column;gap:12px"><div style="display:flex;gap:10px;align-items:center"><span style="background:#06AEEF;padding:3px 9px;font-weight:800;font-size:14px">2e</span><span style="font-size:16px;font-weight:600">Budgets & funds</span></div><dc-import name="ATP Clinic OS" chrome="{{ false }}" device="Mobile" role="Owner" screen="budgets" hint-size="410px,864px"></dc-import></div>
+<div id="2f" style="display:flex;flex-direction:column;gap:12px"><div style="display:flex;gap:10px;align-items:center"><span style="background:#06AEEF;padding:3px 9px;font-weight:800;font-size:14px">2f</span><span style="font-size:16px;font-weight:600">Recurring items</span></div><dc-import name="ATP Clinic OS" chrome="{{ false }}" device="Mobile" role="Owner" screen="recurring" hint-size="410px,864px"></dc-import></div>
+<div id="2g" style="display:flex;flex-direction:column;gap:12px"><div style="display:flex;gap:10px;align-items:center"><span style="background:#06AEEF;padding:3px 9px;font-weight:800;font-size:14px">2g</span><span style="font-size:16px;font-weight:600">CA report / export</span></div><dc-import name="ATP Clinic OS" chrome="{{ false }}" device="Mobile" role="Owner" screen="reports" hint-size="410px,864px"></dc-import></div>
+<div id="2h" style="display:flex;flex-direction:column;gap:12px"><div style="display:flex;gap:10px;align-items:center"><span style="background:#06AEEF;padding:3px 9px;font-weight:800;font-size:14px">2h</span><span style="font-size:16px;font-weight:600">Categories</span></div><dc-import name="ATP Clinic OS" chrome="{{ false }}" device="Mobile" role="Owner" screen="categories" hint-size="410px,864px"></dc-import></div>
+<div id="2i" style="display:flex;flex-direction:column;gap:12px"><div style="display:flex;gap:10px;align-items:center"><span style="background:#06AEEF;padding:3px 9px;font-weight:800;font-size:14px">2i</span><span style="font-size:16px;font-weight:600">Roles & permissions</span></div><dc-import name="ATP Clinic OS" chrome="{{ false }}" device="Mobile" role="Owner" screen="roles" hint-size="410px,864px"></dc-import></div>
+<div id="2j" style="display:flex;flex-direction:column;gap:12px"><div style="display:flex;gap:10px;align-items:center"><span style="background:#06AEEF;padding:3px 9px;font-weight:800;font-size:14px">2j</span><span style="font-size:16px;font-weight:600">Users + invite</span></div><dc-import name="ATP Clinic OS" chrome="{{ false }}" device="Mobile" role="Owner" screen="users" invite="{{ true }}" hint-size="410px,864px"></dc-import></div>
+<div id="2k" style="display:flex;flex-direction:column;gap:12px"><div style="display:flex;gap:10px;align-items:center"><span style="background:#06AEEF;padding:3px 9px;font-weight:800;font-size:14px">2k</span><span style="font-size:16px;font-weight:600">Audit log</span></div><dc-import name="ATP Clinic OS" chrome="{{ false }}" device="Mobile" role="Owner" screen="audit" hint-size="410px,864px"></dc-import></div>
+<div id="2l" style="display:flex;flex-direction:column;gap:12px"><div style="display:flex;gap:10px;align-items:center"><span style="background:#06AEEF;padding:3px 9px;font-weight:800;font-size:14px">2l</span><span style="font-size:16px;font-weight:600">More menu</span></div><dc-import name="ATP Clinic OS" chrome="{{ false }}" device="Mobile" role="Owner" screen="more" hint-size="410px,864px"></dc-import></div>
+</div>
+</section>
+
+<section style="display:flex;flex-direction:column;gap:24px">
+<div style="font-size:28px;font-weight:800">3 · Owner · desktop</div>
+<div style="display:flex;gap:40px;align-items:flex-start;flex-wrap:wrap;max-width:2700px">
+<div id="3a" style="display:flex;flex-direction:column;gap:12px"><div style="display:flex;gap:10px;align-items:center"><span style="background:#06AEEF;padding:3px 9px;font-weight:800;font-size:14px">3a</span><span style="font-size:16px;font-weight:600">Dashboard</span></div><dc-import name="ATP Clinic OS" chrome="{{ false }}" device="Desktop" role="Owner" screen="dashboard" hint-size="1282px,802px"></dc-import></div>
+<div id="3b" style="display:flex;flex-direction:column;gap:12px"><div style="display:flex;gap:10px;align-items:center"><span style="background:#06AEEF;padding:3px 9px;font-weight:800;font-size:14px">3b</span><span style="font-size:16px;font-weight:600">Add entry panel</span></div><dc-import name="ATP Clinic OS" chrome="{{ false }}" device="Desktop" role="Owner" screen="transactions" sheet="{{ true }}" hint-size="1282px,802px"></dc-import></div>
+<div id="3c" style="display:flex;flex-direction:column;gap:12px"><div style="display:flex;gap:10px;align-items:center"><span style="background:#06AEEF;padding:3px 9px;font-weight:800;font-size:14px">3c</span><span style="font-size:16px;font-weight:600">Partner settlement</span></div><dc-import name="ATP Clinic OS" chrome="{{ false }}" device="Desktop" role="Owner" screen="settlement" hint-size="1282px,802px"></dc-import></div>
+<div id="3d" style="display:flex;flex-direction:column;gap:12px"><div style="display:flex;gap:10px;align-items:center"><span style="background:#06AEEF;padding:3px 9px;font-weight:800;font-size:14px">3d</span><span style="font-size:16px;font-weight:600">CA report / export</span></div><dc-import name="ATP Clinic OS" chrome="{{ false }}" device="Desktop" role="Owner" screen="reports" hint-size="1282px,802px"></dc-import></div>
+<div id="3e" style="display:flex;flex-direction:column;gap:12px"><div style="display:flex;gap:10px;align-items:center"><span style="background:#06AEEF;padding:3px 9px;font-weight:800;font-size:14px">3e</span><span style="font-size:16px;font-weight:600">Roles & permissions</span></div><dc-import name="ATP Clinic OS" chrome="{{ false }}" device="Desktop" role="Owner" screen="roles" hint-size="1282px,802px"></dc-import></div>
+<div id="3f" style="display:flex;flex-direction:column;gap:12px"><div style="display:flex;gap:10px;align-items:center"><span style="background:#06AEEF;padding:3px 9px;font-weight:800;font-size:14px">3f</span><span style="font-size:16px;font-weight:600">Budgets & funds</span></div><dc-import name="ATP Clinic OS" chrome="{{ false }}" device="Desktop" role="Owner" screen="budgets" hint-size="1282px,802px"></dc-import></div>
+</div>
+</section>
+
+<section style="display:flex;flex-direction:column;gap:24px">
+<div style="font-size:28px;font-weight:800">4 · Therapist & Front desk</div>
+<div style="display:flex;gap:40px;align-items:flex-start;flex-wrap:wrap;max-width:2900px">
+<div id="4a" style="display:flex;flex-direction:column;gap:12px"><div style="display:flex;gap:10px;align-items:center"><span style="background:#06AEEF;padding:3px 9px;font-weight:800;font-size:14px">4a</span><span style="font-size:16px;font-weight:600">Therapist · My summary</span></div><dc-import name="ATP Clinic OS" chrome="{{ false }}" device="Mobile" role="Therapist" screen="dashboard" hint-size="410px,864px"></dc-import></div>
+<div id="4b" style="display:flex;flex-direction:column;gap:12px"><div style="display:flex;gap:10px;align-items:center"><span style="background:#06AEEF;padding:3px 9px;font-weight:800;font-size:14px">4b</span><span style="font-size:16px;font-weight:600">Therapist · Quick-add</span></div><dc-import name="ATP Clinic OS" chrome="{{ false }}" device="Mobile" role="Therapist" screen="dashboard" sheet="{{ true }}" hint-size="410px,864px"></dc-import></div>
+<div id="4c" style="display:flex;flex-direction:column;gap:12px"><div style="display:flex;gap:10px;align-items:center"><span style="background:#06AEEF;padding:3px 9px;font-weight:800;font-size:14px">4c</span><span style="font-size:16px;font-weight:600">Therapist · My entries</span></div><dc-import name="ATP Clinic OS" chrome="{{ false }}" device="Mobile" role="Therapist" screen="transactions" hint-size="410px,864px"></dc-import></div>
+<div id="4d" style="display:flex;flex-direction:column;gap:12px"><div style="display:flex;gap:10px;align-items:center"><span style="background:#06AEEF;padding:3px 9px;font-weight:800;font-size:14px">4d</span><span style="font-size:16px;font-weight:600">Front desk · Today</span></div><dc-import name="ATP Clinic OS" chrome="{{ false }}" device="Mobile" role="Front desk" screen="dashboard" hint-size="410px,864px"></dc-import></div>
+<div id="4e" style="display:flex;flex-direction:column;gap:12px"><div style="display:flex;gap:10px;align-items:center"><span style="background:#06AEEF;padding:3px 9px;font-weight:800;font-size:14px">4e</span><span style="font-size:16px;font-weight:600">Front desk · desktop</span></div><dc-import name="ATP Clinic OS" chrome="{{ false }}" device="Desktop" role="Front desk" screen="transactions" hint-size="1282px,802px"></dc-import></div>
+</div>
+</section>
+</div>
+</x-dc>
+</body>
+</html>
