@@ -1,3 +1,7 @@
+import type { components } from '@/api/schema';
+
+type S = components['schemas'];
+
 /*
  * Frontend domain types. Provisional until backend L2–L7 publish their schemas in
  * contracts/openapi.json; then these become aliases of the generated types in src/api/schema.d.ts.
@@ -35,11 +39,20 @@ export interface Person {
 }
 
 export interface Session {
+  /** `user.key` is the auth user id (or the fixture key in mock mode). */
   user: Person;
+  /** Closest default role; drives role-specific labels and the mock ledger identity. */
   role: RoleKey;
   roleLabel: string;
+  clinicId: string;
   clinicName: string;
   permissions: Record<PermissionKey, Scope>;
+}
+
+/** Signed in, but `/v1/me` has no active clinic: the user must pick one. */
+export interface ClinicPick {
+  pickClinic: Array<{ id: string; name: string }>;
+  userName: string;
 }
 
 export interface Transaction {
@@ -178,45 +191,18 @@ export interface Categories {
   recurring: RecurringItem[];
 }
 
-export interface PermissionRow {
-  key: PermissionKey;
-  label: string;
-  group: 'Finance' | 'Settings' | 'Later versions';
-  later?: boolean;
-  /** Scopes per role column, same order as `PermissionMatrix.roles` */
-  scopes: Scope[];
-}
-
-export interface PermissionMatrix {
-  roles: Array<{ key: RoleKey; name: string; users: string }>;
-  rows: PermissionRow[];
-}
-
-export interface Member {
-  name: string;
-  initials: string;
-  contact: string;
-  roles: string[];
-  status: 'Active' | 'Invited';
-}
-
-export interface InviteInput {
-  name: string;
-  contact: string;
-  roles: string[];
-}
-
-export type AuditAction = 'Created' | 'Edited' | 'Deleted' | 'Settings' | 'Settled';
-
-export interface AuditEntry {
-  at: string;
-  user: string;
-  action: AuditAction;
-  kind: 'Entries' | 'Settings';
-  entity: string;
-  before?: string;
-  after: string;
-}
+// ── L2 (auth & RBAC): contract types ─────────────────────────────
+export type PermissionDef = S['Permission'];
+export type Role = S['Role'];
+export type Member = S['Member'];
+export type Invite = S['Invite'];
+export type CreateInvite = S['CreateInvite'];
+export type CreatedInvite = S['CreatedInvite'];
+export type InvitePreview = S['InvitePreview'];
+export type AcceptedInvite = S['AcceptedInvite'];
+export type AuditRow = S['AuditEntry'];
+export type AuditPage = S['AuditPage'];
+export type Me = S['Me'];
 
 export interface ReportPreview {
   month: string;

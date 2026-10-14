@@ -3,6 +3,7 @@ import { Navigate, createBrowserRouter, useLocation, type RouteObject } from 're
 import { Loading } from '@/components/ui';
 import type { PermissionKey } from '@/domain/types';
 import { AuditPage } from '@/features/audit/AuditPage';
+import { ClinicPicker } from '@/features/auth/ClinicPicker';
 import { InvitePage } from '@/features/auth/InvitePage';
 import { LoginPage } from '@/features/auth/LoginPage';
 import { BudgetsPage } from '@/features/budgets/BudgetsPage';
@@ -19,7 +20,7 @@ import { AppShell, type RouteHandle } from '@/layout/AppShell';
 import { useSession } from './session';
 
 function RequireAuth() {
-  const { session, loading } = useSession();
+  const { session, clinicPick, loading, error } = useSession();
   const location = useLocation();
   if (loading)
     return (
@@ -27,7 +28,15 @@ function RequireAuth() {
         <Loading />
       </div>
     );
-  if (!session) return <Navigate to="/login" replace state={{ from: location.pathname }} />;
+  if (clinicPick) return <ClinicPicker pick={clinicPick} />;
+  if (!session)
+    return (
+      <Navigate
+        to="/login"
+        replace
+        state={{ from: location.pathname, ...(error ? { error: error.message } : {}) }}
+      />
+    );
   return (
     <QuickAddProvider>
       <AppShell />
@@ -47,6 +56,7 @@ const page = (nav: RouteHandle['nav'], element: ReactNode, permission?: Permissi
 
 export const routes: RouteObject[] = [
   { path: '/login', element: <LoginPage /> },
+  { path: '/invite/:token', element: <InvitePage /> },
   { path: '/invite', element: <InvitePage /> },
   {
     element: <RequireAuth />,

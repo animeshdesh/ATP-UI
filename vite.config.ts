@@ -47,6 +47,7 @@ export default defineConfig({
   preview: { port: 5553, strictPort: true },
   test: {
     environment: 'jsdom',
+    env: { VITE_AUTH: 'mock' },
     setupFiles: ['./src/test/setup.ts'],
     css: false,
   },

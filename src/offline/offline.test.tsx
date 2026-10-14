@@ -2,12 +2,12 @@ import { screen, within } from '@testing-library/react';
 import { act } from 'react';
 import { describe, expect, it } from 'vitest';
 import { api } from '@/api';
-import { renderApp } from '@/test/render';
+import { renderApp, signInAs } from '@/test/render';
 import { setOnline } from '@/test/network';
 
 describe('offline entries (F-08)', () => {
   it('queues an entry offline and syncs it on reconnect', async () => {
-    await api.signIn('owner');
+    await signInAs('owner');
     const { user } = renderApp('/transactions');
     await screen.findByText('Kinesio tape, 6 rolls');
 
@@ -38,7 +38,7 @@ describe('offline entries (F-08)', () => {
   });
 
   it('creates one entry when the same idempotency key is replayed', async () => {
-    await api.signIn('owner');
+    await signInAs('owner');
     const input = {
       idempotencyKey: 'k-1',
       type: 'expense' as const,

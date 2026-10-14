@@ -1,15 +1,25 @@
-import { createContext, use, useMemo, type ReactNode } from 'react';
+import { createContext, use, useEffect, useMemo, type ReactNode } from 'react';
 import { useQueryClient, type QueryClient } from '@tanstack/react-query';
 import { api } from '@/api';
 import { qk, useSessionQuery } from '@/api/queries';
-import type { PermissionKey, RoleKey, Scope, Session } from '@/domain/types';
+import type { ClinicPick, PermissionKey, RoleKey, Scope, Session } from '@/domain/types';
+import { authMode } from '@/lib/env';
+import { supabase } from '@/lib/supabase';
+
+type SessionData = Session | ClinicPick | null;
 
 interface SessionValue {
   session: Session | null;
+  /** Signed in, but no active clinic yet (multi-clinic user): show the picker. */
+  clinicPick: ClinicPick | null;
   loading: boolean;
+  /** Set when loading the session failed, e.g. a deactivated member. */
+  error: Error | null;
   /** True when the user has the permission at `own` scope or wider. */
   can: (key: PermissionKey, min?: Exclude<Scope, 'none'>) => boolean;
-  signIn: (role?: Exclude<RoleKey, 'ca'>) => Promise<void>;
+  signIn: (v: { identifier: string; password: string; devRole?: RoleKey }) => Promise<void>;
+  acceptInvite: (token: string, v: { fullName: string; password: string }) => Promise<void>;
+  chooseClinic: (id: string) => Promise<void>;
   signOut: () => Promise<void>;
 }
 
@@ -19,32 +29,48 @@ const SessionContext = createContext<SessionValue | null>(null);
  * Swap the cached session and drop every other query, so nothing from the previous user leaks.
  * `qc.clear()` is not used: it would detach the live session observer.
  */
-export function replaceSession(qc: QueryClient, session: Session | null) {
+export function replaceSession(qc: QueryClient, session: SessionData) {
   qc.removeQueries({ predicate: (q) => q.queryKey[0] !== qk.session[0] });
   qc.setQueryData(qk.session, session);
 }
 
+const isSession = (s: SessionData | undefined): s is Session => !!s && 'permissions' in s;
+
 export function SessionProvider({ children }: { children: ReactNode }) {
   const qc = useQueryClient();
-  const { data, isPending } = useSessionQuery();
+  const { data, isPending, error } = useSessionQuery();
+
+  // Magic-link callbacks, refreshes in other tabs, and remote sign-outs arrive here.
+  useEffect(() => {
+    if (authMode !== 'supabase') return;
+    const { data: sub } = supabase().auth.onAuthStateChange((event) => {
+      if (event === 'SIGNED_IN' || event === 'SIGNED_OUT' || event === 'USER_UPDATED') {
+        void qc.invalidateQueries({ queryKey: qk.session });
+      }
+    });
+    return () => sub.subscription.unsubscribe();
+  }, [qc]);
+
   const value = useMemo<SessionValue>(() => {
-    const session = data ?? null;
+    const session = isSession(data) ? data : null;
     return {
       session,
+      clinicPick: data && !isSession(data) ? data : null,
       loading: isPending,
+      error: error ?? null,
       can: (key, min = 'own') => {
         const s = session?.permissions[key] ?? 'none';
         return min === 'all' ? s === 'all' : s !== 'none';
       },
-      signIn: async (role) => {
-        replaceSession(qc, await api.signIn(role));
-      },
+      signIn: async (v) => replaceSession(qc, await api.signIn(v)),
+      acceptInvite: async (token, v) => replaceSession(qc, await api.acceptInvite(token, v)),
+      chooseClinic: async (id) => replaceSession(qc, await api.chooseClinic(id)),
       signOut: async () => {
         await api.signOut();
         replaceSession(qc, null);
       },
     };
-  }, [data, isPending, qc]);
+  }, [data, isPending, error, qc]);
   return <SessionContext value={value}>{children}</SessionContext>;
 }
 

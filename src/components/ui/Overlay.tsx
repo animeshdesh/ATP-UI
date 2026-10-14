@@ -7,10 +7,16 @@ import { IconButton } from './Button';
 /** Escape closes, focus moves into the panel and returns to the opener on close. */
 function useModal(open: boolean, onClose: () => void) {
   const panel = useRef<HTMLDivElement>(null);
+  // Read the latest onClose without re-running the effect: callers often pass an inline
+  // function, and re-running would steal focus back to the first field on every render.
+  const close = useRef(onClose);
+  useEffect(() => {
+    close.current = onClose;
+  });
   useEffect(() => {
     if (!open) return;
     const opener = document.activeElement as HTMLElement | null;
-    const onKey = (e: KeyboardEvent) => e.key === 'Escape' && onClose();
+    const onKey = (e: KeyboardEvent) => e.key === 'Escape' && close.current();
     document.addEventListener('keydown', onKey);
     const prevOverflow = document.body.style.overflow;
     document.body.style.overflow = 'hidden';
@@ -20,7 +26,7 @@ function useModal(open: boolean, onClose: () => void) {
       document.body.style.overflow = prevOverflow;
       opener?.focus?.();
     };
-  }, [open, onClose]);
+  }, [open]);
   return panel;
 }
 

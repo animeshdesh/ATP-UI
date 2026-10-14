@@ -9,7 +9,7 @@ Screens are built ahead of the contract on the in-memory mock (D-012); an F3 lev
 | F0    | Design import & inventory                                                | `/design-login`     | done                                |
 | F1    | Scaffold (Vite, React, TS, Tailwind, PWA, routing, API client, MSW)      | F0 tokens           | done                                |
 | F2    | UI kit + all V1 screens on mock data                                     | F0, F1              | done                                |
-| F3a   | Auth + app shell + role-aware nav                                        | backend L2 contract | in-progress (UI done, mock auth)    |
+| F3a   | Auth + app shell + role-aware nav                                        | backend L2 contract | done                                |
 | F3b   | Quick-add entry, ledger list, edit/delete, receipt upload, offline queue | backend L3 contract | in-progress (UI + offline queue)    |
 | F3c   | Settlement view + mark settled                                           | backend L4          | in-progress (UI done, mock data)    |
 | F3d   | Dashboard                                                                | backend L5          | in-progress (UI done, mock data)    |
@@ -39,6 +39,19 @@ Screens are built ahead of the contract on the in-memory mock (D-012); an F3 lev
 - [x] App shell: desktop sidebar + top bar, mobile header + tab bar with centre add button (F-07) — 2026-10-14
 - [x] All 14 V1 screens + quick-add sheet + invite dialog, mobile and desktop, three roles — 2026-10-14
 
+## F3a — Auth & RBAC · `done`
+
+- [x] Supabase Auth sign-in (email or phone, +91 normalised), magic link, sign-out, "keep me signed in" (local vs tab storage) — 2026-10-14
+- [x] Session from `GET /v1/me`: permissions gate nav, routes and actions; clinic picker when `activeClinic` is null; deactivated member → signed out with a message — 2026-10-14
+- [x] API client middleware: bearer token + `x-clinic-id`; `unwrap` maps `error.code` → `ApiError`, fetch failures → `NetworkError` — 2026-10-14
+- [x] Roles matrix = `GET /v1/permissions` × `GET /v1/roles`, optimistic cell edits (`PATCH /v1/roles/{id}`), Own only where supported, Owner locked; New role — 2026-10-14
+- [x] Users: members (deactivate/reactivate), pending invites (revoke), invite dialog → one-time link with Share / WhatsApp / Copy — 2026-10-14
+- [x] Invite accept at `/invite/:token`: status screens (expired/used/revoked), accept → sign-in, `account_exists` → sign in first — 2026-10-14
+- [x] Audit log from `GET /v1/audit` (raw rows → readable lines, table filter, paging) — 2026-10-14
+- [x] Add-entry hidden without `finance.entry.create` (CA) — 2026-10-14
+- [x] Mock mode keeps contract shapes (`src/api/mock/l2.ts`); 36 tests; verified live against local backend in Chrome — 2026-10-14
+- [ ] Member role editing (`PATCH /v1/members/{id}` roleIds) and rename; profile edit (`PATCH /v1/me`)
+
 ## F3b — Entries · `in-progress`
 
 - [x] Quick-add (F-01…F-05) on mock; default mode = last used (F-03) — 2026-10-14
@@ -56,14 +69,15 @@ Screens are built ahead of the contract on the in-memory mock (D-012); an F3 lev
 1. Backend publishes the level → `pnpm api:types`.
 2. In `src/api/index.ts`, override that level's functions with `http.GET/POST` calls; delete them from `mock/server.ts`.
 3. Replace provisional types in `src/domain/types.ts` with aliases of `components['schemas'][...]`.
-4. Auth (F3a): Supabase JS for sign-in/magic link/refresh; drop the dev role picker.
+4. Done for L2 (F3a): `src/api/real.ts` is the pattern; keep mock shapes identical so tests stay in mock mode.
 
 ---
 
 ## Session log
 
-| Date       | Session summary                                                                                                                                                                      | Next step                                                                |
-| ---------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------ |
-| 2026-10-14 | Created tracker. Design import blocked: DesignSync needs `/design-login`.                                                                                                            | Run `/design-login`, then F0.                                            |
-| 2026-10-14 | F0–F2: imported design, scaffolded PWA, built UI kit and all V1 screens on in-memory mock (D-012). `pnpm check` + `pnpm build` green; screens verified in Chrome at 390 and 1280 px. | F3a when backend L2 contract lands; meanwhile F-08 offline queue design. |
-| 2026-10-14 | Ports → 5553 (strict) / API 4553. Pushed to `animeshdesh/ATP-UI`. F-08 offline outbox (21 tests). Fixed this tracker, which the F0–F2 commit had left unticked.                      | F-06 entry edit/delete, then F-23 share sheet.                           |
+| Date       | Session summary                                                                                                                                                                      | Next step                                                                    |
+| ---------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ---------------------------------------------------------------------------- |
+| 2026-10-14 | Created tracker. Design import blocked: DesignSync needs `/design-login`.                                                                                                            | Run `/design-login`, then F0.                                                |
+| 2026-10-14 | F0–F2: imported design, scaffolded PWA, built UI kit and all V1 screens on in-memory mock (D-012). `pnpm check` + `pnpm build` green; screens verified in Chrome at 390 and 1280 px. | F3a when backend L2 contract lands; meanwhile F-08 offline queue design.     |
+| 2026-10-14 | Ports → 5553 (strict) / API 4553. Pushed to `animeshdesh/ATP-UI`. F-08 offline outbox (21 tests). Fixed this tracker, which the F0–F2 commit had left unticked.                      | F-06 entry edit/delete, then F-23 share sheet.                               |
+| 2026-10-14 | F3a: real auth + L2 API (roles, members, invites, audit). Fixed dialog focus-jump bug and invite-before-roles-load bug. Live-verified flows in Chrome.                               | F3b: move ledger, quick-add, categories, recurring to L3 (`docs/LEDGER.md`). |

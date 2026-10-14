@@ -47,6 +47,7 @@ export function AppShell() {
   const title = navLabel(current, session.role);
   const subtitle = subtitleFor(current, session.clinicName);
   const showPeriod = current === 'dashboard' && can('finance.report.view', 'all');
+  const canAdd = can('finance.entry.create');
 
   const visible = (k: NavKey) => {
     const p = NAV[k].permission;
@@ -72,9 +73,11 @@ export function AppShell() {
             <div className="text-[13px] text-neutral-700">{subtitle}</div>
           </div>
           {showPeriod && <PeriodSwitch />}
-          <Button variant="primary" icon={Plus} onClick={() => openAdd()}>
-            Add entry
-          </Button>
+          {canAdd && (
+            <Button variant="primary" icon={Plus} onClick={() => openAdd()}>
+              Add entry
+            </Button>
+          )}
         </header>
 
         {/* Mobile header */}
@@ -100,7 +103,7 @@ export function AppShell() {
           <Outlet />
         </main>
 
-        <TabBar hasMore={hasMore} showSettle={visible('settlement')} />
+        <TabBar hasMore={hasMore} showSettle={visible('settlement')} canAdd={canAdd} />
       </div>
     </div>
   );
@@ -176,17 +179,25 @@ function Sidebar({ mainKeys, settingsKeys }: { mainKeys: NavKey[]; settingsKeys:
   );
 }
 
-function TabBar({ hasMore, showSettle }: { hasMore: boolean; showSettle: boolean }) {
+function TabBar({
+  hasMore,
+  showSettle,
+  canAdd,
+}: {
+  hasMore: boolean;
+  showSettle: boolean;
+  canAdd: boolean;
+}) {
   const openAdd = useQuickAdd();
   const { pathname } = useLocation();
   const tabs = TABS.filter(
     (t) =>
-      t === 'add' ||
-      (t.key !== 'more' && t.key !== 'settlement') ||
-      (t.key === 'more' ? hasMore : showSettle),
+      (t === 'add' && canAdd) ||
+      (t !== 'add' && t.key !== 'more' && t.key !== 'settlement') ||
+      (t !== 'add' && (t.key === 'more' ? hasMore : t.key === 'settlement' && showSettle)),
   );
   // Without More/Settle the design orders Home · Add · Entries.
-  const ordered = tabs.length === 3 ? [tabs[0]!, 'add' as const, tabs[1]!] : tabs;
+  const ordered = canAdd && tabs.length === 3 ? [tabs[0]!, 'add' as const, tabs[1]!] : tabs;
   return (
     <nav
       aria-label="Tabs"

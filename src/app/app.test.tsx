@@ -1,7 +1,6 @@
 import { act, screen, waitFor, within } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
-import { api } from '@/api';
-import { renderApp } from '@/test/render';
+import { renderApp, signInAs } from '@/test/render';
 
 describe('app', () => {
   it('redirects to sign in and lands on the owner dashboard', async () => {
@@ -15,7 +14,7 @@ describe('app', () => {
   });
 
   it('shows clinic tiles and attention items to an owner', async () => {
-    await api.signIn('owner');
+    await signInAs('owner');
     renderApp('/');
     expect(await screen.findByText('₹3,29,100')).toBeInTheDocument();
     const attention = screen.getByRole('region', { name: 'Needs attention' });
@@ -24,7 +23,7 @@ describe('app', () => {
   });
 
   it('logs a quick-add expense and shows it in transactions', async () => {
-    await api.signIn('owner');
+    await signInAs('owner');
     const { user } = renderApp('/transactions');
     await screen.findByText('Kinesio tape, 6 rolls');
     await user.click(screen.getAllByRole('button', { name: /add entry/i })[0]!);
@@ -44,7 +43,7 @@ describe('app', () => {
   });
 
   it('opens a prefilled entry from recurring and marks it logged', async () => {
-    await api.signIn('owner');
+    await signInAs('owner');
     const { user } = renderApp('/recurring');
     await screen.findByText('Caretaker salary');
     await user.click(screen.getAllByRole('button', { name: 'Log now' })[0]!);
@@ -55,7 +54,7 @@ describe('app', () => {
   });
 
   it('limits a therapist to own entries and hides owner screens', async () => {
-    await api.signIn('therapist');
+    await signInAs('therapist');
     const { router } = renderApp('/');
     expect(await screen.findByText('Your latest entries')).toBeInTheDocument();
     expect(screen.queryByRole('link', { name: /Settlement/ })).not.toBeInTheDocument();
@@ -68,7 +67,7 @@ describe('app', () => {
   });
 
   it('cycles a role permission but never reduces Owner', async () => {
-    await api.signIn('owner');
+    await signInAs('owner');
     const { user } = renderApp('/settings/roles');
     const cell = await screen.findByRole('button', { name: 'Edit any entry, Therapist: None' });
     await user.click(cell);
@@ -77,5 +76,72 @@ describe('app', () => {
     ).toBeInTheDocument();
     await user.click(screen.getByRole('button', { name: 'Edit any entry, Owner: All' }));
     expect(screen.getByRole('button', { name: 'Edit any entry, Owner: All' })).toBeInTheDocument();
+  });
+});
+
+describe('auth & RBAC (L2 shapes, mock mode)', () => {
+  it('shows sign-in errors from the auth layer', async () => {
+    const { user } = renderApp('/login');
+    await user.click(await screen.findByRole('button', { name: 'Sign in' }));
+    expect(await screen.findByRole('alert')).toHaveTextContent(
+      'Enter your phone or email and password.',
+    );
+  });
+
+  it('gives the CA read access without an add button', async () => {
+    await signInAs('ca');
+    renderApp('/');
+    expect(await screen.findByText('₹3,29,100')).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /add entry/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Log now' })).not.toBeInTheDocument();
+  });
+
+  it('invites a user, shows the link once, and the invitee joins', async () => {
+    await signInAs('owner');
+    const { user, router } = renderApp('/settings/users');
+    await user.click(await screen.findByRole('button', { name: 'Invite user' }));
+    const dialog = await screen.findByRole('dialog', { name: 'Invite user' });
+    await user.type(within(dialog).getByLabelText('Name'), 'Dr. Neha Joshi');
+    await user.type(within(dialog).getByLabelText('Phone or email'), '98765 43210');
+    await waitFor(() =>
+      expect(within(dialog).getByRole('button', { name: 'Create invite' })).toBeEnabled(),
+    );
+    expect(within(dialog).getByRole('button', { name: 'Therapist' })).toHaveAttribute(
+      'aria-pressed',
+      'true',
+    );
+    await user.click(within(dialog).getByRole('button', { name: 'Create invite' }));
+
+    const share = await screen.findByRole('dialog', { name: 'Send the invite' });
+    const url = within(share).getByLabelText('Invite link').textContent!;
+    expect(url).toMatch(/\/invite\/mock-inv-\d+$/);
+    await user.click(within(share).getByRole('button', { name: 'Done' }));
+    expect(
+      within(await screen.findByRole('region', { name: 'Pending invites' })).getByText(
+        'Dr. Neha Joshi',
+      ),
+    ).toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: 'Sign out' }));
+    await waitFor(() => expect(router.state.location.pathname).toBe('/login'));
+    await screen.findByRole('heading', { name: 'Sign in' });
+    await act(() => router.navigate(new URL(url).pathname));
+    expect(await screen.findByRole('heading', { name: 'Set your password' })).toBeInTheDocument();
+    await user.type(screen.getByLabelText('New password'), 'short');
+    await user.click(screen.getByRole('button', { name: 'Join ATP Rehab' }));
+    expect(screen.getByRole('alert')).toHaveTextContent('Use at least 8 characters.');
+    await user.type(screen.getByLabelText('New password'), '-enough');
+    await user.click(screen.getByRole('button', { name: 'Join ATP Rehab' }));
+    expect(await screen.findAllByRole('heading', { name: 'My summary' })).not.toHaveLength(0);
+  });
+
+  it('deactivates a member', async () => {
+    await signInAs('owner');
+    const { user } = renderApp('/settings/users');
+    const list = await screen.findByRole('list', { name: 'Members' });
+    const pooja = within(list).getByText('Pooja Shinde').closest('li')!;
+    await user.click(within(pooja).getByRole('button', { name: 'Deactivate' }));
+    expect(await within(pooja).findByText('Deactivated')).toBeInTheDocument();
+    expect(within(list).getByText('(you)')).toBeInTheDocument();
   });
 });

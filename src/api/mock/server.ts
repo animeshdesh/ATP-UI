@@ -7,19 +7,11 @@ import { monthToDate, monthYear } from '@/lib/dates';
 import { inr } from '@/lib/money';
 import type {
   AttentionItem,
-  AuditEntry,
   Budgets,
   Categories,
   Dashboard,
-  InviteInput,
-  Member,
   NewTransaction,
-  PermissionKey,
-  PermissionMatrix,
   ReportPreview,
-  RoleKey,
-  Scope,
-  Session,
   Settlement,
   StatTile,
   Transaction,
@@ -34,32 +26,22 @@ import {
   PARTNER_KEYS,
   PARTNER_LEDGER,
   PEOPLE,
-  ROLE_COLUMNS,
-  ROLE_LABEL,
-  USER_FOR_ROLE,
-  seedAudit,
-  seedMembers,
-  seedPermissions,
   seedRecurring,
   seedTransactions,
 } from './fixtures';
 import { computeSettlement } from './settlement';
-
-const SESSION_KEY = 'atp.mock.session';
+import { ApiError, NetworkError } from '../errors';
+import { mockRole, mockScope, mockUserKey, recordAudit, resetMockL2 } from './l2';
 
 function freshDb() {
   return {
-    role: null as Exclude<RoleKey, 'ca'> | null,
     transactions: seedTransactions(),
     recurring: seedRecurring(),
-    permissions: seedPermissions(),
     categories: {
       expense: [...EXPENSE_CATEGORIES],
       income: [...INCOME_CATEGORIES],
       archived: { expense: ['Printing'], income: [] as string[] },
     },
-    members: seedMembers(),
-    audit: seedAudit(),
     settledOn: undefined as string | undefined,
     lastMode: {} as Record<string, NewTransaction['paymentMode']>,
     seq: 100,
@@ -73,71 +55,20 @@ let db = freshDb();
 /** Test hook: restore seed state. */
 export function resetMockDb() {
   db = freshDb();
-  try {
-    localStorage.removeItem(SESSION_KEY);
-  } catch {
-    /* storage unavailable */
-  }
+  resetMockL2();
 }
 
 const latency = <T>(value: T, ms = 120): Promise<T> =>
   new Promise((resolve) => setTimeout(() => resolve(structuredClone(value)), ms));
-
-class ApiError extends Error {
-  constructor(
-    public status: number,
-    message: string,
-  ) {
-    super(message);
-  }
-}
-
-/** The request never reached the server (offline, DNS, timeout). Safe to retry. */
-class NetworkError extends Error {
-  constructor(message = 'You are offline') {
-    super(message);
-  }
-}
 
 /** Simulates fetch failing while the device is offline. */
 function assertOnline() {
   if (typeof navigator !== 'undefined' && navigator.onLine === false) throw new NetworkError();
 }
 
-function currentRole(): Exclude<RoleKey, 'ca'> {
-  if (!db.role) {
-    try {
-      const saved = localStorage.getItem(SESSION_KEY);
-      if (saved === 'owner' || saved === 'therapist' || saved === 'frontdesk') db.role = saved;
-    } catch {
-      /* storage unavailable */
-    }
-  }
-  if (!db.role) throw new ApiError(401, 'Not signed in');
-  return db.role;
-}
-
-function permissionsFor(role: RoleKey): Record<PermissionKey, Scope> {
-  const col = ROLE_COLUMNS.indexOf(role);
-  return Object.fromEntries(db.permissions.map((p) => [p.key, p.scopes[col] ?? 'none'])) as Record<
-    PermissionKey,
-    Scope
-  >;
-}
-
-function buildSession(): Session {
-  const role = currentRole();
-  return {
-    user: PEOPLE[USER_FOR_ROLE[role]]!,
-    role,
-    roleLabel: ROLE_LABEL[role],
-    clinicName: 'ATP Rehab',
-    permissions: permissionsFor(role),
-  };
-}
-
-const me = () => USER_FOR_ROLE[currentRole()];
-const scopeOf = (key: PermissionKey) => permissionsFor(currentRole())[key];
+const me = mockUserKey;
+const currentRole = mockRole;
+const scopeOf = mockScope;
 const visibleTransactions = () =>
   scopeOf('finance.entry.view') === 'all'
     ? db.transactions
@@ -159,48 +90,6 @@ function settlementNow() {
 }
 
 export const mockServer = {
-  // ── Auth (L2) ────────────────────────────────────────────
-  async signIn(role: Exclude<RoleKey, 'ca'> = 'owner'): Promise<Session> {
-    db.role = role;
-    try {
-      localStorage.setItem(SESSION_KEY, role);
-    } catch {
-      /* storage unavailable */
-    }
-    return latency(buildSession(), 250);
-  },
-  async signOut(): Promise<void> {
-    db.role = null;
-    try {
-      localStorage.removeItem(SESSION_KEY);
-    } catch {
-      /* storage unavailable */
-    }
-    return latency(undefined, 50);
-  },
-  async getSession(): Promise<Session | null> {
-    try {
-      return await latency(buildSession(), 30);
-    } catch {
-      return null;
-    }
-  },
-  async sendMagicLink(_contact: string): Promise<void> {
-    return latency(undefined, 300);
-  },
-  async getInvite(_token: string) {
-    return latency({
-      invitedBy: PEOPLE.Sameer!.fullName,
-      clinicName: 'ATP Rehab',
-      role: 'Therapist',
-      name: PEOPLE.Anjali!.fullName,
-      contact: '+91 97654 22018',
-    });
-  },
-  async acceptInvite(_input: { token: string; name: string; password: string }): Promise<Session> {
-    return mockServer.signIn('therapist');
-  },
-
   // ── Ledger (L3) ──────────────────────────────────────────
   async listTransactions(f: TransactionFilters = {}): Promise<Transaction[]> {
     const q = (f.search ?? '').trim().toLowerCase();
@@ -250,19 +139,19 @@ export const mockServer = {
         r.key === input.recurringKey ? { ...r, logged: true } : r,
       );
     }
-    db.audit = [
-      {
-        at: 'Just now',
-        user: PEOPLE[me()]!.shortName,
-        action: 'Created',
-        kind: 'Entries',
-        entity: `${input.type === 'income' ? 'Income' : 'Expense'} · ${input.category}`,
-        after: [inr(input.amountPaise), input.paymentMode, input.patientName]
-          .filter(Boolean)
-          .join(' · '),
+    recordAudit({
+      action: 'insert',
+      tableName: 'transactions',
+      rowId: txn.id,
+      before: null,
+      after: {
+        type: txn.type,
+        category: txn.category,
+        amount_paise: txn.amountPaise,
+        payment_mode: txn.paymentMode,
+        ...(txn.patientName ? { patient_name: txn.patientName } : {}),
       },
-      ...db.audit,
-    ];
+    });
     return latency(txn, 200);
   },
   /** F-03: default payment mode is the user's last used one. */
@@ -472,51 +361,4 @@ export const mockServer = {
     db.categories[type] = [...db.categories[type], name];
     return latency(undefined);
   },
-  async getPermissionMatrix(): Promise<PermissionMatrix> {
-    const counts = { owner: '4 users', therapist: '1 user', frontdesk: '1 user', ca: '1 invited' };
-    return latency({
-      roles: ROLE_COLUMNS.map((key) => ({ key, name: ROLE_LABEL[key], users: counts[key] })),
-      rows: db.permissions,
-    });
-  },
-  async setPermission(key: PermissionKey, role: RoleKey, scope: Scope) {
-    if (role === 'owner') throw new ApiError(400, "Owner access can't be reduced");
-    const col = ROLE_COLUMNS.indexOf(role);
-    db.permissions = db.permissions.map((p) =>
-      p.key === key ? { ...p, scopes: p.scopes.map((s, i) => (i === col ? scope : s)) } : p,
-    );
-    return latency(undefined, 80);
-  },
-  async listMembers(): Promise<Member[]> {
-    return latency(
-      db.members.map((m) => {
-        const p = 'key' in m && m.key ? PEOPLE[m.key] : undefined;
-        return {
-          name: p?.fullName ?? m.name ?? '',
-          initials: p?.initials ?? m.initials ?? '',
-          contact: m.contact,
-          roles: m.roles,
-          status: m.invited ? 'Invited' : 'Active',
-        };
-      }),
-    );
-  },
-  async invite(input: InviteInput) {
-    const initials = input.name
-      .split(/\s+/)
-      .filter(Boolean)
-      .slice(0, 2)
-      .map((w) => w[0]!.toUpperCase())
-      .join('');
-    db.members = [
-      ...db.members,
-      { name: input.name, initials, contact: input.contact, roles: input.roles, invited: true },
-    ];
-    return latency(undefined, 250);
-  },
-  async listAudit(kind: 'All' | AuditEntry['kind']): Promise<AuditEntry[]> {
-    return latency(db.audit.filter((a) => kind === 'All' || a.kind === kind));
-  },
 };
-
-export { ApiError, NetworkError };

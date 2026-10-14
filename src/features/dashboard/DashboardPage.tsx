@@ -70,6 +70,9 @@ export function DashboardPage() {
 function ClinicSections({ data }: { data: Dashboard }) {
   const navigate = useNavigate();
   const openAdd = useQuickAdd();
+  const { can } = useSession();
+  const allowed = (kind: Dashboard['attention'][number]['action']['kind']) =>
+    kind === 'budgets' ? can('finance.budget.manage') : can('finance.entry.create');
   const maxSpent = Math.max(...data.breakdown.map((b) => b.spentPaise), 1);
   const pending = data.recurring.filter((r) => !r.logged);
   const logged = data.recurring.length - pending.length;
@@ -111,22 +114,24 @@ function ClinicSections({ data }: { data: Dashboard }) {
                 <div className="text-sm font-semibold">{a.text}</div>
                 <div className="text-xs text-neutral-700">{a.sub}</div>
               </div>
-              <Button
-                size="sm"
-                className="min-h-11"
-                onClick={() =>
-                  a.action.kind === 'budgets'
-                    ? navigate('/budgets')
-                    : logRecurring(
-                        data.recurring.find(
-                          (r) =>
-                            a.action.kind === 'log-recurring' && r.key === a.action.recurringKey,
-                        ),
-                      )
-                }
-              >
-                {a.action.label}
-              </Button>
+              {allowed(a.action.kind) && (
+                <Button
+                  size="sm"
+                  className="min-h-11"
+                  onClick={() =>
+                    a.action.kind === 'budgets'
+                      ? navigate('/budgets')
+                      : logRecurring(
+                          data.recurring.find(
+                            (r) =>
+                              a.action.kind === 'log-recurring' && r.key === a.action.recurringKey,
+                          ),
+                        )
+                  }
+                >
+                  {a.action.label}
+                </Button>
+              )}
             </div>
           ))}
         </section>

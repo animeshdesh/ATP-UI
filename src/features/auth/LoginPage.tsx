@@ -5,13 +5,25 @@ import { api } from '@/api';
 import { useSession } from '@/app/session';
 import { Button, Field, Input, Segmented, useToast } from '@/components/ui';
 import type { RoleKey } from '@/domain/types';
+import { authMode } from '@/lib/env';
+import { keepSignedIn } from '@/lib/supabase';
 import { AuthLayout } from './AuthLayout';
 
 const DEV_ROLES = [
   { value: 'owner', label: 'Owner' },
   { value: 'therapist', label: 'Therapist' },
   { value: 'frontdesk', label: 'Front desk' },
+  { value: 'ca', label: 'CA' },
 ] as const;
+
+/** Local seed logins from `pnpm db:seed:dev` (backend docs/AUTH.md). Dev builds only. */
+const DEV_LOGINS: Record<RoleKey, string> = {
+  owner: 'owner@atp.local',
+  therapist: 'therapist@atp.local',
+  frontdesk: 'frontdesk@atp.local',
+  ca: 'ca@atp.local',
+};
+const DEV_PASSWORD = 'atp-dev-1234';
 
 const inputCls = 'min-h-12 text-base';
 
@@ -21,24 +33,35 @@ export function LoginPage() {
   const toast = useToast();
   const [contact, setContact] = useState('');
   const [password, setPassword] = useState('');
-  const [keep, setKeep] = useState(true);
-  const [devRole, setDevRole] = useState<Exclude<RoleKey, 'ca'>>('owner');
+  const [keep, setKeep] = useState(keepSignedIn.get);
+  const [devRole, setDevRole] = useState<RoleKey>('owner');
   const [busy, setBusy] = useState(false);
-  const [error, setError] = useState('');
+  const state = location.state as { from?: string; error?: string } | null;
+  const [error, setError] = useState(state?.error ?? '');
 
-  const from = (location.state as { from?: string } | null)?.from ?? '/';
+  const from = state?.from ?? '/';
   // Signing in sets the session; this redirect then returns the user to where they started.
   if (session) return <Navigate to={from} replace />;
 
   const submit = async () => {
     if (!contact.trim() || !password) return setError('Enter your phone or email and password.');
     setBusy(true);
+    setError('');
+    keepSignedIn.set(keep);
     try {
-      await signIn(devRole);
-    } catch {
-      setError('Wrong phone, email or password.');
+      await signIn({ identifier: contact, password, devRole });
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Sign-in failed. Try again.');
     } finally {
       setBusy(false);
+    }
+  };
+
+  const pickDev = (role: RoleKey) => {
+    setDevRole(role);
+    if (authMode === 'supabase') {
+      setContact(DEV_LOGINS[role]);
+      setPassword(DEV_PASSWORD);
     }
   };
 
@@ -99,13 +122,15 @@ export function LoginPage() {
         </label>
         {import.meta.env.DEV && (
           <div className="flex flex-col gap-1.5 border-2 border-dashed border-neutral-500 p-2.5">
-            <div className="kicker">Dev only · sign in as</div>
+            <div className="kicker">
+              Dev only · {authMode === 'supabase' ? 'fill a seeded login' : 'mock sign-in as'}
+            </div>
             <Segmented
               label="Dev role"
               block
               options={DEV_ROLES}
               value={devRole}
-              onChange={setDevRole}
+              onChange={pickDev}
             />
           </div>
         )}
@@ -124,8 +149,13 @@ export function LoginPage() {
           onClick={async () => {
             if (!contact.includes('@')) return setError('Enter your email to get a magic link.');
             setError('');
-            await api.sendMagicLink(contact);
-            toast(`Magic link sent to ${contact}`);
+            try {
+              keepSignedIn.set(keep);
+              await api.sendMagicLink(contact, window.location.origin + from);
+              toast(`Magic link sent to ${contact}`);
+            } catch (e) {
+              setError(e instanceof Error ? e.message : 'Could not send the link.');
+            }
           }}
         >
           Email me a magic link instead

@@ -1,15 +1,13 @@
-import { useMutation, useQuery, useQueryClient, type QueryClient } from '@tanstack/react-query';
-import type {
-  AuditEntry,
-  NewTransaction,
-  PermissionKey,
-  RoleKey,
-  Scope,
-  Transaction,
-  TransactionFilters,
-} from '@/domain/types';
+import {
+  useInfiniteQuery,
+  useMutation,
+  useQuery,
+  useQueryClient,
+  type QueryClient,
+} from '@tanstack/react-query';
+import type { NewTransaction, Role, Scope, Transaction, TransactionFilters } from '@/domain/types';
 import { outbox } from '@/offline/outbox';
-import { NetworkError, api } from './index';
+import { ApiError, NetworkError, api } from './index';
 
 export const qk = {
   session: ['session'] as const,
@@ -22,12 +20,21 @@ export const qk = {
   recurring: ['recurring'] as const,
   report: (month: string) => ['report', month] as const,
   categories: ['categories'] as const,
-  permissions: ['permissions'] as const,
+  permissionCatalog: ['permission-catalog'] as const,
+  roles: ['roles'] as const,
   members: ['members'] as const,
-  audit: (kind: string) => ['audit', kind] as const,
+  invites: ['invites'] as const,
+  audit: (table: string) => ['audit', table] as const,
 };
 
-export const useSessionQuery = () => useQuery({ queryKey: qk.session, queryFn: api.getSession });
+export const useSessionQuery = () =>
+  useQuery({
+    queryKey: qk.session,
+    queryFn: api.getSession,
+    staleTime: 5 * 60_000,
+    // Retry only transient failures; a 401/403 answer is final.
+    retry: (n, e) => !(e instanceof ApiError) && n < 2,
+  });
 export const useTransactions = (f: TransactionFilters) =>
   useQuery({
     queryKey: qk.transactions(f),
@@ -48,11 +55,25 @@ export const useReportPreview = (month: string) =>
   useQuery({ queryKey: qk.report(month), queryFn: () => api.getReportPreview(month) });
 export const useCategories = () =>
   useQuery({ queryKey: qk.categories, queryFn: api.getCategories });
-export const usePermissionMatrix = () =>
-  useQuery({ queryKey: qk.permissions, queryFn: api.getPermissionMatrix });
+export const usePermissionCatalog = () =>
+  useQuery({ queryKey: qk.permissionCatalog, queryFn: api.listPermissions, staleTime: Infinity });
+export const useRoles = () => useQuery({ queryKey: qk.roles, queryFn: api.listRoles });
 export const useMembers = () => useQuery({ queryKey: qk.members, queryFn: api.listMembers });
-export const useAudit = (kind: 'All' | AuditEntry['kind']) =>
-  useQuery({ queryKey: qk.audit(kind), queryFn: () => api.listAudit(kind) });
+export const useInvites = () => useQuery({ queryKey: qk.invites, queryFn: api.listInvites });
+
+/** Audit log, newest first, 30 rows per page; `table` '' means all tables. */
+export const useAuditLog = (table: string) =>
+  useInfiniteQuery({
+    queryKey: qk.audit(table),
+    queryFn: ({ pageParam }) =>
+      api.listAudit({
+        limit: 30,
+        ...(table ? { table } : {}),
+        ...(pageParam ? { cursor: pageParam } : {}),
+      }),
+    initialPageParam: '',
+    getNextPageParam: (last) => last.nextCursor ?? undefined,
+  });
 
 const LEDGER_KEYS = [
   'transactions',
@@ -141,19 +162,64 @@ export function useCategoryMutations() {
   };
 }
 
-export function useSetPermission() {
+/** One matrix cell. Optimistic, rolled back on error (e.g. scope_own_not_supported). */
+export function useSetRolePermission() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (v: { key: PermissionKey; role: RoleKey; scope: Scope }) =>
-      api.setPermission(v.key, v.role, v.scope),
-    onSuccess: () => qc.invalidateQueries({ queryKey: qk.permissions }),
+    mutationFn: (v: { roleId: string; key: string; scope: Scope }) =>
+      api.updateRolePermissions(v.roleId, { [v.key]: v.scope }),
+    onMutate: async (v) => {
+      await qc.cancelQueries({ queryKey: qk.roles });
+      const prev = qc.getQueryData<Role[]>(qk.roles);
+      qc.setQueryData<Role[]>(qk.roles, (roles) =>
+        roles?.map((r) => {
+          if (r.id !== v.roleId) return r;
+          const permissions = { ...r.permissions };
+          if (v.scope === 'none') delete permissions[v.key];
+          else permissions[v.key] = v.scope;
+          return { ...r, permissions };
+        }),
+      );
+      return { prev };
+    },
+    onError: (_e, _v, ctx) => qc.setQueryData(qk.roles, ctx?.prev),
+    onSettled: () =>
+      Promise.all([
+        qc.invalidateQueries({ queryKey: qk.roles }),
+        qc.invalidateQueries({ queryKey: qk.session }),
+      ]),
   });
 }
 
-export function useInvite() {
+export function useCreateRole() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: api.invite,
+    mutationFn: api.createRole,
+    onSuccess: () => qc.invalidateQueries({ queryKey: qk.roles }),
+  });
+}
+
+export function useCreateInvite() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: api.createInvite,
+    onSuccess: () => qc.invalidateQueries({ queryKey: qk.invites }),
+  });
+}
+
+export function useRevokeInvite() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: api.revokeInvite,
+    onSuccess: () => qc.invalidateQueries({ queryKey: qk.invites }),
+  });
+}
+
+export function useSetMemberActive() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (v: { memberId: string; active: boolean }) =>
+      api.setMemberActive(v.memberId, v.active),
     onSuccess: () => qc.invalidateQueries({ queryKey: qk.members }),
   });
 }
