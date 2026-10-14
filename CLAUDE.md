@@ -4,7 +4,7 @@ Mobile-first installable PWA for ATP Rehab staff. React 19 + TypeScript 6.0 + Vi
 
 ## Commands
 
-- `pnpm dev` (port 5173; Vite moves to the next free port if it is taken) · `pnpm build` · `pnpm check` (lint + typecheck + test)
+- `pnpm dev` on http://localhost:5553 (`strictPort`: fails instead of moving, because Supabase auth redirects target 5553) · `pnpm build` · `pnpm check` (lint + typecheck + test)
 - `pnpm api:types` regenerates `src/api/schema.d.ts` from `../atp-backend/contracts/openapi.json`
 - Dev sign-in: any phone/email + password; the dashed "Dev only" picker chooses Owner / Therapist / Front desk.
 
