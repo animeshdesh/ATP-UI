@@ -1,7 +1,7 @@
 import { useEffect, useSyncExternalStore } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { ApiError, NetworkError, api } from '@/api';
-import { invalidateLedger } from '@/api/queries';
+import { attachReceipt, invalidateLedger } from '@/api/queries';
 import { useAuthedSession } from '@/app/session';
 import { useToast } from '@/components/ui';
 import { flushOutbox, outbox, type OutboxItem, type SendResult } from './outbox';
@@ -31,7 +31,9 @@ export function useOutbox(): OutboxItem[] {
 
 async function send(item: OutboxItem): Promise<SendResult> {
   try {
-    await api.createTransaction(item.input);
+    const txn = await api.createTransaction(item.input);
+    // A failed receipt upload doesn't block the entry; it can be re-added from the entry.
+    if (item.receipt) await attachReceipt(txn.id, item.receipt);
     return 'sent';
   } catch (e) {
     if (e instanceof NetworkError) return 'retry';

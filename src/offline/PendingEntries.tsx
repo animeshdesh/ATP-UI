@@ -1,28 +1,38 @@
 import { CloudUpload, TriangleAlert } from 'lucide-react';
-import type { Person, Transaction } from '@/domain/types';
+import type { Transaction } from '@/domain/types';
 import { EntryRow } from '@/features/transactions/EntryRow';
 import { useOutbox } from './hooks';
 import { outbox, type OutboxItem } from './outbox';
 
 function asTransaction(item: OutboxItem): Transaction {
   const i = item.input;
+  const at = new Date(item.queuedAt).toISOString();
   return {
     id: item.key,
     type: i.type,
     amountPaise: i.amountPaise,
-    category: i.category,
-    entryDate: i.entryDate,
-    description: i.description || (i.patientName ? `${i.category} · ${i.patientName}` : i.category),
-    ...(i.patientName ? { patientName: i.patientName } : {}),
-    paymentMode: i.paymentMode,
-    partyKey: i.partyKey,
-    recordedBy: item.userKey,
+    categoryId: i.categoryId,
+    categoryName: item.display.categoryName,
+    entryDate: i.entryDate ?? at.slice(0, 10),
+    description: i.description ?? '',
+    patientName: i.patientName ?? null,
+    paymentMode: i.paymentMode ?? 'cash',
+    party:
+      i.partyMemberId === null || !item.display.partyName
+        ? null
+        : { memberId: i.partyMemberId ?? '', name: item.display.partyName },
+    recurringItemId: i.recurringItemId ?? null,
     hasReceipt: !!item.receipt,
+    settled: false,
+    recordedBy: { userId: item.userKey, name: item.display.recordedByName },
+    createdAt: at,
+    updatedAt: at,
+    canEdit: false,
   };
 }
 
 /** Outbox entries shown above the synced list (F-08). */
-export function PendingEntries({ people }: { people: Record<string, Person> | undefined }) {
+export function PendingEntries() {
   const items = useOutbox();
   if (items.length === 0) return null;
   return (
@@ -33,7 +43,6 @@ export function PendingEntries({ people }: { people: Record<string, Person> | un
           <EntryRow
             key={item.key}
             txn={asTransaction(item)}
-            people={people}
             detailed
             status={
               item.error ? (

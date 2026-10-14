@@ -1,53 +1,16 @@
 /*
- * In-memory stand-in for backend endpoints that are not in contracts/openapi.json yet
- * (L2 auth/RBAC … L7 reports). Each function mirrors one planned endpoint. When an endpoint
- * lands in the contract, replace its body in src/api/index.ts with an openapi-fetch call.
+ * In-memory stand-in for backend levels not in the contract yet: L4 settlement, L5 dashboard
+ * aggregates, L6 budgets, L7 reports (D-012). L2 and L3 mocks live in l2.ts and ledger.ts.
  */
 import { monthToDate, monthYear } from '@/lib/dates';
-import { inr } from '@/lib/money';
-import type {
-  AttentionItem,
-  Budgets,
-  Categories,
-  Dashboard,
-  NewTransaction,
-  ReportPreview,
-  Settlement,
-  StatTile,
-  Transaction,
-  TransactionFilters,
-} from '@/domain/types';
-import {
-  CATEGORY_SPEND,
-  EXPENSE_CATEGORIES,
-  FUNDS,
-  INCOME_CATEGORIES,
-  MOCK_TODAY,
-  PARTNER_KEYS,
-  PARTNER_LEDGER,
-  PEOPLE,
-  seedRecurring,
-  seedTransactions,
-} from './fixtures';
+import type { Budgets, DashboardAggregates, ReportPreview, Settlement } from '@/domain/types';
+import { CATEGORY_SPEND, FUNDS, MOCK_TODAY, PARTNER_LEDGER, PEOPLE } from './fixtures';
 import { computeSettlement } from './settlement';
-import { ApiError, NetworkError } from '../errors';
-import { mockRole, mockScope, mockUserKey, recordAudit, resetMockL2 } from './l2';
+import { mockUserKey, resetMockL2 } from './l2';
+import { resetMockLedger } from './ledger';
 
 function freshDb() {
-  return {
-    transactions: seedTransactions(),
-    recurring: seedRecurring(),
-    categories: {
-      expense: [...EXPENSE_CATEGORIES],
-      income: [...INCOME_CATEGORIES],
-      archived: { expense: ['Printing'], income: [] as string[] },
-    },
-    settledOn: undefined as string | undefined,
-    lastMode: {} as Record<string, NewTransaction['paymentMode']>,
-    seq: 100,
-    /** idempotency key → created transaction id (F-08 replay safety) */
-    idempotency: new Map<string, string>(),
-  };
+  return { settledOn: undefined as string | undefined };
 }
 
 let db = freshDb();
@@ -56,26 +19,13 @@ let db = freshDb();
 export function resetMockDb() {
   db = freshDb();
   resetMockL2();
+  resetMockLedger();
 }
 
 const latency = <T>(value: T, ms = 120): Promise<T> =>
   new Promise((resolve) => setTimeout(() => resolve(structuredClone(value)), ms));
 
-/** Simulates fetch failing while the device is offline. */
-function assertOnline() {
-  if (typeof navigator !== 'undefined' && navigator.onLine === false) throw new NetworkError();
-}
-
 const me = mockUserKey;
-const currentRole = mockRole;
-const scopeOf = mockScope;
-const visibleTransactions = () =>
-  scopeOf('finance.entry.view') === 'all'
-    ? db.transactions
-    : db.transactions.filter((t) => t.recordedBy === me());
-
-const sum = (rows: Transaction[], type: Transaction['type']) =>
-  rows.filter((t) => t.type === type).reduce((a, t) => a + t.amountPaise, 0);
 
 function settlementNow() {
   const result = computeSettlement(PARTNER_LEDGER);
@@ -90,155 +40,12 @@ function settlementNow() {
 }
 
 export const mockServer = {
-  // ── Ledger (L3) ──────────────────────────────────────────
-  async listTransactions(f: TransactionFilters = {}): Promise<Transaction[]> {
-    const q = (f.search ?? '').trim().toLowerCase();
-    const rows = visibleTransactions().filter(
-      (t) =>
-        (!f.type || f.type === 'All' || (f.type === 'Expense') === (t.type === 'expense')) &&
-        (!f.mode || f.mode === 'All' || t.paymentMode === f.mode) &&
-        (!f.category || f.category === 'All' || t.category === f.category) &&
-        (!f.person || f.person === 'All' || t.partyKey === f.person || t.recordedBy === f.person) &&
-        (!q ||
-          [t.description, t.category, t.patientName ?? '', PEOPLE[t.partyKey]?.shortName ?? '']
-            .join(' ')
-            .toLowerCase()
-            .includes(q)),
-    );
-    return latency(rows);
-  },
-  async createTransaction(input: NewTransaction): Promise<Transaction> {
-    assertOnline();
-    if (scopeOf('finance.entry.create') === 'none') throw new ApiError(403, 'Not allowed');
-    if (input.amountPaise <= 0) throw new ApiError(400, 'Enter an amount.');
-    const replayed = input.idempotencyKey && db.idempotency.get(input.idempotencyKey);
-    if (replayed) {
-      const existing = db.transactions.find((t) => t.id === replayed);
-      if (existing) return latency(existing, 80);
-    }
-    const txn: Transaction = {
-      id: `txn_${++db.seq}`,
-      type: input.type,
-      amountPaise: input.amountPaise,
-      category: input.category,
-      entryDate: input.entryDate,
-      description:
-        input.description?.trim() ||
-        (input.patientName ? `${input.category} · ${input.patientName}` : input.category),
-      ...(input.patientName ? { patientName: input.patientName } : {}),
-      paymentMode: input.paymentMode,
-      partyKey: input.partyKey,
-      recordedBy: me(),
-      hasReceipt: !!input.receiptFileName,
-    };
-    db.transactions = [txn, ...db.transactions];
-    if (input.idempotencyKey) db.idempotency.set(input.idempotencyKey, txn.id);
-    db.lastMode[me()] = input.paymentMode;
-    if (input.recurringKey) {
-      db.recurring = db.recurring.map((r) =>
-        r.key === input.recurringKey ? { ...r, logged: true } : r,
-      );
-    }
-    recordAudit({
-      action: 'insert',
-      tableName: 'transactions',
-      rowId: txn.id,
-      before: null,
-      after: {
-        type: txn.type,
-        category: txn.category,
-        amount_paise: txn.amountPaise,
-        payment_mode: txn.paymentMode,
-        ...(txn.patientName ? { patient_name: txn.patientName } : {}),
-      },
-    });
-    return latency(txn, 200);
-  },
-  /** F-03: default payment mode is the user's last used one. */
-  async getEntryDefaults() {
-    const role = currentRole();
-    return latency({
-      paymentMode: db.lastMode[me()] ?? (role === 'owner' ? 'UPI' : 'Cash'),
-      partyOptions: role === 'owner' ? [...PARTNER_KEYS, 'Clinic'] : [me(), 'Clinic'],
-      me: me(),
-    } as const);
-  },
-  async listPeople() {
-    return latency(PEOPLE);
-  },
-
   // ── Dashboard (L5) ───────────────────────────────────────
-  async getDashboard(_period: string): Promise<Dashboard> {
-    const role = currentRole();
-    const clinic = scopeOf('finance.report.view') === 'all';
-    const mine = db.transactions.filter((t) => t.recordedBy === me());
-    const recent = (clinic ? db.transactions : mine).slice(0, 5);
-    if (!clinic) {
-      const cashHeld = mine
-        .filter((t) => t.partyKey === me() && t.paymentMode === 'Cash')
-        .reduce((a, t) => a + (t.type === 'income' ? t.amountPaise : -t.amountPaise), 0);
-      const tiles: StatTile[] = [
-        { label: 'Entries logged', value: String(mine.length), sub: 'This month' },
-        {
-          label: 'Income logged',
-          valuePaise: sum(mine, 'income'),
-          sub: 'Patient payments',
-          emphasis: 'income',
-        },
-        { label: 'Expense logged', valuePaise: sum(mine, 'expense'), sub: 'Paid for the clinic' },
-        {
-          label: 'Cash you hold',
-          valuePaise: cashHeld,
-          sub: role === 'frontdesk' ? 'Collected at desk' : 'Net cash on you',
-        },
-      ];
-      return latency({
-        scope: 'own',
-        tiles,
-        attention: [],
-        breakdown: [],
-        transfers: [],
-        recurring: [],
-        recent,
-      });
-    }
-
-    const attention: AttentionItem[] = [
-      ...db.recurring
-        .filter((r) => !r.logged && r.dayOfMonth < Number(MOCK_TODAY.slice(8)))
-        .map<AttentionItem>((r) => ({
-          tone: 'danger',
-          text: `${r.name} not logged`,
-          sub: `Recurring · ${inr(r.amountPaise)} expected on ${r.dayOfMonth} Oct`,
-          action: { label: 'Log now', kind: 'log-recurring', recurringKey: r.key },
-        })),
-      ...CATEGORY_SPEND.filter((c) => c.spentPaise / c.budgetPaise >= 0.8).map<AttentionItem>(
-        (c) => {
-          const p = c.spentPaise / c.budgetPaise;
-          return {
-            tone: p >= 1 ? 'danger' : 'warn',
-            text: `${c.name} at ${Math.round(p * 100)}% of budget`,
-            sub: `${inr(c.spentPaise)} of ${inr(c.budgetPaise)}`,
-            action: { label: 'Budgets', kind: 'budgets' },
-          };
-        },
-      ),
-    ];
-    const tiles: StatTile[] = [
-      { label: 'Income', valuePaise: 32910000, sub: '+10% vs Sep', emphasis: 'income' },
-      { label: 'Expense', valuePaise: 15055000, sub: '+14% vs Sep' },
-      { label: 'Net', valuePaise: 17855000, sub: '+7% vs Sep' },
-      { label: 'Cash in hand', valuePaise: 2245000, sub: 'Cash in ₹41,200 − out ₹18,750' },
-    ];
+  async getDashboardAggregates(_period: string): Promise<DashboardAggregates> {
     return latency({
-      scope: 'clinic',
-      tiles,
-      attention,
       breakdown: CATEGORY_SPEND,
       transfers: settlementNow().transfers,
       ...(db.settledOn ? { settledOn: db.settledOn } : {}),
-      recurring: db.recurring,
-      recent,
     });
   },
 
@@ -290,12 +97,9 @@ export const mockServer = {
     return latency(undefined);
   },
 
-  // ── Budgets & recurring (L6) ─────────────────────────────
+  // ── Budgets (L6) ─────────────────────────────────────────
   async getBudgets(): Promise<Budgets> {
     return latency({ month: monthYear(MOCK_TODAY), categories: CATEGORY_SPEND, funds: FUNDS });
-  },
-  async listRecurring() {
-    return latency(db.recurring);
   },
 
   // ── Reports (L7) ─────────────────────────────────────────
@@ -341,24 +145,5 @@ export const mockServer = {
       email: 'Sent to accounts@kulkarnica.in',
     };
     return latency({ message: messages[format] }, 400);
-  },
-
-  // ── Settings (L2–L3) ─────────────────────────────────────
-  async getCategories(): Promise<Categories> {
-    return latency({ ...db.categories, recurring: db.recurring });
-  },
-  async addCategory(type: 'expense' | 'income', name: string) {
-    db.categories[type] = [...db.categories[type], name];
-    return latency(undefined);
-  },
-  async archiveCategory(type: 'expense' | 'income', name: string) {
-    db.categories[type] = db.categories[type].filter((c) => c !== name);
-    db.categories.archived[type] = [...db.categories.archived[type], name];
-    return latency(undefined);
-  },
-  async restoreCategory(type: 'expense' | 'income', name: string) {
-    db.categories.archived[type] = db.categories.archived[type].filter((c) => c !== name);
-    db.categories[type] = [...db.categories[type], name];
-    return latency(undefined);
   },
 };

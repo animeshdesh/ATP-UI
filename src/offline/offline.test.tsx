@@ -43,16 +43,16 @@ describe('offline entries (F-08)', () => {
       idempotencyKey: 'k-1',
       type: 'expense' as const,
       amountPaise: 5000,
-      category: 'Utilities',
+      categoryId: 'cat-utilities',
       entryDate: '2026-10-14',
-      paymentMode: 'Cash' as const,
-      partyKey: 'Clinic',
+      paymentMode: 'cash' as const,
+      partyMemberId: null,
       description: 'Replayed once',
     };
     const a = await api.createTransaction(input);
     const b = await api.createTransaction(input);
     expect(b.id).toBe(a.id);
-    const rows = await api.listTransactions({ search: 'Replayed once' });
-    expect(rows).toHaveLength(1);
+    const page = await api.listTransactions({ search: 'Replayed once' });
+    expect(page.totals.count).toBe(1);
   });
 });

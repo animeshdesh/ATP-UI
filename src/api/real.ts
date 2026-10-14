@@ -1,6 +1,19 @@
 /* Real L2 (auth & RBAC): Supabase Auth for sign-in, the backend API for everything else. */
 import type { AuthError } from '@supabase/supabase-js';
 import type {
+  Category,
+  ClinicPerson,
+  CreateRecurringItem,
+  EntryDefaults,
+  EntryType,
+  NewTransaction,
+  ReceiptLink,
+  RecurringItem,
+  Transaction,
+  TransactionPage,
+  TransactionQuery,
+  UpdateRecurringItem,
+  UpdateTransaction,
   AuditPage,
   ClinicPick,
   CreateInvite,
@@ -137,4 +150,56 @@ export const realL2 = {
 
   listAudit: (q: { table?: string; cursor?: string; limit?: number }): Promise<AuditPage> =>
     unwrap(http.GET('/v1/audit', { params: { query: q } })),
+
+  // ── L3 ledger (docs/LEDGER.md) ─────────────────────────────
+  getEntryDefaults: (): Promise<EntryDefaults> => unwrap(http.GET('/v1/transactions/defaults')),
+  listPeople: (): Promise<ClinicPerson[]> => unwrap(http.GET('/v1/people')),
+  listTransactions: async (q: TransactionQuery = {}): Promise<TransactionPage> =>
+    (await unwrap(http.GET('/v1/transactions', { params: { query: q } }))) as TransactionPage,
+  createTransaction: async (input: NewTransaction): Promise<Transaction> =>
+    (await unwrap(http.POST('/v1/transactions', { body: input }))) as Transaction,
+  updateTransaction: async (id: string, patch: UpdateTransaction): Promise<Transaction> =>
+    (await unwrap(
+      http.PATCH('/v1/transactions/{id}', { params: { path: { id } }, body: patch }),
+    )) as Transaction,
+  deleteTransaction: async (id: string): Promise<void> => {
+    await unwrap(http.DELETE('/v1/transactions/{id}', { params: { path: { id } } }));
+  },
+  /** Raw image body; the API rejects > 5 MB with 413 payload_too_large. */
+  uploadReceipt: async (id: string, file: Blob): Promise<void> => {
+    await unwrap(
+      http.PUT('/v1/transactions/{id}/receipt', {
+        params: { path: { id } },
+        body: file as unknown as string,
+        bodySerializer: (b: unknown) => b as Blob,
+        headers: { 'Content-Type': file.type || 'image/jpeg' },
+      }),
+    );
+  },
+  getReceiptUrl: (id: string): Promise<ReceiptLink> =>
+    unwrap(http.GET('/v1/transactions/{id}/receipt', { params: { path: { id } } })),
+  deleteReceipt: async (id: string): Promise<void> => {
+    await unwrap(http.DELETE('/v1/transactions/{id}/receipt', { params: { path: { id } } }));
+  },
+
+  listCategories: (includeArchived = false): Promise<Category[]> =>
+    unwrap(
+      http.GET('/v1/categories', {
+        params: { query: includeArchived ? { includeArchived: 'true' } : {} },
+      }),
+    ),
+  createCategory: (type: EntryType, name: string): Promise<Category> =>
+    unwrap(http.POST('/v1/categories', { body: { type, name } })),
+  updateCategory: (id: string, patch: { name?: string; archived?: boolean }): Promise<Category> =>
+    unwrap(http.PATCH('/v1/categories/{id}', { params: { path: { id } }, body: patch })),
+  reorderCategories: (type: EntryType, ids: string[]): Promise<Category[]> =>
+    unwrap(http.PUT('/v1/categories/order', { body: { type, ids } })),
+
+  listRecurring: (month?: string): Promise<RecurringItem[]> =>
+    unwrap(http.GET('/v1/recurring-items', { params: { query: month ? { month } : {} } })),
+  createRecurring: (input: CreateRecurringItem): Promise<RecurringItem> =>
+    unwrap(http.POST('/v1/recurring-items', { body: input })),
+  updateRecurring: async (id: string, patch: UpdateRecurringItem): Promise<void> => {
+    await unwrap(http.PATCH('/v1/recurring-items/{id}', { params: { path: { id } }, body: patch }));
+  },
 };

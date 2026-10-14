@@ -2,19 +2,11 @@
  * Seed data ported from the design prototype (design/clinic-os.js). Amounts in paise.
  * Mock date context: Wed 14 Oct 2026.
  */
-import type {
-  CategorySpend,
-  Fund,
-  PaymentMode,
-  Person,
-  RecurringItem,
-  RoleKey,
-  Transaction,
-} from '@/domain/types';
+import type { CategorySpend, Fund, Person, RoleKey } from '@/domain/types';
 
 export const MOCK_TODAY = '2026-10-14';
-const oct = (d: number) => `2026-10-${String(d).padStart(2, '0')}`;
-const r = (rupees: number) => rupees * 100;
+export const oct = (d: number) => `2026-10-${String(d).padStart(2, '0')}`;
+export const r = (rupees: number) => rupees * 100;
 
 export const PEOPLE: Record<string, Person> = {
   Sameer: {
@@ -88,14 +80,15 @@ type Seed = [
   category: string,
   description: string,
   patient: string | null,
-  mode: PaymentMode,
+  mode: 'Cash' | 'UPI' | 'Card' | 'Bank transfer',
   rupees: number,
   party: string,
   recordedBy: string,
   receipt?: boolean,
 ];
 
-const SEED: Seed[] = [
+/** October entries, newest first (day, type, category, description, patient, mode, ₹, party, recorded by, receipt). */
+export const SEED_ENTRIES: Seed[] = [
   [
     14,
     'in',
@@ -166,21 +159,6 @@ const SEED: Seed[] = [
   [1, 'out', 'Salaries', 'Staff salary', null, 'Bank transfer', 21000, 'Clinic', 'Sameer'],
 ];
 
-export const seedTransactions = (): Transaction[] =>
-  SEED.map(([d, t, category, description, patient, mode, rupees, party, rec, receipt], i) => ({
-    id: `txn_${i + 1}`,
-    type: t === 'in' ? 'income' : 'expense',
-    amountPaise: r(rupees),
-    category,
-    entryDate: oct(d),
-    description,
-    ...(patient ? { patientName: patient } : {}),
-    paymentMode: mode,
-    partyKey: party,
-    recordedBy: rec,
-    hasReceipt: !!receipt,
-  }));
-
 export const CATEGORY_SPEND: CategorySpend[] = [
   ['Rent', 60000, 62000, 60000],
   ['Salaries', 38000, 40000, 38000],
@@ -206,63 +184,15 @@ export const PARTNER_LEDGER = [
   { key: 'Santosh', paid: r(12000), received: r(61400), sharePct: 25 },
 ];
 
-export const seedRecurring = (): RecurringItem[] => [
-  {
-    key: 'watch',
-    name: 'Watchman salary',
-    category: 'Salaries',
-    dayOfMonth: 1,
-    amountPaise: r(9000),
-    logged: true,
-  },
-  {
-    key: 'staff',
-    name: 'Staff salary',
-    category: 'Salaries',
-    dayOfMonth: 1,
-    amountPaise: r(21000),
-    logged: true,
-  },
-  {
-    key: 'care',
-    name: 'Caretaker salary',
-    category: 'Salaries',
-    dayOfMonth: 1,
-    amountPaise: r(8000),
-    logged: false,
-  },
-  {
-    key: 'rent',
-    name: 'Rent',
-    category: 'Rent',
-    dayOfMonth: 5,
-    amountPaise: r(60000),
-    logged: true,
-  },
-  {
-    key: 'elec',
-    name: 'Electricity',
-    category: 'Utilities',
-    dayOfMonth: 10,
-    amountPaise: r(4500),
-    logged: false,
-  },
-  {
-    key: 'net',
-    name: 'Internet',
-    category: 'Utilities',
-    dayOfMonth: 15,
-    amountPaise: r(1199),
-    logged: false,
-  },
-  {
-    key: 'waste',
-    name: 'Biomedical waste pickup',
-    category: 'Maintenance',
-    dayOfMonth: 20,
-    amountPaise: r(700),
-    logged: false,
-  },
+/** Recurring items: key, name, category, day of month, ₹ expected, description of the October entry that logged it. */
+export const RECURRING_SEED: Array<[string, string, string, number, number, string | null]> = [
+  ['watch', 'Watchman salary', 'Salaries', 1, 9000, 'Watchman salary'],
+  ['staff', 'Staff salary', 'Salaries', 1, 21000, 'Staff salary'],
+  ['care', 'Caretaker salary', 'Salaries', 1, 8000, null],
+  ['rent', 'Rent', 'Rent', 5, 60000, 'October rent'],
+  ['elec', 'Electricity', 'Utilities', 10, 4500, null],
+  ['net', 'Internet', 'Utilities', 15, 1199, null],
+  ['waste', 'Biomedical waste pickup', 'Maintenance', 20, 700, null],
 ];
 
 export const FUNDS: Fund[] = [

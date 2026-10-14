@@ -6,6 +6,7 @@ import { Avatar, Button } from '@/components/ui';
 import { useQuickAdd } from '@/features/entry/QuickAddContext';
 import { PeriodSwitch } from '@/features/dashboard/PeriodSwitch';
 import { cn } from '@/lib/cn';
+import { usePrefetchEntryData } from '@/api/queries';
 import { useOutboxSync } from '@/offline/hooks';
 import { OfflineBanner } from '@/offline/OfflineBanner';
 import { longDate, monthToDate, monthYear, todayIso } from '@/lib/dates';
@@ -48,6 +49,7 @@ export function AppShell() {
   const subtitle = subtitleFor(current, session.clinicName);
   const showPeriod = current === 'dashboard' && can('finance.report.view', 'all');
   const canAdd = can('finance.entry.create');
+  usePrefetchEntryData(canAdd);
 
   const visible = (k: NavKey) => {
     const p = NAV[k].permission;

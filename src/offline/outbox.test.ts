@@ -6,18 +6,18 @@ const input = (key: string, amountPaise = 10000): NewTransaction & { idempotency
   idempotencyKey: key,
   type: 'expense',
   amountPaise,
-  category: 'Utilities',
+  categoryId: 'cat-utilities',
   entryDate: '2026-10-14',
-  paymentMode: 'Cash',
-  partyKey: 'Sameer',
+  paymentMode: 'cash',
 });
+const display = { categoryName: 'Utilities', partyName: null, recordedByName: 'Sameer' };
 
 describe('outbox', () => {
   it('replays oldest first and stops at the first retryable failure', async () => {
     vi.useFakeTimers({ toFake: ['Date'] });
     for (const [i, k] of ['a', 'b', 'c'].entries()) {
       vi.setSystemTime(1000 + i);
-      await outbox.add({ input: input(k), userKey: 'Sameer' });
+      await outbox.add({ input: input(k), userKey: 'Sameer', display });
     }
     vi.useRealTimers();
 
@@ -35,7 +35,7 @@ describe('outbox', () => {
   });
 
   it('marks rejected items and skips them on later runs', async () => {
-    await outbox.add({ input: input('x'), userKey: 'Sameer' });
+    await outbox.add({ input: input('x'), userKey: 'Sameer', display });
     await flushOutbox('Sameer', async () => ({ rejected: 'Not allowed' }));
     expect(outbox.snapshot()[0]).toMatchObject({ key: 'x', error: 'Not allowed' });
 
@@ -45,14 +45,14 @@ describe('outbox', () => {
   });
 
   it("does not replay another user's entries", async () => {
-    await outbox.add({ input: input('mine'), userKey: 'Anjali' });
+    await outbox.add({ input: input('mine'), userKey: 'Anjali', display });
     const send = vi.fn(async (): Promise<SendResult> => 'sent');
     await flushOutbox('Sameer', send);
     expect(send).not.toHaveBeenCalled();
   });
 
   it('returns null while a flush is already running', async () => {
-    await outbox.add({ input: input('slow'), userKey: 'Sameer' });
+    await outbox.add({ input: input('slow'), userKey: 'Sameer', display });
     let release: () => void = () => {};
     const first = flushOutbox(
       'Sameer',

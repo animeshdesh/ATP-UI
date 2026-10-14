@@ -13,6 +13,8 @@ export interface OutboxItem {
   receipt?: Blob;
   /** Who recorded it; replay only for the same signed-in user. */
   userKey: string;
+  /** Names for the "waiting to sync" row (the input only carries ids). */
+  display: { categoryName: string; partyName: string | null; recordedByName: string };
   queuedAt: number;
   attempts: number;
   /** Set when the server rejected the entry; it then waits for the user to discard it. */

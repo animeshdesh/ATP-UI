@@ -55,3 +55,25 @@ export function daysBetween(fromIso: string, toIso: string): number {
 export function secondsSince(epochMs: number): number {
   return Math.max(1, Math.round((Date.now() - epochMs) / 1000));
 }
+
+/** ISO date shifted by whole days. */
+export function addDays(iso: string, days: number): string {
+  const d = asUtc(iso);
+  d.setUTCDate(d.getUTCDate() + days);
+  return d.toISOString().slice(0, 10);
+}
+
+/** ISO date shifted by whole months, clamped to the target month's last day. */
+export function addMonths(iso: string, months: number): string {
+  const { y, m, d } = parts(iso);
+  const last = new Date(Date.UTC(y, m - 1 + months + 1, 0)).getUTCDate();
+  return new Date(Date.UTC(y, m - 1 + months, Math.min(d, last))).toISOString().slice(0, 10);
+}
+
+export const monthStart = (iso: string) => `${iso.slice(0, 7)}-01`;
+
+/** Monday of the ISO date's week. */
+export function weekStart(iso: string): string {
+  const dow = (asUtc(iso).getUTCDay() + 6) % 7;
+  return addDays(iso, -dow);
+}

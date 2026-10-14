@@ -16,10 +16,10 @@ describe('app', () => {
   it('shows clinic tiles and attention items to an owner', async () => {
     await signInAs('owner');
     renderApp('/');
-    expect(await screen.findByText('₹3,29,100')).toBeInTheDocument();
-    const attention = screen.getByRole('region', { name: 'Needs attention' });
-    expect(within(attention).getByText('Caretaker salary not logged')).toBeInTheDocument();
-    expect(within(attention).getByText('Consumables at 107% of budget')).toBeInTheDocument();
+    expect(await screen.findByText('₹11,400')).toBeInTheDocument();
+    const attention = await screen.findByRole('region', { name: 'Needs attention' });
+    expect(await within(attention).findByText('Caretaker salary not logged')).toBeInTheDocument();
+    expect(await within(attention).findByText('Consumables at 107% of budget')).toBeInTheDocument();
   });
 
   it('logs a quick-add expense and shows it in transactions', async () => {
@@ -49,7 +49,7 @@ describe('app', () => {
     await user.click(screen.getAllByRole('button', { name: 'Log now' })[0]!);
     const sheet = await screen.findByRole('dialog', { name: 'New entry' });
     expect(within(sheet).getByLabelText('Amount')).toHaveValue('8000');
-    await user.click(within(sheet).getByRole('button', { name: 'Save ₹8,000 · Salaries' }));
+    await user.click(await within(sheet).findByRole('button', { name: 'Save ₹8,000 · Salaries' }));
     expect(await screen.findByText('4/7')).toBeInTheDocument();
   });
 
@@ -91,7 +91,7 @@ describe('auth & RBAC (L2 shapes, mock mode)', () => {
   it('gives the CA read access without an add button', async () => {
     await signInAs('ca');
     renderApp('/');
-    expect(await screen.findByText('₹3,29,100')).toBeInTheDocument();
+    expect(await screen.findByText('₹11,400')).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: /add entry/i })).not.toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Log now' })).not.toBeInTheDocument();
   });

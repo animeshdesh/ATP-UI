@@ -1,25 +1,29 @@
 import { Check, Lock, TriangleAlert } from 'lucide-react';
 import { useNavigate } from 'react-router';
-import { useDashboard, usePeople } from '@/api/queries';
+import {
+  useDashboardAggregates,
+  useEntryDefaults,
+  useRecurring,
+  useTransactionPage,
+} from '@/api/queries';
 import { useSession } from '@/app/session';
-import { recurringStatus } from '@/features/recurring/status';
 import { Button, Loading, SectionHeader, Stat, StatGrid, Tag } from '@/components/ui';
-import type { Dashboard, RecurringItem } from '@/domain/types';
-import { useQuickAdd } from '@/features/entry/QuickAddContext';
+import type { AttentionItem, DashboardAggregates, RecurringItem } from '@/domain/types';
+import { useEditEntry, useQuickAdd } from '@/features/entry/QuickAddContext';
+import { logPrefill, recurringStatus } from '@/features/recurring/status';
 import { EntryRow } from '@/features/transactions/EntryRow';
 import { inr } from '@/lib/money';
 import { cn } from '@/lib/cn';
 import { PeriodSwitch, usePeriod } from './PeriodSwitch';
+import { change, periodRanges, type Range } from './periods';
 
 export function DashboardPage() {
-  const [period] = usePeriod();
   const { can } = useSession();
-  const { data, isPending } = useDashboard(period);
-  const { data: people } = usePeople();
-  const navigate = useNavigate();
   const clinicView = can('finance.report.view', 'all');
+  const edit = useEditEntry();
+  const navigate = useNavigate();
+  const recent = useTransactionPage({ limit: 5 });
 
-  if (isPending || !data) return <Loading />;
   return (
     <>
       {clinicView && (
@@ -27,20 +31,10 @@ export function DashboardPage() {
           <PeriodSwitch block />
         </div>
       )}
-      <StatGrid>
-        {data.tiles.map((t) => (
-          <Stat
-            key={t.label}
-            label={t.label}
-            value={t.valuePaise !== undefined ? inr(t.valuePaise) : t.value}
-            sub={t.sub}
-            income={t.emphasis === 'income'}
-          />
-        ))}
-      </StatGrid>
+      {clinicView ? <ClinicTiles /> : <OwnTiles />}
 
-      {data.scope === 'clinic' ? (
-        <ClinicSections data={data} />
+      {clinicView ? (
+        <ClinicSections />
       ) : (
         <p className="m-0 flex items-center gap-2 text-[13px] text-neutral-700">
           <Lock aria-hidden size={14} className="flex-none" />
@@ -57,40 +51,136 @@ export function DashboardPage() {
             </Button>
           }
         />
-        <ul className="m-0 list-none p-0">
-          {data.recent.map((t) => (
-            <EntryRow key={t.id} txn={t} people={people} />
-          ))}
-        </ul>
+        {recent.isPending ? (
+          <Loading />
+        ) : (
+          <ul className="m-0 list-none p-0">
+            {(recent.data?.items ?? []).map((t) => (
+              <EntryRow key={t.id} txn={t} onOpen={() => edit(t)} />
+            ))}
+          </ul>
+        )}
       </section>
     </>
   );
 }
 
-function ClinicSections({ data }: { data: Dashboard }) {
+/** Totals for a date range (any filters); `limit: 1` because only totals are read. */
+const useTotals = (
+  range: Range,
+  extra: Parameters<typeof useTransactionPage>[0] = {},
+  enabled = true,
+) => useTransactionPage({ ...range, ...extra, limit: 1 }, enabled).data?.totals;
+
+const signed = (paise: number) => (paise < 0 ? '−' : '') + inr(paise);
+
+function ClinicTiles() {
+  const [period] = usePeriod();
+  const { current, previous, vsLabel } = periodRanges(period);
+  const now = useTotals(current);
+  const before = useTotals(previous);
+  const cash = useTotals(current, { paymentMode: 'cash' });
+  if (!now) return <Loading />;
+  const net = now.incomePaise - now.expensePaise;
+  const vs = (a: number, b: number | undefined) =>
+    b === undefined ? undefined : (change(a, b, vsLabel) ?? undefined);
+  return (
+    <StatGrid>
+      <Stat
+        label="Income"
+        value={inr(now.incomePaise)}
+        sub={vs(now.incomePaise, before?.incomePaise)}
+        income
+      />
+      <Stat
+        label="Expense"
+        value={inr(now.expensePaise)}
+        sub={vs(now.expensePaise, before?.expensePaise)}
+      />
+      <Stat
+        label="Net"
+        value={signed(net)}
+        sub={before ? vs(net, before.incomePaise - before.expensePaise) : undefined}
+      />
+      <Stat
+        label="Cash in hand"
+        value={cash ? signed(cash.incomePaise - cash.expensePaise) : '–'}
+        sub={cash && `Cash in ${inr(cash.incomePaise)} − out ${inr(cash.expensePaise)}`}
+      />
+    </StatGrid>
+  );
+}
+
+/** Therapist / front desk: the API scopes totals to entries they recorded or hold. */
+function OwnTiles() {
+  const { session } = useSession();
+  const { current } = periodRanges('month');
+  const mine = useTotals(current);
+  const defaults = useEntryDefaults();
+  const cash = useTotals(
+    current,
+    { paymentMode: 'cash', memberId: defaults.data?.myMemberId ?? '' },
+    !!defaults.data,
+  );
+  if (!mine) return <Loading />;
+  return (
+    <StatGrid>
+      <Stat label="Entries logged" value={mine.count} sub="This month" />
+      <Stat label="Income logged" value={inr(mine.incomePaise)} sub="Patient payments" income />
+      <Stat label="Expense logged" value={inr(mine.expensePaise)} sub="Paid for the clinic" />
+      <Stat
+        label="Cash you hold"
+        value={cash ? signed(cash.incomePaise - cash.expensePaise) : '–'}
+        sub={session?.role === 'frontdesk' ? 'Collected at desk' : 'Net cash on you'}
+      />
+    </StatGrid>
+  );
+}
+
+function attentionItems(
+  recurring: RecurringItem[],
+  agg: DashboardAggregates | undefined,
+): AttentionItem[] {
+  return [
+    ...recurring
+      .filter((r) => recurringStatus(r).overdue)
+      .map<AttentionItem>((r) => ({
+        tone: 'danger',
+        text: `${r.name} not logged`,
+        sub: `Recurring · ${inr(r.expectedAmountPaise)} ${recurringStatus(r).label.replace('Overdue · due', 'was due')}`,
+        action: { label: 'Log now', kind: 'log-recurring', item: r },
+      })),
+    ...(agg?.breakdown ?? [])
+      .filter((c) => c.spentPaise / c.budgetPaise >= 0.8)
+      .map<AttentionItem>((c) => {
+        const p = c.spentPaise / c.budgetPaise;
+        return {
+          tone: p >= 1 ? 'danger' : 'warn',
+          text: `${c.name} at ${Math.round(p * 100)}% of budget`,
+          sub: `${inr(c.spentPaise)} of ${inr(c.budgetPaise)}`,
+          action: { label: 'Budgets', kind: 'budgets' },
+        };
+      }),
+  ];
+}
+
+function ClinicSections() {
   const navigate = useNavigate();
   const openAdd = useQuickAdd();
   const { can } = useSession();
-  const allowed = (kind: Dashboard['attention'][number]['action']['kind']) =>
-    kind === 'budgets' ? can('finance.budget.manage') : can('finance.entry.create');
-  const maxSpent = Math.max(...data.breakdown.map((b) => b.spentPaise), 1);
-  const pending = data.recurring.filter((r) => !r.logged);
-  const logged = data.recurring.length - pending.length;
-
-  const logRecurring = (r: RecurringItem | undefined) =>
-    r &&
-    openAdd({
-      category: r.category,
-      amountPaise: r.amountPaise,
-      description: r.name,
-      recurringKey: r.key,
-      paymentMode: 'Bank transfer',
-      partyKey: 'Clinic',
-    });
+  const [period] = usePeriod();
+  const agg = useDashboardAggregates(period).data;
+  const recurring = useRecurring().data ?? [];
+  const attention = attentionItems(recurring, agg);
+  const maxSpent = Math.max(...(agg?.breakdown ?? []).map((b) => b.spentPaise), 1);
+  const pending = recurring.filter((r) => !r.logged);
+  const logged = recurring.length - pending.length;
+  const allowed = (a: AttentionItem['action']) =>
+    a.kind === 'budgets' ? can('finance.budget.manage') : can('finance.entry.create');
 
   return (
     <>
-      {data.attention.length > 0 && (
+      {attention.length > 0 && (
         <section
           className="flex flex-col border-2 border-ink bg-white"
           aria-label="Needs attention"
@@ -99,7 +189,7 @@ function ClinicSections({ data }: { data: Dashboard }) {
             <TriangleAlert aria-hidden size={15} />
             Needs attention
           </div>
-          {data.attention.map((a) => (
+          {attention.map((a) => (
             <div
               key={a.text}
               className="flex items-center gap-3 border-b border-rule px-4 py-3 last:border-b-0"
@@ -114,19 +204,14 @@ function ClinicSections({ data }: { data: Dashboard }) {
                 <div className="text-sm font-semibold">{a.text}</div>
                 <div className="text-xs text-neutral-700">{a.sub}</div>
               </div>
-              {allowed(a.action.kind) && (
+              {allowed(a.action) && (
                 <Button
                   size="sm"
                   className="min-h-11"
                   onClick={() =>
                     a.action.kind === 'budgets'
                       ? navigate('/budgets')
-                      : logRecurring(
-                          data.recurring.find(
-                            (r) =>
-                              a.action.kind === 'log-recurring' && r.key === a.action.recurringKey,
-                          ),
-                        )
+                      : openAdd(logPrefill(a.action.item))
                   }
                 >
                   {a.action.label}
@@ -140,7 +225,7 @@ function ClinicSections({ data }: { data: Dashboard }) {
       <div className="grid grid-cols-[repeat(auto-fit,minmax(min(100%,340px),1fr))] gap-5 lg:gap-7">
         <section className="flex flex-col">
           <SectionHeader title="Expense by category" aside="vs last month" />
-          {data.breakdown.map((b) => {
+          {(agg?.breakdown ?? []).map((b) => {
             const mom = b.lastMonthPaise
               ? Math.round(((b.spentPaise - b.lastMonthPaise) / b.lastMonthPaise) * 100)
               : null;
@@ -175,18 +260,20 @@ function ClinicSections({ data }: { data: Dashboard }) {
             <SectionHeader
               title="Partner balance"
               aside={
-                <Button variant="link" onClick={() => navigate('/settlement')}>
-                  Settle up →
-                </Button>
+                can('finance.settlement.manage') && (
+                  <Button variant="link" onClick={() => navigate('/settlement')}>
+                    Settle up →
+                  </Button>
+                )
               }
             />
-            {data.settledOn ? (
+            {agg?.settledOn ? (
               <div className="flex items-center gap-2 py-3 text-sm">
                 <Check aria-hidden size={16} className="text-accent-700" />
                 All partners settled.
               </div>
             ) : (
-              data.transfers.map((t) => (
+              (agg?.transfers ?? []).map((t) => (
                 <div
                   key={t.from + t.to}
                   className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-2 border-b border-rule py-2.5"
@@ -205,7 +292,7 @@ function ClinicSections({ data }: { data: Dashboard }) {
               title="Recurring this month"
               aside={
                 <Button variant="link" onClick={() => navigate('/recurring')}>
-                  {logged} of {data.recurring.length} logged →
+                  {logged} of {recurring.length} logged →
                 </Button>
               }
             />
@@ -213,13 +300,13 @@ function ClinicSections({ data }: { data: Dashboard }) {
               const st = recurringStatus(r);
               return (
                 <div
-                  key={r.key}
+                  key={r.id}
                   className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-2 border-b border-rule py-2.5"
                 >
                   <div>
                     <div className="text-sm">{r.name}</div>
                     <div className="text-xs text-neutral-700">
-                      {inr(r.amountPaise)} · day {r.dayOfMonth}
+                      {inr(r.expectedAmountPaise)} · day {r.dayOfMonth}
                     </div>
                   </div>
                   <Tag tone={st.tone} className="text-xs">

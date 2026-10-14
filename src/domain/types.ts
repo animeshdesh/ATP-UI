@@ -1,4 +1,4 @@
-import type { components } from '@/api/schema';
+import type { components, paths } from '@/api/schema';
 
 type S = components['schemas'];
 
@@ -8,9 +8,15 @@ type S = components['schemas'];
  */
 
 export type RoleKey = 'owner' | 'therapist' | 'frontdesk' | 'ca';
-export type EntryType = 'income' | 'expense';
-export type PaymentMode = 'Cash' | 'UPI' | 'Card' | 'Bank transfer';
-export const PAYMENT_MODES: PaymentMode[] = ['Cash', 'UPI', 'Card', 'Bank transfer'];
+export type EntryType = S['EntryType'];
+export type PaymentMode = S['PaymentMode'];
+export const PAYMENT_MODES: PaymentMode[] = ['cash', 'upi', 'card', 'bank_transfer'];
+export const PAYMENT_MODE_LABEL: Record<PaymentMode, string> = {
+  cash: 'Cash',
+  upi: 'UPI',
+  card: 'Card',
+  bank_transfer: 'Bank transfer',
+};
 
 /** Permission scope for one role (PRD §3). */
 export type Scope = 'all' | 'own' | 'none';
@@ -55,61 +61,35 @@ export interface ClinicPick {
   userName: string;
 }
 
-export interface Transaction {
-  id: string;
-  type: EntryType;
-  amountPaise: number;
-  category: string;
-  /** Clinic calendar date, YYYY-MM-DD */
-  entryDate: string;
-  description: string;
-  patientName?: string;
-  paymentMode: PaymentMode;
-  /** Partner who paid / received, or 'Clinic' for the clinic account */
-  partyKey: string;
-  recordedBy: string;
-  hasReceipt: boolean;
-}
-
-export interface NewTransaction {
-  type: EntryType;
-  amountPaise: number;
-  category: string;
-  entryDate: string;
-  description?: string;
-  patientName?: string;
-  paymentMode: PaymentMode;
-  partyKey: string;
-  receiptFileName?: string;
-  recurringKey?: string;
-  /** Client-generated; the server returns the original entry on replay (F-08). */
-  idempotencyKey?: string;
-}
-
-export interface TransactionFilters {
-  search?: string;
-  type?: 'All' | 'Income' | 'Expense';
-  category?: string;
-  mode?: string;
-  person?: string;
-}
+// ── L3 (ledger): contract types ──────────────────────────────────
+export type PersonRef = S['PersonRef'];
+/**
+ * `party` is PersonRef or null (clinic account). The contract encodes it as
+ * allOf[PersonRef, object|null], which generates an unusable type; corrected here.
+ */
+export type Transaction = Omit<S['Transaction'], 'party'> & { party: PersonRef | null };
+export type NewTransaction = S['NewTransaction'];
+export type UpdateTransaction = S['UpdateTransaction'];
+export type TransactionPage = Omit<S['TransactionPage'], 'items'> & { items: Transaction[] };
+export type EntryDefaults = S['EntryDefaults'];
+export type Category = S['Category'];
+export type RecurringItem = S['RecurringItem'];
+export type CreateRecurringItem = S['CreateRecurringItem'];
+export type UpdateRecurringItem = S['UpdateRecurringItem'];
+/** Clinic member for pickers and filters (`GET /v1/people`). */
+export type ClinicPerson = S['Person'];
+export type ReceiptLink = S['ReceiptLink'];
+/** Query for `GET /v1/transactions`. */
+export type TransactionQuery = NonNullable<paths['/v1/transactions']['get']['parameters']['query']>;
 
 export type Tone = 'accent' | 'neutral' | 'danger' | 'warn' | 'solid';
-
-export interface StatTile {
-  label: string;
-  valuePaise?: number;
-  value?: string;
-  sub: string;
-  emphasis?: 'income';
-}
 
 export interface AttentionItem {
   tone: 'danger' | 'warn';
   text: string;
   sub: string;
   action:
-    | { label: string; kind: 'log-recurring'; recurringKey: string }
+    | { label: string; kind: 'log-recurring'; item: RecurringItem }
     | { label: string; kind: 'budgets' };
 }
 
@@ -126,24 +106,11 @@ export interface Transfer {
   amountPaise: number;
 }
 
-export interface RecurringItem {
-  key: string;
-  name: string;
-  category: string;
-  dayOfMonth: number;
-  amountPaise: number;
-  logged: boolean;
-}
-
-export interface Dashboard {
-  scope: 'clinic' | 'own';
-  tiles: StatTile[];
-  attention: AttentionItem[];
+/** Aggregates still served by the mock until backend L4–L6 (D-012). */
+export interface DashboardAggregates {
   breakdown: CategorySpend[];
   transfers: Transfer[];
   settledOn?: string;
-  recurring: RecurringItem[];
-  recent: Transaction[];
 }
 
 export interface PartnerBalance {
@@ -182,13 +149,6 @@ export interface Budgets {
   month: string;
   categories: CategorySpend[];
   funds: Fund[];
-}
-
-export interface Categories {
-  expense: string[];
-  income: string[];
-  archived: { expense: string[]; income: string[] };
-  recurring: RecurringItem[];
 }
 
 // ── L2 (auth & RBAC): contract types ─────────────────────────────

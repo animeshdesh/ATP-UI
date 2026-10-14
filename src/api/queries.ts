@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import {
   useInfiniteQuery,
   useMutation,
@@ -5,21 +6,32 @@ import {
   useQueryClient,
   type QueryClient,
 } from '@tanstack/react-query';
-import type { NewTransaction, Role, Scope, Transaction, TransactionFilters } from '@/domain/types';
-import { outbox } from '@/offline/outbox';
+import type {
+  CreateRecurringItem,
+  EntryType,
+  NewTransaction,
+  Role,
+  Scope,
+  Transaction,
+  TransactionQuery,
+  UpdateRecurringItem,
+  UpdateTransaction,
+} from '@/domain/types';
+import { compressImage } from '@/lib/image';
+import { outbox, type OutboxItem } from '@/offline/outbox';
 import { ApiError, NetworkError, api } from './index';
 
 export const qk = {
   session: ['session'] as const,
-  transactions: (f: TransactionFilters = {}) => ['transactions', f] as const,
+  transactions: (q: TransactionQuery = {}) => ['transactions', q] as const,
   entryDefaults: ['entry-defaults'] as const,
   people: ['people'] as const,
   dashboard: (period: string) => ['dashboard', period] as const,
   settlement: ['settlement'] as const,
   budgets: ['budgets'] as const,
-  recurring: ['recurring'] as const,
+  recurring: (month = '') => ['recurring', month] as const,
   report: (month: string) => ['report', month] as const,
-  categories: ['categories'] as const,
+  categories: (includeArchived = false) => ['categories', includeArchived] as const,
   permissionCatalog: ['permission-catalog'] as const,
   roles: ['roles'] as const,
   members: ['members'] as const,
@@ -35,26 +47,73 @@ export const useSessionQuery = () =>
     // Retry only transient failures; a 401/403 answer is final.
     retry: (n, e) => !(e instanceof ApiError) && n < 2,
   });
-export const useTransactions = (f: TransactionFilters) =>
-  useQuery({
-    queryKey: qk.transactions(f),
-    queryFn: () => api.listTransactions(f),
+const PAGE = 30;
+
+/** Ledger list with "load more" (cursor pages); totals cover every matching entry. */
+export const useTransactions = (q: TransactionQuery) =>
+  useInfiniteQuery({
+    queryKey: qk.transactions(q),
+    queryFn: ({ pageParam }) =>
+      api.listTransactions({ ...q, limit: PAGE, ...(pageParam ? { cursor: pageParam } : {}) }),
+    initialPageParam: '',
+    getNextPageParam: (last) => last.nextCursor ?? undefined,
     placeholderData: (p) => p,
   });
+
+/** First page only: dashboard lists and totals (`limit` 1 is enough for totals). */
+export const useTransactionPage = (q: TransactionQuery, enabled = true) =>
+  useQuery({
+    queryKey: qk.transactions(q),
+    queryFn: () => api.listTransactions(q),
+    enabled,
+  });
+
+/*
+ * Data the entry form needs works offline-first: served from cache when offline, so an entry
+ * can be logged without a connection (F-08). The shell loads it up front (usePrefetchEntryData).
+ */
 export const useEntryDefaults = () =>
-  useQuery({ queryKey: qk.entryDefaults, queryFn: api.getEntryDefaults });
+  useQuery({
+    queryKey: qk.entryDefaults,
+    queryFn: api.getEntryDefaults,
+    networkMode: 'offlineFirst',
+  });
 export const usePeople = () =>
-  useQuery({ queryKey: qk.people, queryFn: api.listPeople, staleTime: Infinity });
-export const useDashboard = (period: string) =>
-  useQuery({ queryKey: qk.dashboard(period), queryFn: () => api.getDashboard(period) });
+  useQuery({
+    queryKey: qk.people,
+    queryFn: api.listPeople,
+    staleTime: 5 * 60_000,
+    networkMode: 'offlineFirst',
+  });
+export const useDashboardAggregates = (period: string) =>
+  useQuery({ queryKey: qk.dashboard(period), queryFn: () => api.getDashboardAggregates(period) });
 export const useSettlement = () =>
   useQuery({ queryKey: qk.settlement, queryFn: api.getSettlement });
 export const useBudgets = () => useQuery({ queryKey: qk.budgets, queryFn: api.getBudgets });
-export const useRecurring = () => useQuery({ queryKey: qk.recurring, queryFn: api.listRecurring });
+export const useRecurring = (month?: string) =>
+  useQuery({ queryKey: qk.recurring(month), queryFn: () => api.listRecurring(month) });
 export const useReportPreview = (month: string) =>
   useQuery({ queryKey: qk.report(month), queryFn: () => api.getReportPreview(month) });
-export const useCategories = () =>
-  useQuery({ queryKey: qk.categories, queryFn: api.getCategories });
+export const useCategories = (includeArchived = false) =>
+  useQuery({
+    queryKey: qk.categories(includeArchived),
+    queryFn: () => api.listCategories(includeArchived),
+    staleTime: 60_000,
+    networkMode: 'offlineFirst',
+  });
+
+/** Mounted by the shell so quick-add has categories and defaults before the device goes offline. */
+export function usePrefetchEntryData(enabled: boolean) {
+  const qc = useQueryClient();
+  useEffect(() => {
+    if (!enabled) return;
+    void qc.prefetchQuery({
+      queryKey: qk.categories(false),
+      queryFn: () => api.listCategories(false),
+    });
+    void qc.prefetchQuery({ queryKey: qk.entryDefaults, queryFn: api.getEntryDefaults });
+  }, [enabled, qc]);
+}
 export const usePermissionCatalog = () =>
   useQuery({ queryKey: qk.permissionCatalog, queryFn: api.listPermissions, staleTime: Infinity });
 export const useRoles = () => useQuery({ queryKey: qk.roles, queryFn: api.listRoles });
@@ -94,11 +153,22 @@ function useLedgerInvalidation() {
   return () => invalidateLedger(qc);
 }
 
-export type CreateResult = { status: 'saved'; txn: Transaction } | { status: 'queued' };
+export type CreateResult =
+  { status: 'saved'; txn: Transaction; receiptFailed?: boolean } | { status: 'queued' };
+
+/** Upload after create (F-04). The entry is already saved, so a failure is reported, not thrown. */
+export async function attachReceipt(txnId: string, receipt: Blob): Promise<boolean> {
+  try {
+    await api.uploadReceipt(txnId, await compressImage(receipt));
+    return true;
+  } catch {
+    return false;
+  }
+}
 
 /**
- * Saves an entry, or queues it in the offline outbox when the server is unreachable (F-08).
- * Validation and permission errors still throw.
+ * Saves an entry (+ receipt), or queues it in the offline outbox when the server is
+ * unreachable (F-08). Validation and permission errors still throw.
  */
 export function useCreateTransaction() {
   const invalidate = useLedgerInvalidation();
@@ -109,25 +179,58 @@ export function useCreateTransaction() {
       input: NewTransaction & { idempotencyKey: string };
       receipt?: Blob;
       userKey: string;
+      display: OutboxItem['display'];
     }): Promise<CreateResult> => {
       const queue = async (): Promise<CreateResult> => {
         await outbox.add({
           input: v.input,
           userKey: v.userKey,
+          display: v.display,
           ...(v.receipt ? { receipt: v.receipt } : {}),
         });
         return { status: 'queued' };
       };
       if (!navigator.onLine) return queue();
+      let txn: Transaction;
       try {
-        return { status: 'saved', txn: await api.createTransaction(v.input) };
+        txn = await api.createTransaction(v.input);
       } catch (e) {
         if (e instanceof NetworkError) return queue();
         throw e;
       }
+      if (v.receipt && !(await attachReceipt(txn.id, v.receipt)))
+        return { status: 'saved', txn, receiptFailed: true };
+      return { status: 'saved', txn };
     },
     onSuccess: (r) => (r.status === 'saved' ? invalidate() : undefined),
   });
+}
+
+export function useUpdateTransaction() {
+  const invalidate = useLedgerInvalidation();
+  return useMutation({
+    mutationFn: (v: { id: string; patch: UpdateTransaction }) =>
+      api.updateTransaction(v.id, v.patch),
+    onSuccess: invalidate,
+  });
+}
+
+export function useDeleteTransaction() {
+  const invalidate = useLedgerInvalidation();
+  return useMutation({ mutationFn: api.deleteTransaction, onSuccess: invalidate });
+}
+
+export function useReceiptMutations() {
+  const invalidate = useLedgerInvalidation();
+  return {
+    upload: useMutation({
+      mutationFn: async (v: { id: string; file: Blob }) => {
+        await api.uploadReceipt(v.id, await compressImage(v.file));
+      },
+      onSuccess: invalidate,
+    }),
+    remove: useMutation({ mutationFn: api.deleteReceipt, onSuccess: invalidate }),
+  };
 }
 
 export function useMarkSettled() {
@@ -142,21 +245,42 @@ export function useUndoSettlement() {
 
 export function useCategoryMutations() {
   const qc = useQueryClient();
-  const done = () => qc.invalidateQueries({ queryKey: qk.categories });
+  const done = () =>
+    Promise.all([
+      qc.invalidateQueries({ queryKey: ['categories'] }),
+      qc.invalidateQueries({ queryKey: ['recurring'] }),
+    ]);
   return {
-    add: useMutation({
-      mutationFn: (v: { type: 'expense' | 'income'; name: string }) =>
-        api.addCategory(v.type, v.name),
+    create: useMutation({
+      mutationFn: (v: { type: EntryType; name: string }) => api.createCategory(v.type, v.name),
       onSuccess: done,
     }),
-    archive: useMutation({
-      mutationFn: (v: { type: 'expense' | 'income'; name: string }) =>
-        api.archiveCategory(v.type, v.name),
+    update: useMutation({
+      mutationFn: (v: { id: string; name?: string; archived?: boolean }) =>
+        api.updateCategory(v.id, {
+          ...(v.name ? { name: v.name } : {}),
+          ...(v.archived !== undefined ? { archived: v.archived } : {}),
+        }),
       onSuccess: done,
     }),
-    restore: useMutation({
-      mutationFn: (v: { type: 'expense' | 'income'; name: string }) =>
-        api.restoreCategory(v.type, v.name),
+    reorder: useMutation({
+      mutationFn: (v: { type: EntryType; ids: string[] }) => api.reorderCategories(v.type, v.ids),
+      onSuccess: done,
+    }),
+  };
+}
+
+export function useRecurringMutations() {
+  const qc = useQueryClient();
+  const done = () => qc.invalidateQueries({ queryKey: ['recurring'] });
+  return {
+    create: useMutation({
+      mutationFn: (v: CreateRecurringItem) => api.createRecurring(v),
+      onSuccess: done,
+    }),
+    update: useMutation({
+      mutationFn: (v: { id: string; patch: UpdateRecurringItem }) =>
+        api.updateRecurring(v.id, v.patch),
       onSuccess: done,
     }),
   };

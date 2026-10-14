@@ -74,6 +74,510 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/categories": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Categories (any member) */
+        get: {
+            parameters: {
+                query?: {
+                    includeArchived?: "true" | "false";
+                };
+                header?: {
+                    /** @description Active clinic. Optional when the user belongs to exactly one clinic. */
+                    "x-clinic-id"?: string;
+                };
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Category"][];
+                    };
+                };
+                /** @description Unauthenticated */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Forbidden */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        /** Add a category (settings.categories.manage) */
+        post: {
+            parameters: {
+                query?: never;
+                header?: {
+                    /** @description Active clinic. Optional when the user belongs to exactly one clinic. */
+                    "x-clinic-id"?: string;
+                };
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["CreateCategory"];
+                };
+            };
+            responses: {
+                /** @description Created */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Category"];
+                    };
+                };
+                /** @description Bad request */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Unauthenticated */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Forbidden */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Conflict */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/categories/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Rename, archive or restore a category (settings.categories.manage) */
+        patch: {
+            parameters: {
+                query?: never;
+                header?: {
+                    /** @description Active clinic. Optional when the user belongs to exactly one clinic. */
+                    "x-clinic-id"?: string;
+                };
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["UpdateCategory"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Category"];
+                    };
+                };
+                /** @description Bad request */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Unauthenticated */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Forbidden */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Not found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Conflict */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+            };
+        };
+        trace?: never;
+    };
+    "/v1/categories/order": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Reorder categories of one type (settings.categories.manage) */
+        put: {
+            parameters: {
+                query?: never;
+                header?: {
+                    /** @description Active clinic. Optional when the user belongs to exactly one clinic. */
+                    "x-clinic-id"?: string;
+                };
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["ReorderCategories"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Category"][];
+                    };
+                };
+                /** @description Bad request */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Unauthenticated */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Forbidden */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+            };
+        };
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/recurring-items": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Recurring items with this month’s status (finance.entry.create or finance.report.view) */
+        get: {
+            parameters: {
+                query?: {
+                    month?: string;
+                    includeArchived?: "true" | "false";
+                };
+                header?: {
+                    /** @description Active clinic. Optional when the user belongs to exactly one clinic. */
+                    "x-clinic-id"?: string;
+                };
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["RecurringItem"][];
+                    };
+                };
+                /** @description Bad request */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Unauthenticated */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Forbidden */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        /** Add a recurring item (settings.categories.manage) */
+        post: {
+            parameters: {
+                query?: never;
+                header?: {
+                    /** @description Active clinic. Optional when the user belongs to exactly one clinic. */
+                    "x-clinic-id"?: string;
+                };
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["CreateRecurringItem"];
+                };
+            };
+            responses: {
+                /** @description Created */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["RecurringItem"];
+                    };
+                };
+                /** @description Bad request */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Unauthenticated */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Forbidden */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Conflict */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/recurring-items/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Edit or archive a recurring item (settings.categories.manage) */
+        patch: {
+            parameters: {
+                query?: never;
+                header?: {
+                    /** @description Active clinic. Optional when the user belongs to exactly one clinic. */
+                    "x-clinic-id"?: string;
+                };
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["UpdateRecurringItem"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["RecurringItem"];
+                    };
+                };
+                /** @description Bad request */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Unauthenticated */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Forbidden */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Not found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Conflict */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+            };
+        };
+        trace?: never;
+    };
     "/health": {
         parameters: {
             query?: never;
@@ -845,6 +1349,322 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/people": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Clinic people for pickers and filters (any member) */
+        get: {
+            parameters: {
+                query?: never;
+                header?: {
+                    /** @description Active clinic. Optional when the user belongs to exactly one clinic. */
+                    "x-clinic-id"?: string;
+                };
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Person"][];
+                    };
+                };
+                /** @description Unauthenticated */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Forbidden */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/partners": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Partners (finance.settlement.manage or finance.report.view) */
+        get: {
+            parameters: {
+                query?: never;
+                header?: {
+                    /** @description Active clinic. Optional when the user belongs to exactly one clinic. */
+                    "x-clinic-id"?: string;
+                };
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Partner"][];
+                    };
+                };
+                /** @description Unauthenticated */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Forbidden */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        /**
+         * Make an active member a partner (finance.settlement.manage)
+         * @description Re-adding a deactivated partner reactivates them.
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: {
+                    /** @description Active clinic. Optional when the user belongs to exactly one clinic. */
+                    "x-clinic-id"?: string;
+                };
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["AddPartner"];
+                };
+            };
+            responses: {
+                /** @description Added */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Partner"];
+                    };
+                };
+                /** @description Bad request */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Unauthenticated */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Forbidden */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Conflict */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/partners/{id}/deactivate": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Deactivate a partner (finance.settlement.manage). History is kept. */
+        post: {
+            parameters: {
+                query?: never;
+                header?: {
+                    /** @description Active clinic. Optional when the user belongs to exactly one clinic. */
+                    "x-clinic-id"?: string;
+                };
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Partner"];
+                    };
+                };
+                /** @description Unauthenticated */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Forbidden */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Not found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/partners/{id}/reactivate": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Reactivate a partner (finance.settlement.manage). History is kept. */
+        post: {
+            parameters: {
+                query?: never;
+                header?: {
+                    /** @description Active clinic. Optional when the user belongs to exactly one clinic. */
+                    "x-clinic-id"?: string;
+                };
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Partner"];
+                    };
+                };
+                /** @description Unauthenticated */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Forbidden */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Not found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/permissions": {
         parameters: {
             query?: never;
@@ -1174,6 +1994,1006 @@ export interface paths {
         };
         trace?: never;
     };
+    "/v1/settlement": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Unsettled partner position up to a date (finance.settlement.manage or finance.report.view) */
+        get: {
+            parameters: {
+                query?: {
+                    to?: string;
+                };
+                header?: {
+                    /** @description Active clinic. Optional when the user belongs to exactly one clinic. */
+                    "x-clinic-id"?: string;
+                };
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["SettlementPosition"];
+                    };
+                };
+                /** @description Bad request */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Unauthenticated */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Forbidden */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/settlements": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Settlement history, newest first */
+        get: {
+            parameters: {
+                query?: never;
+                header?: {
+                    /** @description Active clinic. Optional when the user belongs to exactly one clinic. */
+                    "x-clinic-id"?: string;
+                };
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["SettlementSummary"][];
+                    };
+                };
+                /** @description Unauthenticated */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Forbidden */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        /**
+         * Mark as settled (finance.settlement.manage)
+         * @description Records the settle-up transfers and closes every unsettled entry up to `to`. `fingerprint` must match GET /v1/settlement, otherwise 409 settlement_changed.
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: {
+                    /** @description Active clinic. Optional when the user belongs to exactly one clinic. */
+                    "x-clinic-id"?: string;
+                };
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["Settle"];
+                };
+            };
+            responses: {
+                /** @description Settled */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["SettlementDetail"];
+                    };
+                };
+                /** @description Bad request */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Unauthenticated */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Forbidden */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Conflict */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/settlements/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** One settlement with its snapshot */
+        get: {
+            parameters: {
+                query?: never;
+                header?: {
+                    /** @description Active clinic. Optional when the user belongs to exactly one clinic. */
+                    "x-clinic-id"?: string;
+                };
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["SettlementDetail"];
+                    };
+                };
+                /** @description Unauthenticated */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Forbidden */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Not found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        /** Undo the latest settlement (finance.settlement.manage) */
+        delete: {
+            parameters: {
+                query?: never;
+                header?: {
+                    /** @description Active clinic. Optional when the user belongs to exactly one clinic. */
+                    "x-clinic-id"?: string;
+                };
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Undone */
+                204: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Unauthenticated */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Forbidden */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Not found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Conflict */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+            };
+        };
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/partners/shares": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Profit shares in effect today */
+        get: {
+            parameters: {
+                query?: never;
+                header?: {
+                    /** @description Active clinic. Optional when the user belongs to exactly one clinic. */
+                    "x-clinic-id"?: string;
+                };
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["PartnerShares"];
+                    };
+                };
+                /** @description Unauthenticated */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Forbidden */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+            };
+        };
+        /** Set profit shares (finance.settlement.manage) */
+        put: {
+            parameters: {
+                query?: never;
+                header?: {
+                    /** @description Active clinic. Optional when the user belongs to exactly one clinic. */
+                    "x-clinic-id"?: string;
+                };
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["SetPartnerShares"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["PartnerShares"];
+                    };
+                };
+                /** @description Bad request */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Unauthenticated */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Forbidden */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+            };
+        };
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/transactions/defaults": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Quick-add defaults: today, last payment mode, allowed payers (F-02, F-03) */
+        get: {
+            parameters: {
+                query?: never;
+                header?: {
+                    /** @description Active clinic. Optional when the user belongs to exactly one clinic. */
+                    "x-clinic-id"?: string;
+                };
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["EntryDefaults"];
+                    };
+                };
+                /** @description Unauthenticated */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Forbidden */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/transactions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Ledger with search, filters and cursor pagination (finance.entry.view)
+         * @description With scope 'own' only entries the caller recorded or is the party of are returned.
+         */
+        get: {
+            parameters: {
+                query?: {
+                    search?: string;
+                    type?: components["schemas"]["EntryType"];
+                    categoryId?: string;
+                    paymentMode?: components["schemas"]["PaymentMode"];
+                    memberId?: string;
+                    party?: "clinic";
+                    from?: string;
+                    to?: string;
+                    cursor?: string;
+                    limit?: number;
+                };
+                header?: {
+                    /** @description Active clinic. Optional when the user belongs to exactly one clinic. */
+                    "x-clinic-id"?: string;
+                };
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["TransactionPage"];
+                    };
+                };
+                /** @description Bad request */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Unauthenticated */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Forbidden */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        /** Record an expense or income (finance.entry.create) */
+        post: {
+            parameters: {
+                query?: never;
+                header?: {
+                    /** @description Active clinic. Optional when the user belongs to exactly one clinic. */
+                    "x-clinic-id"?: string;
+                };
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["NewTransaction"];
+                };
+            };
+            responses: {
+                /** @description Idempotent replay: already created with this key */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Transaction"];
+                    };
+                };
+                /** @description Created */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Transaction"];
+                    };
+                };
+                /** @description Bad request */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Unauthenticated */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Forbidden */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/transactions/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** One entry */
+        get: {
+            parameters: {
+                query?: never;
+                header?: {
+                    /** @description Active clinic. Optional when the user belongs to exactly one clinic. */
+                    "x-clinic-id"?: string;
+                };
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Transaction"];
+                    };
+                };
+                /** @description Unauthenticated */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Forbidden */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Not found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        /** Soft-delete an entry (same rule as edit) */
+        delete: {
+            parameters: {
+                query?: never;
+                header?: {
+                    /** @description Active clinic. Optional when the user belongs to exactly one clinic. */
+                    "x-clinic-id"?: string;
+                };
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Deleted */
+                204: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Unauthenticated */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Forbidden */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Not found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+            };
+        };
+        options?: never;
+        head?: never;
+        /** Edit an entry (own within 7 days, or finance.entry.edit_any) */
+        patch: {
+            parameters: {
+                query?: never;
+                header?: {
+                    /** @description Active clinic. Optional when the user belongs to exactly one clinic. */
+                    "x-clinic-id"?: string;
+                };
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["UpdateTransaction"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Transaction"];
+                    };
+                };
+                /** @description Bad request */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Unauthenticated */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Forbidden */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Not found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+            };
+        };
+        trace?: never;
+    };
+    "/v1/transactions/{id}/receipt": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Short-lived download link for the receipt photo */
+        get: {
+            parameters: {
+                query?: never;
+                header?: {
+                    /** @description Active clinic. Optional when the user belongs to exactly one clinic. */
+                    "x-clinic-id"?: string;
+                };
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ReceiptLink"];
+                    };
+                };
+                /** @description Unauthenticated */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Forbidden */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Not found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+            };
+        };
+        /** Upload or replace the receipt photo (F-04; raw image body, max 5 MB) */
+        put: {
+            parameters: {
+                query?: never;
+                header?: {
+                    /** @description Active clinic. Optional when the user belongs to exactly one clinic. */
+                    "x-clinic-id"?: string;
+                };
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "image/jpeg": string;
+                    "image/png": string;
+                    "image/webp": string;
+                    "image/heic": string;
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Transaction"];
+                    };
+                };
+                /** @description Bad request */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Unauthenticated */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Forbidden */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Not found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+            };
+        };
+        post?: never;
+        /** Remove the receipt photo */
+        delete: {
+            parameters: {
+                query?: never;
+                header?: {
+                    /** @description Active clinic. Optional when the user belongs to exactly one clinic. */
+                    "x-clinic-id"?: string;
+                };
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Transaction"];
+                    };
+                };
+                /** @description Unauthenticated */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Forbidden */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Not found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+            };
+        };
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -1190,6 +3010,11 @@ export interface components {
         RoleRef: {
             /** Format: uuid */
             id: string;
+            name: string;
+        };
+        PersonRef: {
+            /** Format: uuid */
+            memberId: string;
             name: string;
         };
         AuditEntry: {
@@ -1215,6 +3040,85 @@ export interface components {
         AuditPage: {
             items: components["schemas"]["AuditEntry"][];
             nextCursor: string | null;
+        };
+        Category: {
+            /** Format: uuid */
+            id: string;
+            type: components["schemas"]["EntryType"];
+            name: string;
+            sortOrder: number;
+            archived: boolean;
+        };
+        /** @enum {string} */
+        EntryType: "expense" | "income";
+        CreateCategory: {
+            type: components["schemas"]["EntryType"];
+            name: string;
+        };
+        UpdateCategory: {
+            name?: string;
+            archived?: boolean;
+        };
+        ReorderCategories: {
+            type: components["schemas"]["EntryType"];
+            ids: string[];
+        };
+        RecurringItem: {
+            /** Format: uuid */
+            id: string;
+            name: string;
+            /** Format: uuid */
+            categoryId: string;
+            categoryName: string;
+            /**
+             * @description Integer paise (₹1 = 100)
+             * @example 60000
+             */
+            expectedAmountPaise: number;
+            dayOfMonth: number;
+            archived: boolean;
+            /**
+             * Format: date
+             * @example 2026-10-14
+             */
+            dueDate: string;
+            logged: {
+                /** Format: uuid */
+                transactionId: string;
+                /**
+                 * @description Integer paise (₹1 = 100)
+                 * @example 60000
+                 */
+                amountPaise: number;
+                /**
+                 * Format: date
+                 * @example 2026-10-14
+                 */
+                entryDate: string;
+            } | null;
+        };
+        CreateRecurringItem: {
+            name: string;
+            /** Format: uuid */
+            categoryId: string;
+            /**
+             * @description Integer paise (₹1 = 100)
+             * @example 60000
+             */
+            expectedAmountPaise: number;
+            dayOfMonth: number;
+        };
+        UpdateRecurringItem: {
+            name?: string;
+            /** Format: uuid */
+            categoryId?: string;
+            /**
+             * @description Integer paise (₹1 = 100)
+             * @example 60000
+             */
+            expectedAmountPaise?: number;
+            dayOfMonth?: number;
+            archived?: boolean;
         };
         HealthResponse: {
             /** @enum {string} */
@@ -1326,6 +3230,32 @@ export interface components {
             displayName?: string;
             roleIds?: string[];
         };
+        Person: {
+            /** Format: uuid */
+            memberId: string;
+            /** Format: uuid */
+            userId: string;
+            name: string;
+            initials: string;
+            isPartner: boolean;
+            /** @enum {string} */
+            status: "active" | "deactivated";
+        };
+        Partner: {
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            memberId: string;
+            name: string;
+            /** @enum {string} */
+            status: "active" | "deactivated";
+            since: string;
+            deactivatedAt: string | null;
+        };
+        AddPartner: {
+            /** Format: uuid */
+            memberId: string;
+        };
         Permission: {
             /** @example finance.entry.create */
             key: string;
@@ -1363,6 +3293,274 @@ export interface components {
             permissions?: {
                 [key: string]: components["schemas"]["ScopeOrNone"];
             };
+        };
+        PartyRef: {
+            /** @enum {string} */
+            kind: "member";
+            /** Format: uuid */
+            memberId: string;
+            name: string;
+        } | {
+            /** @enum {string} */
+            kind: "clinic";
+        };
+        SettleTransfer: {
+            from: components["schemas"]["PartyRef"];
+            to: components["schemas"]["PartyRef"];
+            /**
+             * @description Integer paise (₹1 = 100)
+             * @example 60000
+             */
+            amountPaise: number;
+        };
+        SettlementPosition: {
+            /**
+             * Format: date
+             * @example 2026-10-14
+             */
+            periodFrom: string | null;
+            /**
+             * Format: date
+             * @example 2026-10-14
+             */
+            periodTo: string;
+            entryCount: number;
+            fingerprint: string;
+            lastSettlement: {
+                /** Format: uuid */
+                id: string;
+                /**
+                 * Format: date
+                 * @example 2026-10-14
+                 */
+                periodTo: string;
+                settledAt: string;
+            } | null;
+            shares: {
+                /** @enum {string} */
+                source: "set" | "equal";
+                /**
+                 * Format: date
+                 * @example 2026-10-14
+                 */
+                effectiveFrom: string | null;
+                stale: boolean;
+            };
+            /** @description Integer paise; may be negative */
+            partnerNetPaise: number;
+            clinicAccount: {
+                /** @description Integer paise; may be negative */
+                receivedPaise: number;
+                /** @description Integer paise; may be negative */
+                paidPaise: number;
+                /** @description Integer paise; may be negative */
+                netPaise: number;
+            };
+            partners: {
+                /** Format: uuid */
+                partnerId: string;
+                /** Format: uuid */
+                memberId: string;
+                name: string;
+                active: boolean;
+                shareBps: number;
+                /** @description Integer paise; may be negative */
+                paidPaise: number;
+                /** @description Integer paise; may be negative */
+                receivedPaise: number;
+                /** @description Integer paise; may be negative */
+                allocationPaise: number;
+                /** @description Integer paise; may be negative */
+                balancePaise: number;
+            }[];
+            staff: {
+                /** Format: uuid */
+                memberId: string;
+                name: string;
+                /** @description Integer paise; may be negative */
+                paidPaise: number;
+                /** @description Integer paise; may be negative */
+                receivedPaise: number;
+                /** @description Integer paise; may be negative */
+                balancePaise: number;
+            }[];
+            transfers: components["schemas"]["SettleTransfer"][];
+        };
+        SettlementSummary: {
+            /** Format: uuid */
+            id: string;
+            /**
+             * Format: date
+             * @example 2026-10-14
+             */
+            periodFrom: string | null;
+            /**
+             * Format: date
+             * @example 2026-10-14
+             */
+            periodTo: string;
+            entryCount: number;
+            /** @description Integer paise; may be negative */
+            partnerNetPaise: number;
+            transferCount: number;
+            /** @description Integer paise; may be negative */
+            transferredPaise: number;
+            settledAt: string;
+            settledBy: {
+                /** Format: uuid */
+                userId: string;
+                name: string;
+            };
+        };
+        SettlementDetail: components["schemas"]["SettlementSummary"] & {
+            position: components["schemas"]["SettlementPosition"];
+        };
+        Settle: {
+            /**
+             * Format: date
+             * @example 2026-10-14
+             */
+            to: string;
+            fingerprint: string;
+        };
+        PartnerShares: {
+            effective: {
+                /** @enum {string} */
+                source: "set" | "equal";
+                /**
+                 * Format: date
+                 * @example 2026-10-14
+                 */
+                effectiveFrom: string | null;
+                stale: boolean;
+                partners: {
+                    /** Format: uuid */
+                    partnerId: string;
+                    name: string;
+                    shareBps: number;
+                }[];
+            };
+        };
+        SetPartnerShares: {
+            /**
+             * Format: date
+             * @example 2026-10-14
+             */
+            effectiveFrom?: string;
+            shares: {
+                /** Format: uuid */
+                partnerId: string;
+                shareBps: number;
+            }[];
+        };
+        Transaction: {
+            /** Format: uuid */
+            id: string;
+            type: components["schemas"]["EntryType"];
+            /**
+             * @description Integer paise (₹1 = 100)
+             * @example 60000
+             */
+            amountPaise: number;
+            /** Format: uuid */
+            categoryId: string;
+            categoryName: string;
+            /**
+             * Format: date
+             * @example 2026-10-14
+             */
+            entryDate: string;
+            description: string;
+            patientName: string | null;
+            paymentMode: components["schemas"]["PaymentMode"];
+            party: components["schemas"]["PersonRef"] & (Record<string, never> | null);
+            /** Format: uuid */
+            recurringItemId: string | null;
+            hasReceipt: boolean;
+            settled: boolean;
+            recordedBy: {
+                /** Format: uuid */
+                userId: string;
+                name: string;
+            };
+            createdAt: string;
+            updatedAt: string;
+            canEdit: boolean;
+        };
+        /** @enum {string} */
+        PaymentMode: "cash" | "upi" | "card" | "bank_transfer";
+        NewTransaction: {
+            type: components["schemas"]["EntryType"];
+            /**
+             * @description Integer paise (₹1 = 100)
+             * @example 60000
+             */
+            amountPaise: number;
+            /** Format: uuid */
+            categoryId: string;
+            /**
+             * Format: date
+             * @example 2026-10-14
+             */
+            entryDate?: string;
+            description?: string;
+            patientName?: string;
+            paymentMode?: components["schemas"]["PaymentMode"];
+            /** Format: uuid */
+            partyMemberId?: string | null;
+            /** Format: uuid */
+            recurringItemId?: string;
+            idempotencyKey?: string;
+        };
+        UpdateTransaction: {
+            type?: components["schemas"]["EntryType"];
+            /**
+             * @description Integer paise (₹1 = 100)
+             * @example 60000
+             */
+            amountPaise?: number;
+            /** Format: uuid */
+            categoryId?: string;
+            /**
+             * Format: date
+             * @example 2026-10-14
+             */
+            entryDate?: string;
+            description?: string;
+            patientName?: string | null;
+            paymentMode?: components["schemas"]["PaymentMode"];
+            /** Format: uuid */
+            partyMemberId?: string | null;
+            /** Format: uuid */
+            recurringItemId?: string | null;
+        };
+        TransactionPage: {
+            items: components["schemas"]["Transaction"][];
+            nextCursor: string | null;
+            totals: {
+                count: number;
+                incomePaise: number;
+                expensePaise: number;
+            };
+        };
+        EntryDefaults: {
+            /**
+             * Format: date
+             * @example 2026-10-14
+             */
+            entryDate: string;
+            paymentMode: components["schemas"]["PaymentMode"];
+            /** Format: uuid */
+            myMemberId: string;
+            parties: (components["schemas"]["PersonRef"] & {
+                isPartner: boolean;
+                isMe: boolean;
+            })[];
+        };
+        ReceiptLink: {
+            /** Format: uri */
+            url: string;
+            expiresInSec: number;
         };
     };
     responses: never;

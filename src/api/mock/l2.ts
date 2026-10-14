@@ -286,6 +286,10 @@ export function mockRole(): RoleKey {
 
 export const mockUserKey = () => USER_FOR_ROLE[mockRole()];
 
+/** Member id for a fixture person key (member userId = person key in the mock). */
+export const memberIdOf = (key: string) => l2.members.find((m) => m.userId === key)?.id ?? null;
+export const mockMembers = () => l2.members;
+
 export function mockScope(key: PermissionKey): Scope {
   const role = l2.roles.find((r) => r.id === ROLE_ID[mockRole()]);
   return role?.permissions[key] ?? 'none';

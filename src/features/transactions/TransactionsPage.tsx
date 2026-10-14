@@ -1,49 +1,57 @@
 import { useDeferredValue, useState } from 'react';
 import { Search } from 'lucide-react';
 import { useCategories, usePeople, useTransactions } from '@/api/queries';
-import { useAuthedSession, useSession } from '@/app/session';
-import { EmptyState, Loading, Note, Segmented, Select, Stat, StatGrid } from '@/components/ui';
-import { PAYMENT_MODES, type Transaction, type TransactionFilters } from '@/domain/types';
-import { daysBetween, todayIso } from '@/lib/dates';
+import { useSession } from '@/app/session';
+import {
+  Button,
+  EmptyState,
+  Loading,
+  Note,
+  Segmented,
+  Select,
+  Stat,
+  StatGrid,
+} from '@/components/ui';
+import { PAYMENT_MODES, PAYMENT_MODE_LABEL, type TransactionQuery } from '@/domain/types';
+import { useEditEntry } from '@/features/entry/QuickAddContext';
 import { inr } from '@/lib/money';
 import { PendingEntries } from '@/offline/PendingEntries';
 import { EntryRow } from './EntryRow';
 
 const TYPE_OPTIONS = [
-  { value: 'All', label: 'All' },
-  { value: 'Income', label: 'Income' },
-  { value: 'Expense', label: 'Expense' },
+  { value: '', label: 'All' },
+  { value: 'income', label: 'Income' },
+  { value: 'expense', label: 'Expense' },
 ] as const;
 
 const filterSelect = 'min-h-11 px-2 text-[13px]';
 
-export function TransactionsPage() {
-  const session = useAuthedSession();
-  const { can } = useSession();
-  const [search, setSearch] = useState('');
-  const [filters, setFilters] = useState<Required<Omit<TransactionFilters, 'search'>>>({
-    type: 'All',
-    category: 'All',
-    mode: 'All',
-    person: 'All',
-  });
-  const deferredSearch = useDeferredValue(search);
-  const { data: rows, isPending } = useTransactions({ ...filters, search: deferredSearch });
-  const { data: categories } = useCategories();
-  const { data: people } = usePeople();
-  const set =
-    <K extends keyof typeof filters>(k: K) =>
-    (v: (typeof filters)[K]) =>
-      setFilters((f) => ({ ...f, [k]: v }));
+/** Person filter value for the clinic account (`party=clinic`). */
+const CLINIC = 'clinic';
 
-  const today = todayIso();
-  const canEdit = (t: Transaction) =>
-    can('finance.entry.edit_any') ||
-    (can('finance.entry.edit_own') &&
-      t.recordedBy === session.user.key &&
-      daysBetween(t.entryDate, today) <= 7);
-  const total = (type: Transaction['type']) =>
-    (rows ?? []).filter((t) => t.type === type).reduce((a, t) => a + t.amountPaise, 0);
+export function TransactionsPage() {
+  const { can } = useSession();
+  const edit = useEditEntry();
+  const [search, setSearch] = useState('');
+  const [type, setType] = useState<'' | 'income' | 'expense'>('');
+  const [categoryId, setCategoryId] = useState('');
+  const [mode, setMode] = useState('');
+  const [person, setPerson] = useState('');
+  const deferredSearch = useDeferredValue(search.trim());
+  const { data: categories } = useCategories(true);
+  const seesAll = can('finance.entry.view', 'all');
+  const { data: people } = usePeople();
+
+  const query: TransactionQuery = {
+    ...(deferredSearch ? { search: deferredSearch } : {}),
+    ...(type ? { type } : {}),
+    ...(categoryId ? { categoryId } : {}),
+    ...(mode ? { paymentMode: mode as TransactionQuery['paymentMode'] } : {}),
+    ...(person === CLINIC ? { party: 'clinic' as const } : person ? { memberId: person } : {}),
+  };
+  const list = useTransactions(query);
+  const rows = list.data?.pages.flatMap((p) => p.items) ?? [];
+  const totals = list.data?.pages[0]?.totals;
 
   return (
     <>
@@ -60,73 +68,91 @@ export function TransactionsPage() {
           />
         </label>
         <div className="flex flex-wrap gap-2">
-          <Segmented
-            label="Entry type"
-            options={TYPE_OPTIONS}
-            value={filters.type}
-            onChange={set('type')}
-          />
+          <Segmented label="Entry type" options={TYPE_OPTIONS} value={type} onChange={setType} />
           <Select
             inline
             aria-label="Category"
-            value={filters.category}
-            onChange={(e) => set('category')(e.target.value)}
+            value={categoryId}
+            onChange={(e) => setCategoryId(e.target.value)}
             className={filterSelect}
           >
-            <option value="All">All categories</option>
-            {[...(categories?.expense ?? []), ...(categories?.income ?? [])].map((c) => (
-              <option key={c}>{c}</option>
+            <option value="">All categories</option>
+            {(['expense', 'income'] as const).map((t) => (
+              <optgroup key={t} label={t === 'expense' ? 'Expense' : 'Income'}>
+                {(categories ?? [])
+                  .filter((c) => c.type === t)
+                  .map((c) => (
+                    <option key={c.id} value={c.id}>
+                      {c.name}
+                      {c.archived ? ' (archived)' : ''}
+                    </option>
+                  ))}
+              </optgroup>
             ))}
           </Select>
           <Select
             inline
             aria-label="Payment mode"
-            value={filters.mode}
-            onChange={(e) => set('mode')(e.target.value)}
+            value={mode}
+            onChange={(e) => setMode(e.target.value)}
             className={filterSelect}
           >
-            <option value="All">All modes</option>
+            <option value="">All modes</option>
             {PAYMENT_MODES.map((m) => (
-              <option key={m}>{m}</option>
+              <option key={m} value={m}>
+                {PAYMENT_MODE_LABEL[m]}
+              </option>
             ))}
           </Select>
-          {can('finance.entry.view', 'all') && (
+          {seesAll && (
             <Select
               inline
               aria-label="Person"
-              value={filters.person}
-              onChange={(e) => set('person')(e.target.value)}
+              value={person}
+              onChange={(e) => setPerson(e.target.value)}
               className={filterSelect}
             >
-              <option value="All">Everyone</option>
-              {Object.values(people ?? {}).map((p) => (
-                <option key={p.key} value={p.key}>
-                  {p.shortName}
+              <option value="">Everyone</option>
+              {(people ?? []).map((p) => (
+                <option key={p.memberId} value={p.memberId}>
+                  {p.name}
                 </option>
               ))}
+              <option value={CLINIC}>Clinic account</option>
             </Select>
           )}
         </div>
       </div>
 
       <StatGrid cols={3}>
-        <Stat size="sm" label="Entries" value={rows?.length ?? '–'} />
-        <Stat size="sm" label="In" value={inr(total('income'))} income />
-        <Stat size="sm" label="Out" value={inr(total('expense'))} />
+        <Stat size="sm" label="Entries" value={totals?.count ?? '–'} />
+        <Stat size="sm" label="In" value={totals ? inr(totals.incomePaise) : '–'} income />
+        <Stat size="sm" label="Out" value={totals ? inr(totals.expensePaise) : '–'} />
       </StatGrid>
 
-      <PendingEntries people={people} />
+      <PendingEntries />
 
-      {isPending ? (
+      {list.isPending ? (
         <Loading />
-      ) : rows && rows.length > 0 ? (
-        <ul className="m-0 flex list-none flex-col p-0">
+      ) : list.isError ? (
+        <p className="text-sm text-danger-fg">Could not load entries.</p>
+      ) : rows.length > 0 ? (
+        <ul className="m-0 flex list-none flex-col p-0" aria-label="Entries">
           {rows.map((t) => (
-            <EntryRow key={t.id} txn={t} people={people} detailed editable={canEdit(t)} />
+            <EntryRow key={t.id} txn={t} detailed onOpen={() => edit(t)} />
           ))}
         </ul>
       ) : (
         <EmptyState>No entries match these filters.</EmptyState>
+      )}
+      {list.hasNextPage && (
+        <Button
+          className="self-start"
+          disabled={list.isFetchingNextPage}
+          onClick={() => void list.fetchNextPage()}
+        >
+          {list.isFetchingNextPage ? 'Loading…' : 'Load more'}
+        </Button>
       )}
       <Note>
         You can edit or delete your own entries for 7 days. Owners can edit any entry. Every change
