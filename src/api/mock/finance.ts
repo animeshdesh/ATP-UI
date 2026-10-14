@@ -3,6 +3,10 @@
  * mock ledger (ledger.ts). Mirrors backend docs/SETTLEMENT.md (D-028) and docs/DASHBOARD.md.
  */
 import type {
+  MonthlyReport,
+  ReceiptsMode,
+  ReportFile,
+  ReportFormat,
   BudgetLine,
   Budgets,
   CreateFund,
@@ -540,5 +544,117 @@ export const mockFinance = {
       { fundId: id, amountPaise: v.amountPaise, entryDate: v.entryDate ?? MOCK_TODAY },
     ];
     return (await mockFinance.listFunds(undefined, true)).find((x) => x.id === id)!;
+  },
+
+  // ── L7 reports ────────────────────────────────────────────
+  async getMonthlyReport(month: string): Promise<MonthlyReport> {
+    if (mockScope('finance.report.view') === 'none')
+      throw new ApiError(403, 'Not allowed', 'forbidden');
+    const rows = ledgerDb()
+      .transactions.filter((t) => !t.deleted && t.entryDate.startsWith(month))
+      .sort((a, b) => a.entryDate.localeCompare(b.entryDate));
+    const byCat = (type: 'income' | 'expense') => {
+      const m = new Map<string, { name: string; count: number; amountPaise: number }>();
+      for (const t of rows.filter((x) => x.type === type)) {
+        const e = m.get(t.categoryName) ?? { name: t.categoryName, count: 0, amountPaise: 0 };
+        e.count++;
+        e.amountPaise += t.amountPaise;
+        m.set(t.categoryName, e);
+      }
+      return [...m.values()].sort((a, b) => b.amountPaise - a.amountPaise);
+    };
+    const last = new Date(
+      Date.UTC(Number(month.slice(0, 4)), Number(month.slice(5, 7)), 0),
+    ).getUTCDate();
+    const to = `${month}-${String(last).padStart(2, '0')}`;
+    const open = position(to < MOCK_TODAY ? to : MOCK_TODAY);
+    const name = (p: PartyRef) => (p.kind === 'clinic' ? 'Clinic account' : p.name);
+    const modes: PaymentMode[] = ['cash', 'upi', 'card', 'bank_transfer'];
+    return latency({
+      clinicName: 'ATP Rehab',
+      month,
+      period: { from: `${month}-01`, to },
+      generatedAt: new Date().toISOString(),
+      totals: periodTotals(rows),
+      incomeByCategory: byCat('income'),
+      expenseByCategory: byCat('expense'),
+      byPaymentMode: modes.map((m) => ({
+        paymentMode: m,
+        incomePaise: rows
+          .filter((t) => t.paymentMode === m && t.type === 'income')
+          .reduce((a, t) => a + t.amountPaise, 0),
+        expensePaise: rows
+          .filter((t) => t.paymentMode === m && t.type === 'expense')
+          .reduce((a, t) => a + t.amountPaise, 0),
+      })),
+      transactions: rows.map((t) => ({
+        id: t.id,
+        entryDate: t.entryDate,
+        type: t.type,
+        category: t.categoryName,
+        description: t.description,
+        patientName: t.patientName,
+        paymentMode: t.paymentMode,
+        amountPaise: t.amountPaise,
+        party: t.party?.name ?? 'Clinic account',
+        recordedBy: t.recordedBy.name,
+        fund: t.fund?.name ?? null,
+        hasReceipt: t.hasReceipt,
+      })),
+      settlement: {
+        settled: fin.settlements
+          .filter((x) => x.periodTo.startsWith(month))
+          .map((x) => ({
+            periodFrom: x.periodFrom,
+            periodTo: x.periodTo,
+            settledAt: x.settledAt,
+            settledBy: x.settledBy.name,
+            transfers: x.position.transfers.map((t) => ({
+              from: name(t.from),
+              to: name(t.to),
+              amountPaise: t.amountPaise,
+            })),
+          })),
+        openAtMonthEnd: {
+          entryCount: open.entryCount,
+          partnerNetPaise: open.partnerNetPaise,
+          partners: open.partners.map((p) => ({
+            name: p.name,
+            shareBps: p.shareBps,
+            balancePaise: p.balancePaise,
+          })),
+          transfers: open.transfers.map((t) => ({
+            from: name(t.from),
+            to: name(t.to),
+            amountPaise: t.amountPaise,
+          })),
+        },
+      },
+    } as MonthlyReport);
+  },
+  async downloadReport(
+    month: string,
+    format: ReportFormat,
+    receipts: ReceiptsMode = 'links',
+  ): Promise<ReportFile> {
+    const report = await mockFinance.getMonthlyReport(month);
+    const type = {
+      pdf: 'application/pdf',
+      csv: 'text/csv',
+      xlsx: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+    }[format];
+    const lines = report.transactions.map((t) =>
+      [t.entryDate, t.type, t.category, t.description, t.paymentMode, t.amountPaise / 100].join(
+        ',',
+      ),
+    );
+    const body =
+      format === 'csv'
+        ? ['date,type,category,description,mode,amount', ...lines].join('\n')
+        : `mock ${format} ${month} receipts=${receipts}`;
+    return latency(
+      { blob: new Blob([body], { type }), filename: `atp-rehab-accounts-${month}.${format}` },
+      300,
+    );
   },
 };

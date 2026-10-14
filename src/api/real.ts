@@ -1,6 +1,10 @@
 /* Real L2 (auth & RBAC): Supabase Auth for sign-in, the backend API for everything else. */
 import type { AuthError } from '@supabase/supabase-js';
 import type {
+  MonthlyReport,
+  ReceiptsMode,
+  ReportFile,
+  ReportFormat,
   Budgets,
   CreateFund,
   Fund,
@@ -289,4 +293,49 @@ export const realL2 = {
     unwrap(http.PATCH('/v1/funds/{id}', { params: { path: { id } }, body: v })),
   topUpFund: (id: string, v: FundTopUp): Promise<Fund> =>
     unwrap(http.POST('/v1/funds/{id}/topups', { params: { path: { id } }, body: v })),
+
+  // ── L7 reports (docs/REPORTS.md) ───────────────────────────
+  getMonthlyReport: (month: string): Promise<MonthlyReport> =>
+    unwrap(http.GET('/v1/reports/monthly', { params: { query: { month } } })),
+  /** PDF / CSV / XLSX as a Blob, with the server's filename when the header is readable. */
+  downloadReport: async (
+    month: string,
+    format: ReportFormat,
+    receipts: ReceiptsMode = 'links',
+  ): Promise<ReportFile> => {
+    const call =
+      format === 'pdf'
+        ? http.GET('/v1/reports/monthly.pdf', {
+            params: { query: { month, receipts } },
+            parseAs: 'blob',
+          })
+        : format === 'csv'
+          ? http.GET('/v1/reports/monthly.csv', { params: { query: { month } }, parseAs: 'blob' })
+          : http.GET('/v1/reports/monthly.xlsx', { params: { query: { month } }, parseAs: 'blob' });
+    const { data, error, response } = await call;
+    if (!response.ok) {
+      // Error bodies are JSON even when a blob was requested.
+      let body = error as { error?: { code?: string; message?: string } } | Blob | undefined;
+      if (body instanceof Blob) {
+        try {
+          body = JSON.parse(await body.text()) as { error?: { code?: string; message?: string } };
+        } catch {
+          body = undefined;
+        }
+      }
+      throw new ApiError(
+        response.status,
+        (body && !(body instanceof Blob) && body.error?.message) || 'Export failed',
+        body && !(body instanceof Blob) ? body.error?.code : undefined,
+      );
+    }
+    return { blob: data as unknown as Blob, filename: filenameFrom(response, month, format) };
+  },
 };
+
+/** `content-disposition` filename, else the documented pattern (header may not be CORS-exposed). */
+function filenameFrom(response: Response, month: string, ext: ReportFormat): string {
+  const cd = response.headers.get('content-disposition') ?? '';
+  const m = /filename\*?=(?:UTF-8'')?"?([^";]+)"?/i.exec(cd);
+  return m?.[1] ? decodeURIComponent(m[1]) : `atp-rehab-accounts-${month}.${ext}`;
+}

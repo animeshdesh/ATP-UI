@@ -118,8 +118,8 @@ export const useFunds = (month?: string) =>
   });
 export const useRecurring = (month?: string) =>
   useQuery({ queryKey: qk.recurring(month), queryFn: () => api.listRecurring(month) });
-export const useReportPreview = (month: string) =>
-  useQuery({ queryKey: qk.report(month), queryFn: () => api.getReportPreview(month) });
+export const useMonthlyReport = (month: string) =>
+  useQuery({ queryKey: qk.report(month), queryFn: () => api.getMonthlyReport(month) });
 export const useCategories = (includeArchived = false) =>
   useQuery({
     queryKey: qk.categories(includeArchived),
@@ -162,6 +162,7 @@ export const useAuditLog = (table: string) =>
 
 const LEDGER_KEYS = [
   'transactions',
+  'report',
   'budgets',
   'funds',
   'dashboard',

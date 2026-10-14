@@ -5,65 +5,76 @@ import {
   Download,
   FileSpreadsheet,
   FileText,
-  FolderArchive,
-  Send,
+  Share2,
   Sheet as SheetIcon,
   type LucideIcon,
 } from 'lucide-react';
 import { api } from '@/api';
-import { useReportPreview } from '@/api/queries';
-import { useAuthedSession } from '@/app/session';
+import { useMonthlyReport } from '@/api/queries';
 import { Button, IconButton, Loading, Segmented, useToast } from '@/components/ui';
+import {
+  PAYMENT_MODE_LABEL,
+  type PaymentMode,
+  type ReceiptsMode,
+  type ReportFormat,
+} from '@/domain/types';
+import { addMonths, dateRange, dayOfMonth, monthShort, monthYear, todayIso } from '@/lib/dates';
 import { inr } from '@/lib/money';
-import { monthYear, todayIso } from '@/lib/dates';
+import { canShareFiles, download, shareOrDownload } from '@/lib/share';
 
-type ReceiptsMode = 'links' | 'embed' | 'none';
 const RECEIPT_OPTIONS = [
   { value: 'links', label: 'As links' },
-  { value: 'embed', label: 'Embedded' },
+  { value: 'appendix', label: 'Appendix' },
   { value: 'none', label: 'Leave out' },
 ] as const;
 const RECEIPT_TEXT: Record<ReceiptsMode, string> = {
-  links: 'linked',
-  embed: 'embedded in appendix',
+  links: 'linked (30-day links)',
+  appendix: 'in an appendix',
   none: 'not included',
 };
+const PREVIEW_ROWS = 6;
 
-/** Previous month as YYYY-MM, shifted by `offset` months. */
-function monthKey(offset: number): string {
-  const [y, m] = todayIso().split('-').map(Number) as [number, number];
-  const d = new Date(Date.UTC(y, m - 2 + offset, 1));
-  return d.toISOString().slice(0, 7);
-}
+const modeLabel = (m: string) => PAYMENT_MODE_LABEL[m as PaymentMode] ?? m;
 
 export function ReportsPage() {
-  const session = useAuthedSession();
   const toast = useToast();
-  const [offset, setOffset] = useState(0);
-  const month = monthKey(offset);
-  const { data, isPending } = useReportPreview(month);
+  const thisMonth = todayIso().slice(0, 7);
+  // The CA usually wants last month; the current month is available month-to-date.
+  const [month, setMonth] = useState(() => addMonths(todayIso(), -1).slice(0, 7));
+  const shift = (n: number) => setMonth((m) => addMonths(`${m}-01`, n).slice(0, 7));
+  const { data, isPending, isError } = useMonthlyReport(month);
   const [receipts, setReceipts] = useState<ReceiptsMode>('links');
-  const [autoEmail, setAutoEmail] = useState(true);
-  const [busy, setBusy] = useState(false);
+  const [busy, setBusy] = useState<string | null>(null);
+  const shareable = canShareFiles();
 
-  const run = async (format: Parameters<typeof api.exportReport>[1]) => {
-    setBusy(true);
+  const run = async (key: string, format: ReportFormat, how: 'download' | 'share') => {
+    setBusy(key);
     try {
-      toast((await api.exportReport(month, format)).message);
+      const file = await api.downloadReport(month, format, receipts);
+      if (how === 'share') {
+        const r = await shareOrDownload(file, `ATP Rehab accounts · ${monthYear(`${month}-01`)}`);
+        if (r === 'downloaded') toast(`Downloaded ${file.filename}`);
+      } else {
+        download(file);
+        toast(`Downloaded ${file.filename}`);
+      }
+    } catch (e) {
+      toast(e instanceof Error ? e.message : 'Export failed');
     } finally {
-      setBusy(false);
+      setBusy(null);
     }
   };
 
   const exports: Array<{
+    key: string;
     label: string;
     icon: LucideIcon;
-    format: Parameters<typeof api.exportReport>[1];
+    format: ReportFormat;
+    how: 'download' | 'share';
   }> = [
-    { label: 'Excel (.xlsx)', icon: SheetIcon, format: 'xlsx' },
-    { label: 'CSV', icon: FileSpreadsheet, format: 'csv' },
-    { label: 'Receipts (.zip)', icon: FolderArchive, format: 'receipts' },
-    { label: 'Email to CA', icon: Send, format: 'email' },
+    { key: 'xlsx', label: 'Excel (.xlsx)', icon: SheetIcon, format: 'xlsx', how: 'download' },
+    { key: 'csv', label: 'CSV', icon: FileSpreadsheet, format: 'csv', how: 'download' },
+    { key: 'share', label: 'Share PDF', icon: Share2, format: 'pdf', how: 'share' },
   ];
 
   return (
@@ -74,18 +85,21 @@ export function ReportsPage() {
           label="Previous month"
           bordered
           className="bg-white"
-          onClick={() => setOffset((o) => o - 1)}
+          onClick={() => shift(-1)}
         />
         <div className="flex min-h-11 flex-1 items-center border-2 border-ink bg-white px-3.5 text-base font-extrabold">
           {monthYear(`${month}-01`)}
+          {month === thisMonth && (
+            <span className="ml-2 text-xs font-semibold text-neutral-700">month to date</span>
+          )}
         </div>
         <IconButton
           icon={ChevronRight}
           label="Next month"
           bordered
           className="bg-white disabled:opacity-40"
-          disabled={offset >= 0}
-          onClick={() => setOffset((o) => Math.min(0, o + 1))}
+          disabled={month >= thisMonth}
+          onClick={() => shift(1)}
         />
       </div>
 
@@ -97,22 +111,22 @@ export function ReportsPage() {
             icon={FileText}
             trailingIcon={Download}
             className="min-h-14"
-            disabled={busy}
-            onClick={() => run('pdf')}
+            disabled={!!busy}
+            onClick={() => run('pdf', 'pdf', 'download')}
           >
-            Generate CA report (PDF)
+            {busy === 'pdf' ? 'Preparing PDF…' : 'Generate CA report (PDF)'}
           </Button>
           <div className="grid grid-cols-2 gap-0.5 border-2 border-ink bg-ink">
-            {exports.map(({ label, icon: Icon, format }) => (
+            {exports.map(({ key, label, icon: Icon, format, how }) => (
               <button
-                key={format}
+                key={key}
                 type="button"
-                disabled={busy}
-                onClick={() => run(format)}
-                className="flex min-h-12 items-center gap-2.5 border-0 bg-white px-3.5 py-3 text-left text-sm font-semibold text-ink hover:bg-accent-100"
+                disabled={!!busy}
+                onClick={() => run(key, format, how)}
+                className="flex min-h-12 items-center gap-2.5 border-0 bg-white px-3.5 py-3 text-left text-sm font-semibold text-ink hover:bg-accent-100 disabled:opacity-60"
               >
                 <Icon aria-hidden size={17} />
-                {label}
+                {busy === key ? 'Preparing…' : label}
               </button>
             ))}
           </div>
@@ -126,30 +140,18 @@ export function ReportsPage() {
               onChange={setReceipts}
             />
           </div>
-          <div className="flex items-center gap-3 border-t-2 border-b border-t-divider border-b-rule py-3">
-            <div className="flex-1">
-              <div className="text-sm font-semibold">Email the CA on the 1st</div>
-              <div className="text-xs text-neutral-700">
-                {data?.caEmail ?? '…'} · previous month
-              </div>
-            </div>
-            <button
-              type="button"
-              role="switch"
-              aria-checked={autoEmail}
-              aria-label="Email the CA on the 1st"
-              onClick={() => setAutoEmail((v) => !v)}
-              className={`relative h-7 w-12 flex-none border-2 border-ink p-0 ${autoEmail ? 'bg-accent' : 'bg-white'}`}
-            >
-              <span
-                className={`absolute top-0.5 size-5 bg-ink transition-[left] ${autoEmail ? 'left-[22px]' : 'left-0.5'}`}
-              />
-            </button>
-          </div>
+          <p className="m-0 border-t-2 border-divider pt-3 text-xs text-neutral-700">
+            {shareable
+              ? 'Share PDF opens your phone’s share sheet (WhatsApp, email).'
+              : 'On a phone, Share PDF opens the share sheet; here it downloads the file.'}{' '}
+            Emailing the CA automatically on the 1st comes later.
+          </p>
         </div>
 
-        {isPending || !data ? (
+        {isPending ? (
           <Loading label="Loading preview" />
+        ) : isError || !data ? (
+          <p className="text-sm text-danger-fg">Could not load the report.</p>
         ) : (
           <article
             aria-label="Report preview"
@@ -159,18 +161,25 @@ export function ReportsPage() {
               <img src="/atp-logo.svg" alt="ATP Rehab" className="h-11" />
               <div className="text-right">
                 <div className="text-sm font-extrabold">Monthly statement</div>
-                <div className="text-neutral-700">{data.periodLabel}</div>
+                <div className="text-neutral-700">
+                  {dateRange(data.period.from, data.period.to)}
+                </div>
               </div>
             </div>
             <div className="grid grid-cols-3 gap-2 tabular">
-              {[
-                ['Income', data.incomePaise],
-                ['Expense', data.expensePaise],
-                ['Net', data.incomePaise - data.expensePaise],
-              ].map(([l, v]) => (
+              {(
+                [
+                  ['Income', data.totals.incomePaise],
+                  ['Expense', data.totals.expensePaise],
+                  ['Net', data.totals.netPaise],
+                ] as const
+              ).map(([l, v]) => (
                 <div key={l}>
                   <div className="text-neutral-700">{l}</div>
-                  <div className="text-[15px] font-extrabold">{inr(v as number)}</div>
+                  <div className="text-[15px] font-extrabold">
+                    {v < 0 ? '−' : ''}
+                    {inr(v)}
+                  </div>
                 </div>
               ))}
             </div>
@@ -178,51 +187,94 @@ export function ReportsPage() {
               <div className="mb-1 text-[10px] font-extrabold tracking-[.06em] uppercase">
                 Category totals
               </div>
-              {data.categories.map((c) => (
+              {[...data.expenseByCategory, ...data.incomeByCategory].length === 0 && (
+                <div className="text-neutral-600">No entries this month.</div>
+              )}
+              {data.expenseByCategory.map((c) => (
                 <div
-                  key={c.name}
+                  key={`e-${c.name}`}
                   className="flex justify-between border-b border-rule py-0.5 tabular"
                 >
                   <span>{c.name}</span>
-                  <span>{inr(c.amountPaise)}</span>
+                  <span>−{inr(c.amountPaise)}</span>
+                </div>
+              ))}
+              {data.incomeByCategory.map((c) => (
+                <div
+                  key={`i-${c.name}`}
+                  className="flex justify-between border-b border-rule py-0.5 tabular"
+                >
+                  <span>{c.name}</span>
+                  <span>+{inr(c.amountPaise)}</span>
                 </div>
               ))}
             </div>
             <div>
               <div className="mb-1 text-[10px] font-extrabold tracking-[.06em] uppercase">
-                Transactions ({data.transactionCount})
+                Transactions ({data.totals.count})
               </div>
-              <div className="grid grid-cols-[40px_1fr_40px_56px] gap-x-1.5 gap-y-0.5 text-neutral-700">
+              <div className="grid grid-cols-[40px_1fr_44px_60px] gap-x-1.5 gap-y-0.5 text-neutral-700">
                 <span>Date</span>
                 <span>Category · description</span>
                 <span>Mode</span>
                 <span className="text-right">Amount</span>
               </div>
-              {data.transactions.map((t, i) => (
+              {data.transactions.slice(0, PREVIEW_ROWS).map((t) => (
                 <div
-                  key={i}
-                  className="grid grid-cols-[40px_1fr_40px_56px] gap-x-1.5 border-b border-rule py-0.5 tabular"
+                  key={t.id}
+                  className="grid grid-cols-[40px_1fr_44px_60px] gap-x-1.5 border-b border-rule py-0.5 tabular"
                 >
-                  <span>{t.date}</span>
-                  <span className="truncate">{t.label}</span>
-                  <span>{t.mode}</span>
-                  <span className="text-right">{inr(t.amountPaise)}</span>
+                  <span>
+                    {dayOfMonth(t.entryDate)} {monthShort(t.entryDate)}
+                  </span>
+                  <span className="truncate">
+                    {t.category}
+                    {t.description
+                      ? ` · ${t.description}`
+                      : t.patientName
+                        ? ` · ${t.patientName}`
+                        : ''}
+                  </span>
+                  <span>{modeLabel(t.paymentMode)}</span>
+                  <span className="text-right">
+                    {t.type === 'expense' ? '−' : '+'}
+                    {inr(t.amountPaise)}
+                  </span>
                 </div>
               ))}
               <div className="pt-[3px] text-neutral-600">
-                … {data.transactionCount - data.transactions.length} more rows · receipts{' '}
-                {RECEIPT_TEXT[receipts]}
+                {data.transactions.length > PREVIEW_ROWS &&
+                  `… ${data.transactions.length - PREVIEW_ROWS} more rows · `}
+                receipts {RECEIPT_TEXT[receipts]}
               </div>
             </div>
             <div>
               <div className="mb-1 text-[10px] font-extrabold tracking-[.06em] uppercase">
                 Partner settlement
               </div>
-              <div>{data.settlementLine}</div>
+              {data.settlement.settled.map((s, i) => (
+                <div key={i}>
+                  Settled {dayOfMonth(s.settledAt.slice(0, 10))}{' '}
+                  {monthShort(s.settledAt.slice(0, 10))} by {s.settledBy} · {s.transfers.length}{' '}
+                  payments · {inr(s.transfers.reduce((a, t) => a + t.amountPaise, 0))}
+                </div>
+              ))}
+              {data.settlement.openAtMonthEnd.entryCount > 0 ? (
+                <div>
+                  Open at month end: {data.settlement.openAtMonthEnd.transfers.length} payments ·{' '}
+                  {inr(
+                    data.settlement.openAtMonthEnd.transfers.reduce((a, t) => a + t.amountPaise, 0),
+                  )}
+                </div>
+              ) : (
+                data.settlement.settled.length === 0 && (
+                  <div className="text-neutral-600">Nothing open.</div>
+                )
+              )}
             </div>
             <div className="flex justify-between gap-2 border-t border-rule pt-1.5 text-neutral-600">
-              <span>Generated by {session.user.fullName}</span>
-              <span>Page 1 of {data.pages}</span>
+              <span>{data.clinicName}</span>
+              <span>Preview · full list in the PDF</span>
             </div>
           </article>
         )}

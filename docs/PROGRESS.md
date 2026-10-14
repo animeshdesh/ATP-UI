@@ -4,18 +4,18 @@ Status legend: `todo` · `in-progress` · `done` · `blocked`.
 Frontend levels unlock as backend contracts land (see `../atp-backend/docs/PROGRESS.md`).
 Screens are built ahead of the contract on the in-memory mock (D-012); an F3 level is done when its screens run against the real API.
 
-| Level | Scope                                                                    | Depends on          | Status                              |
-| ----- | ------------------------------------------------------------------------ | ------------------- | ----------------------------------- |
-| F0    | Design import & inventory                                                | `/design-login`     | done                                |
-| F1    | Scaffold (Vite, React, TS, Tailwind, PWA, routing, API client, MSW)      | F0 tokens           | done                                |
-| F2    | UI kit + all V1 screens on mock data                                     | F0, F1              | done                                |
-| F3a   | Auth + app shell + role-aware nav                                        | backend L2 contract | done                                |
-| F3b   | Quick-add entry, ledger list, edit/delete, receipt upload, offline queue | backend L3 contract | done                                |
-| F3c   | Settlement view + mark settled                                           | backend L4          | done                                |
-| F3d   | Dashboard                                                                | backend L5          | done                                |
-| F3e   | Budgets & funds                                                          | backend L6          | done                                |
-| F3f   | Reports: PDF/CSV/XLSX download, share sheet                              | backend L7          | in-progress (UI done, mock exports) |
-| F4    | Settings: categories, partners, roles, members, invites                  | backend L2–L3       | in-progress (UI done, mock data)    |
+| Level | Scope                                                                    | Depends on          | Status                           |
+| ----- | ------------------------------------------------------------------------ | ------------------- | -------------------------------- |
+| F0    | Design import & inventory                                                | `/design-login`     | done                             |
+| F1    | Scaffold (Vite, React, TS, Tailwind, PWA, routing, API client, MSW)      | F0 tokens           | done                             |
+| F2    | UI kit + all V1 screens on mock data                                     | F0, F1              | done                             |
+| F3a   | Auth + app shell + role-aware nav                                        | backend L2 contract | done                             |
+| F3b   | Quick-add entry, ledger list, edit/delete, receipt upload, offline queue | backend L3 contract | done                             |
+| F3c   | Settlement view + mark settled                                           | backend L4          | done                             |
+| F3d   | Dashboard                                                                | backend L5          | done                             |
+| F3e   | Budgets & funds                                                          | backend L6          | done                             |
+| F3f   | Reports: PDF/CSV/XLSX download, share sheet                              | backend L7          | done                             |
+| F4    | Settings: categories, partners, roles, members, invites                  | backend L2–L3       | in-progress (UI done, mock data) |
 
 ## F0 — Design import · `done`
 
@@ -82,9 +82,13 @@ Screens are built ahead of the contract on the in-memory mock (D-012); an F3 lev
 - [x] CA can view budgets (`finance.report.view`); edits need `finance.budget.manage` — 2026-10-14
 - [ ] Fund rule edit (`PATCH` rule + effective month), month picker for past months
 
-## F3f — Reports · `in-progress`
+## F3f — Reports · `done`
 
-- [ ] Device share sheet for PDF (F-23) — needs backend L7 PDF endpoint
+- [x] Preview from `/v1/reports/monthly` (totals, category totals, first rows, settlement); month picker up to month-to-date — 2026-10-14
+- [x] PDF (receipts as links / appendix / none), CSV, XLSX downloads (F-20…F-22) — 2026-10-14
+- [x] Share PDF via the device share sheet with `navigator.share({ files })`, download fallback (F-23) — 2026-10-14
+- [ ] Auto-email to the CA on the 1st (F-24): deferred by Animesh; UI option removed
+- [ ] Use the server filename once `Content-Disposition` is CORS-exposed (fallback pattern in use)
 
 ### How to swap a level from mock to API
 
@@ -97,11 +101,12 @@ Screens are built ahead of the contract on the in-memory mock (D-012); an F3 lev
 
 ## Session log
 
-| Date       | Session summary                                                                                                                                                                                                                                  | Next step                                                                    |
-| ---------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ---------------------------------------------------------------------------- |
-| 2026-10-14 | Created tracker. Design import blocked: DesignSync needs `/design-login`.                                                                                                                                                                        | Run `/design-login`, then F0.                                                |
-| 2026-10-14 | F0–F2: imported design, scaffolded PWA, built UI kit and all V1 screens on in-memory mock (D-012). `pnpm check` + `pnpm build` green; screens verified in Chrome at 390 and 1280 px.                                                             | F3a when backend L2 contract lands; meanwhile F-08 offline queue design.     |
-| 2026-10-14 | Ports → 5553 (strict) / API 4553. Pushed to `animeshdesh/ATP-UI`. F-08 offline outbox (21 tests). Fixed this tracker, which the F0–F2 commit had left unticked.                                                                                  | F-06 entry edit/delete, then F-23 share sheet.                               |
-| 2026-10-14 | F3a: real auth + L2 API (roles, members, invites, audit). Fixed dialog focus-jump bug and invite-before-roles-load bug. Live-verified flows in Chrome.                                                                                           | F3b: move ledger, quick-add, categories, recurring to L3 (`docs/LEDGER.md`). |
-| 2026-10-14 | F3b ledger, F3c settlement, F3d dashboard on L3–L5. Fixed: offline quick-add with no cached categories, sign-in race that left screens loading, bounce to sign-in when API unreachable. Live-verified on local backend (prod build for offline). | L6 budgets & funds (budget bars, fund picker), L7 reports.                   |
-| 2026-10-14 | F3e budgets & funds on L6 (+ fund picker, dashboard budget alerts). 51 tests; live-verified.                                                                                                                                                     | F3f reports on L7 (PDF/CSV/XLSX, share sheet).                               |
+| Date       | Session summary                                                                                                                                                                                                                                  | Next step                                                                        |
+| ---------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | -------------------------------------------------------------------------------- |
+| 2026-10-14 | Created tracker. Design import blocked: DesignSync needs `/design-login`.                                                                                                                                                                        | Run `/design-login`, then F0.                                                    |
+| 2026-10-14 | F0–F2: imported design, scaffolded PWA, built UI kit and all V1 screens on in-memory mock (D-012). `pnpm check` + `pnpm build` green; screens verified in Chrome at 390 and 1280 px.                                                             | F3a when backend L2 contract lands; meanwhile F-08 offline queue design.         |
+| 2026-10-14 | Ports → 5553 (strict) / API 4553. Pushed to `animeshdesh/ATP-UI`. F-08 offline outbox (21 tests). Fixed this tracker, which the F0–F2 commit had left unticked.                                                                                  | F-06 entry edit/delete, then F-23 share sheet.                                   |
+| 2026-10-14 | F3a: real auth + L2 API (roles, members, invites, audit). Fixed dialog focus-jump bug and invite-before-roles-load bug. Live-verified flows in Chrome.                                                                                           | F3b: move ledger, quick-add, categories, recurring to L3 (`docs/LEDGER.md`).     |
+| 2026-10-14 | F3b ledger, F3c settlement, F3d dashboard on L3–L5. Fixed: offline quick-add with no cached categories, sign-in race that left screens loading, bounce to sign-in when API unreachable. Live-verified on local backend (prod build for offline). | L6 budgets & funds (budget bars, fund picker), L7 reports.                       |
+| 2026-10-14 | F3e budgets & funds on L6 (+ fund picker, dashboard budget alerts). 51 tests; live-verified.                                                                                                                                                     | F3f reports on L7 (PDF/CSV/XLSX, share sheet).                                   |
+| 2026-10-14 | F3f reports on L7: preview, PDF/CSV/XLSX, share sheet. All screens now on the real API; mocks only for tests/offline dev. 54 tests; live-verified.                                                                                               | F4 leftovers: member role editing, profile edit, recurring edit, fund rule edit. |

@@ -97,6 +97,16 @@ export type CreateFund = S['CreateFund'];
 export type UpdateFund = S['UpdateFund'];
 export type FundTopUp = S['FundTopUp'];
 
+// ── L7 (reports): contract types ────────────────────────────────
+export type MonthlyReport = S['MonthlyReport'];
+export type ReceiptsMode = 'links' | 'appendix' | 'none';
+export type ReportFormat = 'pdf' | 'csv' | 'xlsx';
+/** A downloaded export, ready to save or share. */
+export interface ReportFile {
+  blob: Blob;
+  filename: string;
+}
+
 export type DashboardQuery = NonNullable<paths['/v1/dashboard']['get']['parameters']['query']>;
 /** Query for `GET /v1/transactions`. */
 export type TransactionQuery = NonNullable<paths['/v1/transactions']['get']['parameters']['query']>;
@@ -124,16 +134,3 @@ export type AcceptedInvite = S['AcceptedInvite'];
 export type AuditRow = S['AuditEntry'];
 export type AuditPage = S['AuditPage'];
 export type Me = S['Me'];
-
-export interface ReportPreview {
-  month: string;
-  periodLabel: string;
-  incomePaise: number;
-  expensePaise: number;
-  categories: Array<{ name: string; amountPaise: number }>;
-  transactions: Array<{ date: string; label: string; mode: string; amountPaise: number }>;
-  transactionCount: number;
-  settlementLine: string;
-  caEmail: string;
-  pages: number;
-}

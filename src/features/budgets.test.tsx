@@ -26,15 +26,21 @@ describe('budgets & funds (L6 shapes, mock mode)', () => {
     await user.type(input, '50000');
     await user.click(within(dialog).getByRole('button', { name: 'Save budgets' }));
     expect(await screen.findByText('Budgets saved')).toBeInTheDocument();
-    await waitFor(async () => expect(within(await budgetRow('Rent')).getByText('Over budget')).toBeInTheDocument());
+    await waitFor(async () =>
+      expect(within(await budgetRow('Rent')).getByText('Over budget')).toBeInTheDocument(),
+    );
     expect(within(await budgetRow('Rent')).getByText('120%')).toBeInTheDocument();
   });
 
   it('creates a fund and tops one up', async () => {
     await signInAs('owner');
     const { user } = renderApp('/budgets');
-    expect(within(await fundCard('Emergency reserve')).getByText('₹10,000 fixed each month')).toBeInTheDocument();
-    expect(within(await fundCard('Equipment fund')).getByText('10% of monthly net')).toBeInTheDocument();
+    expect(
+      within(await fundCard('Emergency reserve')).getByText('₹10,000 fixed each month'),
+    ).toBeInTheDocument();
+    expect(
+      within(await fundCard('Equipment fund')).getByText('10% of monthly net'),
+    ).toBeInTheDocument();
 
     await user.click(screen.getByRole('button', { name: 'New fund' }));
     const dialog = await screen.findByRole('dialog', { name: 'New fund' });
@@ -50,7 +56,9 @@ describe('budgets & funds (L6 shapes, mock mode)', () => {
     await user.type(within(top).getByLabelText('Amount (₹)'), '1500');
     await user.click(within(top).getByRole('button', { name: 'Top up' }));
     expect(await screen.findByText('Topped up Laser machine by ₹1,500')).toBeInTheDocument();
-    await waitFor(async () => expect(within(await fundCard('Laser machine')).getByText('₹6,500')).toBeInTheDocument());
+    await waitFor(async () =>
+      expect(within(await fundCard('Laser machine')).getByText('₹6,500')).toBeInTheDocument(),
+    );
   });
 
   it('draws an expense from a fund', async () => {
@@ -61,7 +69,10 @@ describe('budgets & funds (L6 shapes, mock mode)', () => {
     const sheet = await screen.findByRole('dialog', { name: 'New entry' });
     await user.type(within(sheet).getByLabelText('Amount'), '9000');
     await user.click(await within(sheet).findByRole('button', { name: 'Equipment' }));
-    await user.selectOptions(await within(sheet).findByLabelText('Draw from fund (optional)'), 'Equipment fund');
+    await user.selectOptions(
+      await within(sheet).findByLabelText('Draw from fund (optional)'),
+      'Equipment fund',
+    );
     await user.click(within(sheet).getByRole('button', { name: 'Description, receipt photo' }));
     await user.type(within(sheet).getByLabelText('Description (optional)'), 'Exercise ball set');
     await user.click(within(sheet).getByRole('button', { name: 'Save ₹9,000 · Equipment' }));
