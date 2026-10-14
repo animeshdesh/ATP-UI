@@ -15,4 +15,4 @@ export const api = {
   },
 };
 
-export { ApiError } from './mock/server';
+export { ApiError, NetworkError } from './mock/server';

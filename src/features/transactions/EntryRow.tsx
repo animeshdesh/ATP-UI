@@ -1,4 +1,5 @@
 import { Lock, Paperclip, Pencil } from 'lucide-react';
+import type { ReactNode } from 'react';
 import type { Person, Transaction } from '@/domain/types';
 import { dayOfMonth, monthShort } from '@/lib/dates';
 import { signedInr } from '@/lib/money';
@@ -10,9 +11,11 @@ interface Props {
   /** Full row with recorder, patient, receipt and edit state (transactions list). */
   detailed?: boolean;
   editable?: boolean;
+  /** Replaces the edit/locked marker, e.g. an outbox entry's sync state and actions. */
+  status?: ReactNode;
 }
 
-export function EntryRow({ txn, people, detailed, editable }: Props) {
+export function EntryRow({ txn, people, detailed, editable, status }: Props) {
   const name = (k: string) => people?.[k]?.shortName ?? k;
   const sub = [
     txn.category,
@@ -59,17 +62,18 @@ export function EntryRow({ txn, people, detailed, editable }: Props) {
       {detailed ? (
         <div className="flex flex-col items-end gap-1">
           {amount}
-          {editable ? (
-            <span className="flex items-center gap-1 text-xs text-neutral-700">
-              <Pencil aria-hidden size={12} />
-              Edit
-            </span>
-          ) : (
-            <span className="flex items-center gap-1 text-xs text-neutral-600">
-              <Lock aria-hidden size={12} />
-              Locked
-            </span>
-          )}
+          {status ??
+            (editable ? (
+              <span className="flex items-center gap-1 text-xs text-neutral-700">
+                <Pencil aria-hidden size={12} />
+                Edit
+              </span>
+            ) : (
+              <span className="flex items-center gap-1 text-xs text-neutral-600">
+                <Lock aria-hidden size={12} />
+                Locked
+              </span>
+            ))}
         </div>
       ) : (
         amount

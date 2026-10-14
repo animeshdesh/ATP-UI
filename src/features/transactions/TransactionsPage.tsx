@@ -6,6 +6,7 @@ import { EmptyState, Loading, Note, Segmented, Select, Stat, StatGrid } from '@/
 import { PAYMENT_MODES, type Transaction, type TransactionFilters } from '@/domain/types';
 import { daysBetween, todayIso } from '@/lib/dates';
 import { inr } from '@/lib/money';
+import { PendingEntries } from '@/offline/PendingEntries';
 import { EntryRow } from './EntryRow';
 
 const TYPE_OPTIONS = [
@@ -113,6 +114,8 @@ export function TransactionsPage() {
         <Stat size="sm" label="In" value={inr(total('income'))} income />
         <Stat size="sm" label="Out" value={inr(total('expense'))} />
       </StatGrid>
+
+      <PendingEntries people={people} />
 
       {isPending ? (
         <Loading />

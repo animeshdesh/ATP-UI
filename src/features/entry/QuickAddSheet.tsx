@@ -1,10 +1,19 @@
 import { useRef, useState } from 'react';
-import { ArrowDownLeft, ArrowUpRight, Camera, Check, CircleCheck, Plus } from 'lucide-react';
+import {
+  ArrowDownLeft,
+  ArrowUpRight,
+  Camera,
+  Check,
+  CircleCheck,
+  Plus,
+  WifiOff,
+} from 'lucide-react';
 import { useCategories, useCreateTransaction, useEntryDefaults, usePeople } from '@/api/queries';
 import { useAuthedSession } from '@/app/session';
 import { Button, Field, Input, Segmented, Select, Sheet, useToast } from '@/components/ui';
 import { PAYMENT_MODES, type EntryType, type PaymentMode } from '@/domain/types';
 import { cn } from '@/lib/cn';
+import { useOnline } from '@/offline/hooks';
 import { secondsSince, shortWeekday, todayIso } from '@/lib/dates';
 import { inr, rupeesToPaise } from '@/lib/money';
 import type { QuickAddPrefill } from './QuickAddContext';
@@ -23,6 +32,8 @@ interface Props {
   open: boolean;
   /** Epoch ms when the sheet opened; the save toast reports elapsed seconds (PRD goal: < 15 s). */
   openedAt: number;
+  /** Idempotency key for this form (F-08). */
+  entryKey: string;
   prefill?: QuickAddPrefill;
   onClose: () => void;
 }
@@ -32,13 +43,14 @@ export function QuickAddSheet({ open, ...rest }: Props) {
   return <QuickAddForm {...rest} />;
 }
 
-function QuickAddForm({ prefill, openedAt, onClose }: Omit<Props, 'open'>) {
+function QuickAddForm({ prefill, openedAt, entryKey, onClose }: Omit<Props, 'open'>) {
   const session = useAuthedSession();
   const toast = useToast();
   const { data: defaults } = useEntryDefaults();
   const { data: categories } = useCategories();
   const { data: people } = usePeople();
   const create = useCreateTransaction();
+  const online = useOnline();
 
   const today = todayIso();
   const [type, setType] = useState<EntryType>(prefill?.type ?? 'expense');
@@ -66,21 +78,30 @@ function QuickAddForm({ prefill, openedAt, onClose }: Omit<Props, 'open'>) {
     if (!amountPaise) return setError('Enter an amount.');
     if (!category) return setError('Pick a category.');
     try {
-      await create.mutateAsync({
-        type,
-        amountPaise,
-        category,
-        entryDate: date,
-        paymentMode: effectiveMode,
-        partyKey: effectiveParty,
-        ...(description.trim() ? { description: description.trim() } : {}),
-        ...(isIncome && patient.trim() ? { patientName: patient.trim() } : {}),
-        ...(receipt ? { receiptFileName: receipt.name } : {}),
-        ...(prefill?.recurringKey ? { recurringKey: prefill.recurringKey } : {}),
+      const result = await create.mutateAsync({
+        userKey: session.user.key,
+        ...(receipt ? { receipt } : {}),
+        input: {
+          idempotencyKey: entryKey,
+          type,
+          amountPaise,
+          category,
+          entryDate: date,
+          paymentMode: effectiveMode,
+          partyKey: effectiveParty,
+          ...(description.trim() ? { description: description.trim() } : {}),
+          ...(isIncome && patient.trim() ? { patientName: patient.trim() } : {}),
+          ...(receipt ? { receiptFileName: receipt.name } : {}),
+          ...(prefill?.recurringKey ? { recurringKey: prefill.recurringKey } : {}),
+        },
       });
       const secs = secondsSince(openedAt);
       onClose();
-      toast(`Saved ${inr(amountPaise)} · ${category} · ${secs}s`);
+      toast(
+        result.status === 'queued'
+          ? `Saved offline · ${inr(amountPaise)} · ${category} · syncs when online`
+          : `Saved ${inr(amountPaise)} · ${category} · ${secs}s`,
+      );
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Could not save. Try again.');
     }
@@ -94,6 +115,12 @@ function QuickAddForm({ prefill, openedAt, onClose }: Omit<Props, 'open'>) {
       subtitle={`Recorded by ${session.user.shortName} · ${shortWeekday(today)}`}
       footer={
         <>
+          {!online && (
+            <div className="flex items-center gap-1.5 text-xs font-semibold text-warn-fg">
+              <WifiOff aria-hidden size={14} />
+              Offline · this entry is kept on your device and syncs later
+            </div>
+          )}
           {error && (
             <div role="alert" className="text-xs font-semibold text-danger-fg">
               {error}

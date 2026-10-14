@@ -6,6 +6,8 @@ import { Avatar, Button } from '@/components/ui';
 import { useQuickAdd } from '@/features/entry/QuickAddContext';
 import { PeriodSwitch } from '@/features/dashboard/PeriodSwitch';
 import { cn } from '@/lib/cn';
+import { useOutboxSync } from '@/offline/hooks';
+import { OfflineBanner } from '@/offline/OfflineBanner';
 import { longDate, monthToDate, monthYear, todayIso } from '@/lib/dates';
 
 export interface RouteHandle {
@@ -36,6 +38,7 @@ const subtitleFor = (key: NavKey, clinicName: string): string => {
 };
 
 export function AppShell() {
+  useOutboxSync();
   const session = useAuthedSession();
   const { can } = useSession();
   const openAdd = useQuickAdd();
@@ -85,6 +88,8 @@ export function AppShell() {
           </div>
           <Avatar initials={session.user.initials} />
         </header>
+
+        <OfflineBanner />
 
         <main
           className={cn(

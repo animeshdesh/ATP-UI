@@ -69,6 +69,8 @@ export interface NewTransaction {
   partyKey: string;
   receiptFileName?: string;
   recurringKey?: string;
+  /** Client-generated; the server returns the original entry on replay (F-08). */
+  idempotencyKey?: string;
 }
 
 export interface TransactionFilters {

@@ -24,14 +24,18 @@ export function QuickAddProvider({ children }: { children: ReactNode }) {
     prefill?: QuickAddPrefill;
     n: number;
     openedAt: number;
+    entryKey: string;
   }>({
     open: false,
     n: 0,
     openedAt: 0,
+    entryKey: '',
   });
   const open = useCallback((prefill?: QuickAddPrefill) => {
+    // One idempotency key per opened form: double taps and offline replays create one entry.
     const openedAt = Date.now();
-    setState((s) => ({ open: true, prefill, n: s.n + 1, openedAt }));
+    const entryKey = crypto.randomUUID();
+    setState((s) => ({ open: true, prefill, n: s.n + 1, openedAt, entryKey }));
   }, []);
   const close = useCallback(() => setState((s) => ({ ...s, open: false })), []);
   return (
@@ -41,6 +45,7 @@ export function QuickAddProvider({ children }: { children: ReactNode }) {
         key={state.n}
         open={state.open}
         openedAt={state.openedAt}
+        entryKey={state.entryKey}
         prefill={state.prefill}
         onClose={close}
       />

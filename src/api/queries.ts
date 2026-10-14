@@ -1,13 +1,15 @@
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient, type QueryClient } from '@tanstack/react-query';
 import type {
   AuditEntry,
   NewTransaction,
   PermissionKey,
   RoleKey,
   Scope,
+  Transaction,
   TransactionFilters,
 } from '@/domain/types';
-import { api } from './index';
+import { outbox } from '@/offline/outbox';
+import { NetworkError, api } from './index';
 
 export const qk = {
   session: ['session'] as const,
@@ -52,28 +54,58 @@ export const useMembers = () => useQuery({ queryKey: qk.members, queryFn: api.li
 export const useAudit = (kind: 'All' | AuditEntry['kind']) =>
   useQuery({ queryKey: qk.audit(kind), queryFn: () => api.listAudit(kind) });
 
+const LEDGER_KEYS = [
+  'transactions',
+  'dashboard',
+  'recurring',
+  'categories',
+  'audit',
+  'entry-defaults',
+  'settlement',
+];
+
 /** Invalidate everything derived from the ledger after a write. */
+export const invalidateLedger = (qc: QueryClient) =>
+  Promise.all(LEDGER_KEYS.map((k) => qc.invalidateQueries({ queryKey: [k] })));
+
 function useLedgerInvalidation() {
   const qc = useQueryClient();
-  return () =>
-    Promise.all(
-      [
-        'transactions',
-        'dashboard',
-        'recurring',
-        'categories',
-        'audit',
-        'entry-defaults',
-        'settlement',
-      ].map((k) => qc.invalidateQueries({ queryKey: [k] })),
-    );
+  return () => invalidateLedger(qc);
 }
 
+export type CreateResult = { status: 'saved'; txn: Transaction } | { status: 'queued' };
+
+/**
+ * Saves an entry, or queues it in the offline outbox when the server is unreachable (F-08).
+ * Validation and permission errors still throw.
+ */
 export function useCreateTransaction() {
   const invalidate = useLedgerInvalidation();
   return useMutation({
-    mutationFn: (input: NewTransaction) => api.createTransaction(input),
-    onSuccess: invalidate,
+    // Default 'online' mode would pause this mutation offline; it queues to the outbox instead.
+    networkMode: 'always',
+    mutationFn: async (v: {
+      input: NewTransaction & { idempotencyKey: string };
+      receipt?: Blob;
+      userKey: string;
+    }): Promise<CreateResult> => {
+      const queue = async (): Promise<CreateResult> => {
+        await outbox.add({
+          input: v.input,
+          userKey: v.userKey,
+          ...(v.receipt ? { receipt: v.receipt } : {}),
+        });
+        return { status: 'queued' };
+      };
+      if (!navigator.onLine) return queue();
+      try {
+        return { status: 'saved', txn: await api.createTransaction(v.input) };
+      } catch (e) {
+        if (e instanceof NetworkError) return queue();
+        throw e;
+      }
+    },
+    onSuccess: (r) => (r.status === 'saved' ? invalidate() : undefined),
   });
 }
 

@@ -63,6 +63,8 @@ function freshDb() {
     settledOn: undefined as string | undefined,
     lastMode: {} as Record<string, NewTransaction['paymentMode']>,
     seq: 100,
+    /** idempotency key → created transaction id (F-08 replay safety) */
+    idempotency: new Map<string, string>(),
   };
 }
 
@@ -88,6 +90,18 @@ class ApiError extends Error {
   ) {
     super(message);
   }
+}
+
+/** The request never reached the server (offline, DNS, timeout). Safe to retry. */
+class NetworkError extends Error {
+  constructor(message = 'You are offline') {
+    super(message);
+  }
+}
+
+/** Simulates fetch failing while the device is offline. */
+function assertOnline() {
+  if (typeof navigator !== 'undefined' && navigator.onLine === false) throw new NetworkError();
 }
 
 function currentRole(): Exclude<RoleKey, 'ca'> {
@@ -205,8 +219,14 @@ export const mockServer = {
     return latency(rows);
   },
   async createTransaction(input: NewTransaction): Promise<Transaction> {
+    assertOnline();
     if (scopeOf('finance.entry.create') === 'none') throw new ApiError(403, 'Not allowed');
     if (input.amountPaise <= 0) throw new ApiError(400, 'Enter an amount.');
+    const replayed = input.idempotencyKey && db.idempotency.get(input.idempotencyKey);
+    if (replayed) {
+      const existing = db.transactions.find((t) => t.id === replayed);
+      if (existing) return latency(existing, 80);
+    }
     const txn: Transaction = {
       id: `txn_${++db.seq}`,
       type: input.type,
@@ -223,6 +243,7 @@ export const mockServer = {
       hasReceipt: !!input.receiptFileName,
     };
     db.transactions = [txn, ...db.transactions];
+    if (input.idempotencyKey) db.idempotency.set(input.idempotencyKey, txn.id);
     db.lastMode[me()] = input.paymentMode;
     if (input.recurringKey) {
       db.recurring = db.recurring.map((r) =>
@@ -498,4 +519,4 @@ export const mockServer = {
   },
 };
 
-export { ApiError };
+export { ApiError, NetworkError };
