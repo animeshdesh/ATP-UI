@@ -11,9 +11,11 @@ Mobile-first installable PWA for ATP Rehab staff. React 19 + TypeScript 6.0 + Vi
 
 ## Builds
 
-- Deployed builds are same-origin (D-037): Caddy serves `dist/` at `app.` / `staging.` and proxies `/api/*` to the API, so `.env.production` / `.env.staging` set `VITE_API_URL=/api`.
-- `VITE_SUPABASE_URL` and `VITE_SUPABASE_PUBLISHABLE_KEY` come from CI; production/staging builds fail without them (`vite.config.ts`), so mock auth can never ship.
-- `pnpm build --mode staging` for staging; CI (`.github/workflows/ci.yml`) runs format, lint, typecheck, tests and a development-mode build.
+- Cloudflare Pages (D-040/D-041): branch `production` → app.<domain>, `main` → staging.<domain>. Setup and checks: `docs/DEPLOY.md`.
+- The API is on its own origin (Railway): `VITE_API_URL`, `VITE_SUPABASE_URL`, `VITE_SUPABASE_PUBLISHABLE_KEY` come from Pages environment variables; deployed builds fail without them (`vite.config.ts`), so mock auth can never ship.
+- `public/_headers`, `public/_routes.json` and `functions/[[path]].ts` (stale-chunk 404) ship with the build. Never add a catch-all `_redirects` or a `404.html`.
+- CI (`.github/workflows/ci.yml`): format, lint, typecheck, tests, development-mode build.
+- Local test data: `pnpm seed:demo` (needs atp-backend `pnpm db:seed:dev` first; local hosts only).
 
 ## Layout
 

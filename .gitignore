@@ -9,4 +9,3 @@ coverage
 *.tsbuildinfo
 !.env.development
 !.env.production
-!.env.staging

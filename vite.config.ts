@@ -18,8 +18,12 @@ function requireDeployEnv(mode: string, command: string) {
   );
   if (missing.length || env.VITE_AUTH === 'mock')
     throw new Error(
-      `${mode} build needs ${missing.join(', ') || 'VITE_AUTH=supabase'} (set them in CI or .env.${mode}.local)`,
+      `${mode} build needs ${missing.join(', ') || 'VITE_AUTH=supabase'} (Pages environment variables, or .env.${mode}.local)`,
     );
+  // The API is on its own origin (Railway, D-040): absolute https, or http only for localhost.
+  const api = env.VITE_API_URL!;
+  if (!/^https:\/\//.test(api) && !/^http:\/\/(localhost|127\.0\.0\.1)(:\d+)?/.test(api))
+    throw new Error(`VITE_API_URL must be an absolute https URL, got "${api}"`);
 }
 
 /** The MSW worker (public/) is for `pnpm dev` only; keep it out of deployed builds. */
@@ -66,8 +70,6 @@ export default defineConfig(({ mode, command }) => {
         workbox: {
           globPatterns: ['**/*.{js,css,html,svg,png,woff2}'],
           globIgnores: ['mockServiceWorker.js'],
-          // Production/staging proxy the API at /api (D-037); local dev calls :4553 directly.
-          navigateFallbackDenylist: [/^\/api\//, /^\/v1\//, /^\/health/],
         },
       }),
     ],
