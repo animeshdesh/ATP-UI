@@ -32,7 +32,8 @@ const MIME: Record<string, string> = {
 
 /** Share targets (WhatsApp, Gmail) need an exact MIME type; derive it from the extension. */
 const mimeFor = (file: ReportFile) =>
-  MIME[file.filename.split('.').pop()?.toLowerCase() ?? ''] ?? (file.blob.type || 'application/octet-stream');
+  MIME[file.filename.split('.').pop()?.toLowerCase() ?? ''] ??
+  (file.blob.type || 'application/octet-stream');
 
 /**
  * F-23: share through the device share sheet, else download.

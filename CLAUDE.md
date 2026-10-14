@@ -9,6 +9,12 @@ Mobile-first installable PWA for ATP Rehab staff. React 19 + TypeScript 6.0 + Vi
 - Dev sign-in (`VITE_AUTH=supabase`, default in `.env.development`): needs atp-backend running (`pnpm db:start`, `pnpm db:seed:dev`, `pnpm dev`). The dashed "Dev only" picker fills a seeded login (password `atp-dev-1234`).
 - Without the backend: `VITE_AUTH=mock pnpm dev` (any phone/email + password; picker chooses the role). Tests always run in mock mode.
 
+## Builds
+
+- Deployed builds are same-origin (D-037): Caddy serves `dist/` at `app.` / `staging.` and proxies `/api/*` to the API, so `.env.production` / `.env.staging` set `VITE_API_URL=/api`.
+- `VITE_SUPABASE_URL` and `VITE_SUPABASE_PUBLISHABLE_KEY` come from CI; production/staging builds fail without them (`vite.config.ts`), so mock auth can never ship.
+- `pnpm build --mode staging` for staging; CI (`.github/workflows/ci.yml`) runs format, lint, typecheck, tests and a development-mode build.
+
 ## Layout
 
 - `src/api` — the only data surface: `api` (index.ts) picks real or mock per level; query hooks (queries.ts); `client.ts` (openapi-fetch + bearer/`x-clinic-id` middleware, `unwrap` → `ApiError`/`NetworkError`); `real.ts` (L2–L5 on Supabase Auth + API); `mock/l2.ts`, `mock/ledger.ts`, `mock/finance.ts` (same contract shapes in memory, for tests); `mock/server.ts` (L6–L7 not yet wired, D-012)

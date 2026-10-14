@@ -31,9 +31,13 @@ describe('CA report (L7 shapes, mock mode)', () => {
     const { user } = renderApp('/reports');
     await screen.findByRole('article', { name: 'Report preview' });
     await user.click(screen.getByRole('button', { name: 'CSV' }));
-    expect(await screen.findByText('Downloaded atp-rehab-accounts-2026-09.csv')).toBeInTheDocument();
+    expect(
+      await screen.findByText('Downloaded atp-rehab-accounts-2026-09.csv'),
+    ).toBeInTheDocument();
     await user.click(screen.getByRole('button', { name: 'Share PDF' }));
-    expect(await screen.findByText('Downloaded atp-rehab-accounts-2026-09.pdf')).toBeInTheDocument();
+    expect(
+      await screen.findByText('Downloaded atp-rehab-accounts-2026-09.pdf'),
+    ).toBeInTheDocument();
     expect(URL.createObjectURL).toHaveBeenCalledTimes(2);
     expect(screen.queryByText('Email to CA')).not.toBeInTheDocument();
   });

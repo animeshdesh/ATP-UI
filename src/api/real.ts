@@ -334,7 +334,7 @@ export const realL2 = {
 };
 
 /** `content-disposition` filename, else the documented pattern (header may not be CORS-exposed). */
-function filenameFrom(response: Response, month: string, ext: ReportFormat): string {
+export function filenameFrom(response: Response, month: string, ext: ReportFormat): string {
   const cd = response.headers.get('content-disposition') ?? '';
   const m = /filename\*?=(?:UTF-8'')?"?([^";]+)"?/i.exec(cd);
   return m?.[1] ? decodeURIComponent(m[1]) : `atp-rehab-accounts-${month}.${ext}`;
