@@ -4,18 +4,18 @@ Status legend: `todo` · `in-progress` · `done` · `blocked`.
 Frontend levels unlock as backend contracts land (see `../atp-backend/docs/PROGRESS.md`).
 Screens are built ahead of the contract on the in-memory mock (D-012); an F3 level is done when its screens run against the real API.
 
-| Level | Scope                                                                    | Depends on          | Status                           |
-| ----- | ------------------------------------------------------------------------ | ------------------- | -------------------------------- |
-| F0    | Design import & inventory                                                | `/design-login`     | done                             |
-| F1    | Scaffold (Vite, React, TS, Tailwind, PWA, routing, API client, MSW)      | F0 tokens           | done                             |
-| F2    | UI kit + all V1 screens on mock data                                     | F0, F1              | done                             |
-| F3a   | Auth + app shell + role-aware nav                                        | backend L2 contract | done                             |
-| F3b   | Quick-add entry, ledger list, edit/delete, receipt upload, offline queue | backend L3 contract | done                             |
-| F3c   | Settlement view + mark settled                                           | backend L4          | done                             |
-| F3d   | Dashboard                                                                | backend L5          | done                             |
-| F3e   | Budgets & funds                                                          | backend L6          | done                             |
-| F3f   | Reports: PDF/CSV/XLSX download, share sheet                              | backend L7          | done                             |
-| F4    | Settings: categories, partners, roles, members, invites                  | backend L2–L3       | in-progress (UI done, mock data) |
+| Level | Scope                                                                    | Depends on          | Status                               |
+| ----- | ------------------------------------------------------------------------ | ------------------- | ------------------------------------ |
+| F0    | Design import & inventory                                                | `/design-login`     | done                                 |
+| F1    | Scaffold (Vite, React, TS, Tailwind, PWA, routing, API client, MSW)      | F0 tokens           | done                                 |
+| F2    | UI kit + all V1 screens on mock data                                     | F0, F1              | done                                 |
+| F3a   | Auth + app shell + role-aware nav                                        | backend L2 contract | done                                 |
+| F3b   | Quick-add entry, ledger list, edit/delete, receipt upload, offline queue | backend L3 contract | done                                 |
+| F3c   | Settlement view + mark settled                                           | backend L4          | done                                 |
+| F3d   | Dashboard                                                                | backend L5          | done                                 |
+| F3e   | Budgets & funds                                                          | backend L6          | done                                 |
+| F3f   | Reports: PDF/CSV/XLSX download, share sheet                              | backend L7          | done                                 |
+| F4    | Settings: categories, partners, roles, members, invites                  | backend L2–L3       | in-progress (on real API; leftovers) |
 
 ## F0 — Design import · `done`
 
@@ -52,6 +52,7 @@ Screens are built ahead of the contract on the in-memory mock (D-012); an F3 lev
 - [x] Mock mode keeps contract shapes (`src/api/mock/l2.ts`); 36 tests; verified live against local backend in Chrome — 2026-10-14
 - [x] Feature flags `VITE_PHONE_AUTH` / `VITE_MAGIC_LINK`: off in deployed builds (no SMS provider / SMTP yet), so sign-in and invites are email-only; on in dev and tests — 2026-10-27
 - [ ] Member role editing (`PATCH /v1/members/{id}` roleIds) and rename; profile edit (`PATCH /v1/me`)
+- [ ] Change password (Supabase `updateUser`): needed before more users; the Owner's temporary password was shared in chat (2026-10-27)
 
 ## F3b — Entries · `done`
 
