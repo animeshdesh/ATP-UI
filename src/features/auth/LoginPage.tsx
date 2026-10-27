@@ -5,7 +5,7 @@ import { api } from '@/api';
 import { useSession } from '@/app/session';
 import { Button, Field, Input, Segmented, useToast } from '@/components/ui';
 import type { RoleKey } from '@/domain/types';
-import { authMode } from '@/lib/env';
+import { authMode, contactField, features } from '@/lib/env';
 import { keepSignedIn } from '@/lib/supabase';
 import { AuthLayout } from './AuthLayout';
 
@@ -44,7 +44,8 @@ export function LoginPage() {
   if (session) return <Navigate to={from} replace />;
 
   const submit = async () => {
-    if (!contact.trim() || !password) return setError('Enter your phone or email and password.');
+    if (!contact.trim() || !password)
+      return setError(`Enter your ${contactField.label.toLowerCase()} and password.`);
     setBusy(true);
     setError('');
     keepSignedIn.set(keep);
@@ -86,7 +87,7 @@ export function LoginPage() {
           void submit();
         }}
       >
-        <Field label="Phone or email">
+        <Field label={contactField.label}>
           {(id) => (
             <Input
               id={id}
@@ -94,7 +95,7 @@ export function LoginPage() {
               onChange={(e) => setContact(e.target.value)}
               autoComplete="username"
               inputMode="email"
-              placeholder="+91 98220 41736"
+              placeholder={features.phoneAuth ? '+91 98220 41736' : 'name@email.com'}
               className={inputCls}
             />
           )}
@@ -142,24 +143,26 @@ export function LoginPage() {
         <Button type="submit" variant="primary" size="lg" trailingIcon={ArrowRight} disabled={busy}>
           Sign in
         </Button>
-        <Button
-          size="lg"
-          icon={Mail}
-          className="justify-start text-[15px]"
-          onClick={async () => {
-            if (!contact.includes('@')) return setError('Enter your email to get a magic link.');
-            setError('');
-            try {
-              keepSignedIn.set(keep);
-              await api.sendMagicLink(contact, window.location.origin + from);
-              toast(`Magic link sent to ${contact}`);
-            } catch (e) {
-              setError(e instanceof Error ? e.message : 'Could not send the link.');
-            }
-          }}
-        >
-          Email me a magic link instead
-        </Button>
+        {features.magicLink && (
+          <Button
+            size="lg"
+            icon={Mail}
+            className="justify-start text-[15px]"
+            onClick={async () => {
+              if (!contact.includes('@')) return setError('Enter your email to get a magic link.');
+              setError('');
+              try {
+                keepSignedIn.set(keep);
+                await api.sendMagicLink(contact, window.location.origin + from);
+                toast(`Magic link sent to ${contact}`);
+              } catch (e) {
+                setError(e instanceof Error ? e.message : 'Could not send the link.');
+              }
+            }}
+          >
+            Email me a magic link instead
+          </Button>
+        )}
         <Link to="/invite" className="py-1.5 text-sm underline">
           Have an invite? Set your password
         </Link>

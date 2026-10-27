@@ -19,6 +19,7 @@ Promote `main` → `production` with a reviewed PR, like the backend.
 - Environment variables, per environment (all public, plain variables):
   - `VITE_API_URL`: absolute https URL from the table above
   - `VITE_SUPABASE_URL`, `VITE_SUPABASE_PUBLISHABLE_KEY`: that environment's Supabase project (Singapore)
+  - Optional `VITE_PHONE_AUTH=true` (phone + password sign-in and phone invites; needs a Supabase SMS provider) and `VITE_MAGIC_LINK=true` (needs Supabase SMTP). Unset = off: sign-in is email + password, and accounts come from invites or `bootstrap-clinic`.
 
 `vite.config.ts` fails the build when any of these is missing, when `VITE_API_URL` isn't absolute https, or when `VITE_AUTH=mock`, so mock auth can never ship. Preview builds of other branches also use the Preview (staging) variables.
 

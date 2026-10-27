@@ -43,6 +43,7 @@ import type {
   Scope,
   Session,
 } from '@/domain/types';
+import { contactField } from '@/lib/env';
 import { supabase } from '@/lib/supabase';
 import { clinicChoice, http, unwrap } from './client';
 import { ApiError, NetworkError } from './errors';
@@ -51,7 +52,7 @@ import { parseIdentifier, sessionFromMe } from './session';
 function authError(e: AuthError): Error {
   if (e.name === 'AuthRetryableFetchError') return new NetworkError();
   if (e.code === 'invalid_credentials')
-    return new ApiError(400, 'Wrong phone, email or password.', e.code);
+    return new ApiError(400, `Wrong ${contactField.label.toLowerCase()} or password.`, e.code);
   if (e.code === 'otp_disabled' || e.code === 'user_not_found')
     return new ApiError(400, 'No account uses this email. Ask an Owner for an invite.', e.code);
   return new ApiError(e.status ?? 400, e.message, e.code ?? 'auth_error');
@@ -127,7 +128,7 @@ export const realL2 = {
 
   async signIn(v: { identifier: string; password: string }): Promise<Session | ClinicPick> {
     const id = parseIdentifier(v.identifier);
-    if (!id) throw new ApiError(400, 'Enter a valid phone number or email.', 'bad_request');
+    if (!id) throw new ApiError(400, contactField.invalid, 'bad_request');
     if (!v.password) throw new ApiError(400, 'Enter your password.', 'bad_request');
     await signInWith(id, v.password);
     return requireSession();

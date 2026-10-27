@@ -18,6 +18,7 @@ import { useAuthedSession, useSession } from '@/app/session';
 import { Button, Dialog, Field, Input, Loading, Segmented, useToast } from '@/components/ui';
 import type { CreatedInvite, PermissionDef, Role, Scope } from '@/domain/types';
 import { cn } from '@/lib/cn';
+import { contactField, features } from '@/lib/env';
 
 type Tab = 'roles' | 'users';
 const TABS = [
@@ -389,7 +390,7 @@ function InviteDialog({ open, onClose }: { open: boolean; onClose: () => void })
   const send = async () => {
     const id = parseIdentifier(contact);
     if (!name.trim()) return setError('Add their name.');
-    if (!id) return setError('Enter a valid phone number or email.');
+    if (!id) return setError(contactField.invalid);
     if (selected.length === 0) return setError('Pick at least one role.');
     try {
       setCreated(await invite.mutateAsync({ displayName: name.trim(), roleIds: selected, ...id }));
@@ -443,13 +444,13 @@ function InviteDialog({ open, onClose }: { open: boolean; onClose: () => void })
             />
           )}
         </Field>
-        <Field label="Phone or email">
+        <Field label={contactField.label}>
           {(id) => (
             <Input
               id={id}
               value={contact}
               onChange={(e) => setContact(e.target.value)}
-              placeholder="+91 or name@email.com"
+              placeholder={features.phoneAuth ? '+91 or name@email.com' : 'name@email.com'}
             />
           )}
         </Field>

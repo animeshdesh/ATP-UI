@@ -1,4 +1,5 @@
 import type { ClinicPick, Me, PermissionKey, RoleKey, Scope, Session } from '@/domain/types';
+import { features } from '@/lib/env';
 
 const SYSTEM_ROLES: Array<[string, RoleKey]> = [
   ['Owner', 'owner'],
@@ -48,11 +49,18 @@ export function sessionFromMe(me: Me): Session | ClinicPick {
   };
 }
 
-/** Phone or email for Supabase sign-in. Indian numbers without a country code get +91 (E.164). */
-export function parseIdentifier(input: string): { email: string } | { phone: string } | null {
+/**
+ * Phone or email for Supabase sign-in. Indian numbers without a country code get +91 (E.164).
+ * Phones are rejected while phone sign-in is off (`features.phoneAuth`).
+ */
+export function parseIdentifier(
+  input: string,
+  { phone = features.phoneAuth } = {},
+): { email: string } | { phone: string } | null {
   const v = input.trim();
   if (v.includes('@'))
     return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v) ? { email: v.toLowerCase() } : null;
+  if (!phone) return null;
   const digits = v.replace(/[^\d+]/g, '');
   if (/^\+\d{8,15}$/.test(digits)) return { phone: digits };
   if (/^\d{10}$/.test(digits)) return { phone: `+91${digits}` };

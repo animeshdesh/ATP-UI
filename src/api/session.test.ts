@@ -35,6 +35,10 @@ describe('parseIdentifier', () => {
     expect(parseIdentifier('12345')).toBeNull();
     expect(parseIdentifier('a@b')).toBeNull();
   });
+  it('rejects phones while phone sign-in is off', () => {
+    expect(parseIdentifier('98220 41736', { phone: false })).toBeNull();
+    expect(parseIdentifier('a@b.in', { phone: false })).toEqual({ email: 'a@b.in' });
+  });
 });
 
 describe('sessionFromMe', () => {

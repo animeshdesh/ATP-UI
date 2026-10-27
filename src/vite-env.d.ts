@@ -6,4 +6,6 @@ interface ImportMetaEnv {
   readonly VITE_AUTH?: 'supabase' | 'mock';
   readonly VITE_SUPABASE_URL?: string;
   readonly VITE_SUPABASE_PUBLISHABLE_KEY?: string;
+  readonly VITE_PHONE_AUTH?: string;
+  readonly VITE_MAGIC_LINK?: string;
 }

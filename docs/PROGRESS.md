@@ -50,6 +50,7 @@ Screens are built ahead of the contract on the in-memory mock (D-012); an F3 lev
 - [x] Audit log from `GET /v1/audit` (raw rows → readable lines, table filter, paging) — 2026-10-14
 - [x] Add-entry hidden without `finance.entry.create` (CA) — 2026-10-14
 - [x] Mock mode keeps contract shapes (`src/api/mock/l2.ts`); 36 tests; verified live against local backend in Chrome — 2026-10-14
+- [x] Feature flags `VITE_PHONE_AUTH` / `VITE_MAGIC_LINK`: off in deployed builds (no SMS provider / SMTP yet), so sign-in and invites are email-only; on in dev and tests — 2026-10-27
 - [ ] Member role editing (`PATCH /v1/members/{id}` roleIds) and rename; profile edit (`PATCH /v1/me`)
 
 ## F3b — Entries · `done`
@@ -109,4 +110,5 @@ Screens are built ahead of the contract on the in-memory mock (D-012); an F3 lev
 | 2026-10-14 | F3a: real auth + L2 API (roles, members, invites, audit). Fixed dialog focus-jump bug and invite-before-roles-load bug. Live-verified flows in Chrome.                                                                                           | F3b: move ledger, quick-add, categories, recurring to L3 (`docs/LEDGER.md`).     |
 | 2026-10-14 | F3b ledger, F3c settlement, F3d dashboard on L3–L5. Fixed: offline quick-add with no cached categories, sign-in race that left screens loading, bounce to sign-in when API unreachable. Live-verified on local backend (prod build for offline). | L6 budgets & funds (budget bars, fund picker), L7 reports.                       |
 | 2026-10-14 | F3e budgets & funds on L6 (+ fund picker, dashboard budget alerts). 51 tests; live-verified.                                                                                                                                                     | F3f reports on L7 (PDF/CSV/XLSX, share sheet).                                   |
+| 2026-10-27 | Launch prep: phone sign-in and magic link behind feature flags, off in deployed builds (email + password only). 59 tests.                                                                                                                        | Deploy staging + production per DEPLOY.md.                                       |
 | 2026-10-14 | F3f reports on L7: preview, PDF/CSV/XLSX, share sheet. All screens now on the real API; mocks only for tests/offline dev. 54 tests; live-verified.                                                                                               | F4 leftovers: member role editing, profile edit, recurring edit, fund rule edit. |
