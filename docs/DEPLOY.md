@@ -2,7 +2,7 @@
 
 Decided in the backend repo: D-040 / D-041 / D-042, `atp-backend/docs/DEPLOY.md` §3.
 
-**Live since 2026-10-27:** Pages project `atp-ui` → `https://app.atprehab.si` (branch `production`, API `https://api.atprehab.si`). Production only: preview deployments are off and there is no staging API (D-042); the staging row below is the original plan. All checks under "After the first deploy" passed on `app.atprehab.si`.
+**Live since 2026-10-27:** Pages project `atp-ui` → `https://money.atprehab.si` (branch `production`, API `https://api.atprehab.si`). Production only: preview deployments are off and there is no staging API (D-042); the staging row below is the original plan. All checks under "After the first deploy" passed on `money.atprehab.si`.
 
 ## Environments
 
