@@ -4,18 +4,23 @@ Status legend: `todo` · `in-progress` · `done` · `blocked`.
 Frontend levels unlock as backend contracts land (see `../atp-backend/docs/PROGRESS.md`).
 Screens are built ahead of the contract on the in-memory mock (D-012); an F3 level is done when its screens run against the real API.
 
-| Level | Scope                                                                    | Depends on          | Status                               |
-| ----- | ------------------------------------------------------------------------ | ------------------- | ------------------------------------ |
-| F0    | Design import & inventory                                                | `/design-login`     | done                                 |
-| F1    | Scaffold (Vite, React, TS, Tailwind, PWA, routing, API client, MSW)      | F0 tokens           | done                                 |
-| F2    | UI kit + all V1 screens on mock data                                     | F0, F1              | done                                 |
-| F3a   | Auth + app shell + role-aware nav                                        | backend L2 contract | done                                 |
-| F3b   | Quick-add entry, ledger list, edit/delete, receipt upload, offline queue | backend L3 contract | done                                 |
-| F3c   | Settlement view + mark settled                                           | backend L4          | done                                 |
-| F3d   | Dashboard                                                                | backend L5          | done                                 |
-| F3e   | Budgets & funds                                                          | backend L6          | done                                 |
-| F3f   | Reports: PDF/CSV/XLSX download, share sheet                              | backend L7          | done                                 |
-| F4    | Settings: categories, partners, roles, members, invites                  | backend L2–L3       | in-progress (on real API; leftovers) |
+| Level | Scope                                                                              | Depends on            | Status                               |
+| ----- | ---------------------------------------------------------------------------------- | --------------------- | ------------------------------------ |
+| F0    | Design import & inventory                                                          | `/design-login`       | done                                 |
+| F1    | Scaffold (Vite, React, TS, Tailwind, PWA, routing, API client, MSW)                | F0 tokens             | done                                 |
+| F2    | UI kit + all V1 screens on mock data                                               | F0, F1                | done                                 |
+| F3a   | Auth + app shell + role-aware nav                                                  | backend L2 contract   | done                                 |
+| F3b   | Quick-add entry, ledger list, edit/delete, receipt upload, offline queue           | backend L3 contract   | done                                 |
+| F3c   | Settlement view + mark settled                                                     | backend L4            | done                                 |
+| F3d   | Dashboard                                                                          | backend L5            | done                                 |
+| F3e   | Budgets & funds                                                                    | backend L6            | done                                 |
+| F3f   | Reports: PDF/CSV/XLSX download, share sheet                                        | backend L7            | done                                 |
+| F4    | Settings: categories, partners, roles, members, invites                            | backend L2–L3         | in-progress (on real API; leftovers) |
+| F5    | Monorepo split: `apps/money`, `packages/ui`, `packages/core` (no behaviour change) | —                     | todo                                 |
+| F6    | `apps/patients` scaffold: PWA, routes, auth, permission nav, mocks                 | F5, backend V2 spec   | todo                                 |
+| F7    | Public `/book` + inquiry queue                                                     | Claude Design, L11    | blocked (design)                     |
+| F8    | Calendar, appointment sheet, availability                                          | Claude Design, L10    | blocked (design)                     |
+| F9    | Patients: list, profile, notes, visits, packages, payments; money patient picker   | Claude Design, L9/L12 | blocked (design)                     |
 
 ## F0 — Design import · `done`
 
@@ -111,6 +116,7 @@ Screens are built ahead of the contract on the in-memory mock (D-012); an F3 lev
 | 2026-10-14 | F3a: real auth + L2 API (roles, members, invites, audit). Fixed dialog focus-jump bug and invite-before-roles-load bug. Live-verified flows in Chrome.                                                                                           | F3b: move ledger, quick-add, categories, recurring to L3 (`docs/LEDGER.md`).     |
 | 2026-10-14 | F3b ledger, F3c settlement, F3d dashboard on L3–L5. Fixed: offline quick-add with no cached categories, sign-in race that left screens loading, bounce to sign-in when API unreachable. Live-verified on local backend (prod build for offline). | L6 budgets & funds (budget bars, fund picker), L7 reports.                       |
 | 2026-10-14 | F3e budgets & funds on L6 (+ fund picker, dashboard budget alerts). 51 tests; live-verified.                                                                                                                                                     | F3f reports on L7 (PDF/CSV/XLSX, share sheet).                                   |
+| 2026-10-28 | V2 planned (backend `docs/V2.md`, D-043 – D-046): second app `apps/patients` → `patient.atprehab.si` in a pnpm workspace; Claude Design screens first. F5–F9 added.                                                                              | F5 monorepo split; user creates patient-app screens in Claude Design.            |
 | 2026-10-27 | Production live on `money.atprehab.si` (Pages `atp-ui`, branch `production`, previews off; D-042). Cache headers, stale-chunk 404, SPA routes and API URL verified; Owner sign-in → `/v1/me` OK.                                                 | F4 leftovers; staging UI if a staging API returns.                               |
 | 2026-10-27 | Launch prep: phone sign-in and magic link behind feature flags, off in deployed builds (email + password only). 59 tests.                                                                                                                        | Deploy staging + production per DEPLOY.md.                                       |
 | 2026-10-14 | F3f reports on L7: preview, PDF/CSV/XLSX, share sheet. All screens now on the real API; mocks only for tests/offline dev. 54 tests; live-verified.                                                                                               | F4 leftovers: member role editing, profile edit, recurring edit, fund rule edit. |
