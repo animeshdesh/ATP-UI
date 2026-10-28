@@ -542,6 +542,7 @@ function Payments({ data }: { data: Profile }) {
           patientId={p.id}
           patientName={p.fullName}
           defaultPaise={last ? defaultFeePaise(last) : 80_000}
+          defaultKind={last?.visitType === 'home' ? 'home_visit' : 'session'}
           onClose={() => setSheet(null)}
         />
       )}

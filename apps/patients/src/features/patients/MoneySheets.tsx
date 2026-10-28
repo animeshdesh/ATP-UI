@@ -4,7 +4,7 @@ import { PAYMENT_MODE_LABEL, inr, rupeesToPaise } from '@atp/core';
 import { Button, Segmented, Sheet, useToast } from '@atp/ui';
 import { useRecordPayment, useSellPackage } from '@/api/queries';
 import { useBranch } from '@/app/branch';
-import { PAYMENT_MODES_V2, type PaymentMode } from '@/domain/types';
+import { PAYMENT_MODES_V2, type PaymentKind, type PaymentMode } from '@/domain/types';
 import { Chip, Kicker } from '@/features/calendar/common';
 
 const input = 'min-h-12 w-full rounded-none border-2 border-ink bg-white px-3 text-base tabular';
@@ -146,11 +146,13 @@ export function RecordPaymentSheet({
   patientId,
   patientName,
   defaultPaise,
+  defaultKind = 'session',
   onClose,
 }: {
   patientId: string;
   patientName: string;
   defaultPaise: number;
+  defaultKind?: PaymentKind;
   onClose: () => void;
 }) {
   const toast = useToast();
@@ -158,13 +160,13 @@ export function RecordPaymentSheet({
   const record = useRecordPayment(patientId);
   const [amount, setAmount] = useState(String(defaultPaise / 100));
   const [mode, setMode] = useState<PaymentMode>('upi');
-  const [what, setWhat] = useState<'Session' | 'Home visit' | 'Assessment' | 'Other'>('Session');
+  const [what, setWhat] = useState<PaymentKind>(defaultKind);
   const [branchId, setBranchId] = useState(branch.defaultId);
   const paise = rupeesToPaise(amount);
 
   const save = async () => {
     try {
-      await record.mutateAsync({ amountPaise: paise, mode, description: what, branchId });
+      await record.mutateAsync({ amountPaise: paise, mode, kind: what, branchId });
       toast(`Payment recorded · ${inr(paise)} · ${patientName}`);
       onClose();
     } catch (e) {
@@ -203,9 +205,16 @@ export function RecordPaymentSheet({
       <div className="flex flex-col gap-1.5">
         <Kicker>For</Kicker>
         <div className="flex flex-wrap gap-1.5">
-          {(['Session', 'Home visit', 'Assessment', 'Other'] as const).map((w) => (
-            <Chip key={w} active={what === w} onClick={() => setWhat(w)}>
-              {w}
+          {(
+            [
+              ['session', 'Session'],
+              ['home_visit', 'Home visit'],
+              ['assessment', 'Assessment'],
+              ['other', 'Other'],
+            ] as const
+          ).map(([k, label]) => (
+            <Chip key={k} active={what === k} onClick={() => setWhat(k)}>
+              {label}
             </Chip>
           ))}
         </div>

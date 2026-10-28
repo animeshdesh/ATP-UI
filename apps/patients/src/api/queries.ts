@@ -12,7 +12,7 @@ import type {
   NewPayment,
   PatientNote,
   StatusChange,
-  TimeOff,
+  NewTimeOff,
   WorkingHours,
 } from '@/domain/types';
 import { api } from './index';
@@ -209,7 +209,7 @@ export function useSetWorkingHours(memberId: string) {
 export function useCreateTimeOff() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (v: Omit<TimeOff, 'id'>) => api.createTimeOff(v),
+    mutationFn: (v: NewTimeOff) => api.createTimeOff(v),
     onSettled: () =>
       Promise.all([qc.invalidateQueries({ queryKey: qk.timeOff }), scheduleChanged(qc)]),
   });

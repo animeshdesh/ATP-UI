@@ -18,7 +18,10 @@ export function useTherapistMap() {
   return useMemo(() => {
     const map = new Map(data.map((t) => [t.memberId, t]));
     return {
-      list: data,
+      /** Bookable: working hours, or a therapist-style (own-scope) role. */
+      list: data.filter((t) => t.takesAppointments),
+      /** Every member with appointments.manage (Availability can give them hours). */
+      all: data,
       get: (id: string | null | undefined): Therapist | undefined => (id ? map.get(id) : undefined),
       name: (id: string | null | undefined) => (id && map.get(id)?.fullName) || 'Therapist',
       short: (id: string | null | undefined) => (id && map.get(id)?.shortName) || 'Therapist',

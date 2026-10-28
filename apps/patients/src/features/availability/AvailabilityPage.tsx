@@ -25,9 +25,12 @@ export function AvailabilityPage() {
   const [tab, setTab] = useState<'hours' | 'off'>('hours');
   const [adding, setAdding] = useState(false);
   const own = !can('appointments.manage', 'all');
+  const [extra, setExtra] = useState<string[]>([]);
   const scope = own
-    ? therapists.list.filter((t) => t.memberId === session.memberId)
-    : therapists.list;
+    ? therapists.all.filter((t) => t.memberId === session.memberId)
+    : therapists.all.filter((t) => t.takesAppointments || extra.includes(t.memberId));
+  // Members with appointments.manage but no hours yet (e.g. an Owner who also treats).
+  const others = own ? [] : therapists.all.filter((t) => !scope.includes(t));
 
   usePageHeader({
     title: 'Availability',
@@ -48,7 +51,27 @@ export function AvailabilityPage() {
         ]}
       />
       {tab === 'hours' ? (
-        <Hours therapists={scope} />
+        <>
+          <Hours therapists={scope} />
+          {others.length > 0 && (
+            <label className="flex flex-wrap items-center gap-2 text-sm text-neutral-700">
+              Set hours for another member
+              <select
+                aria-label="Set hours for another member"
+                value=""
+                onChange={(e) => e.target.value && setExtra((x) => [...x, e.target.value])}
+                className="h-10 rounded-none border-2 border-ink bg-white px-2 text-sm text-ink"
+              >
+                <option value="">Choose…</option>
+                {others.map((t) => (
+                  <option key={t.memberId} value={t.memberId}>
+                    {t.fullName}
+                  </option>
+                ))}
+              </select>
+            </label>
+          )}
+        </>
       ) : (
         <TimeOffList memberIds={scope.map((t) => t.memberId)} onAdd={() => setAdding(true)} />
       )}

@@ -88,9 +88,7 @@ export function DetailSheet({
                 ? {
                     amountPaise: paise,
                     mode: payMode,
-                    description: `Session · ${dayLabel(dateOf(a.startsAt))}`,
-                    branchId: a.branchId,
-                    appointmentId: a.id,
+                    kind: a.visitType === 'home' ? 'home_visit' : 'session',
                   }
                 : null,
           },

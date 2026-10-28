@@ -20,8 +20,15 @@ import type {
   NewPackage,
   NewPatient,
   NewPayment,
+  NewPatientNote,
+  UpdateBranch,
+  UpdatePatient,
+  UpdateInquiry,
+  NewTimeOff,
   Package,
   Patient,
+  PaymentKind,
+  ConvertResult,
   PatientNote,
   PatientProfile,
   PatientSummary,
@@ -33,7 +40,7 @@ import type {
   WorkingHours,
 } from '@/domain/types';
 import { samePhone } from '@/lib/contact';
-import { at, dateOf, minutesOf, toMinutes, weekdayOf } from '@/lib/time';
+import { at, dateOf, dayMonth, minutesOf, toMinutes, weekdayOf } from '@/lib/time';
 import {
   THERAPIST_IDS,
   seedAppointments,
@@ -153,14 +160,23 @@ function summary(p: Patient): PatientSummary {
   };
 }
 
-function recordIncome(patientId: string, v: NewPayment): Payment {
+const KIND_LABEL: Record<PaymentKind, string> = {
+  session: 'Session',
+  assessment: 'Assessment',
+  home_visit: 'Home visit',
+  package: 'Package',
+  other: 'Payment',
+};
+
+/** Same descriptions as the backend (patients/service.ts): "Session · 28 Oct", "Package · 10 sessions". */
+function recordIncome(patientId: string, v: NewPayment, detail?: string): Payment {
   const pay: Payment = {
     id: nextId('pay'),
     patientId,
     amountPaise: v.amountPaise,
     mode: v.mode,
-    occurredOn: todayIso(),
-    description: v.description,
+    occurredOn: v.entryDate ?? todayIso(),
+    description: detail ? `${KIND_LABEL[v.kind]} · ${detail}` : KIND_LABEL[v.kind],
     branchId: v.branchId,
   };
   db.payments.push(pay);
@@ -184,14 +200,14 @@ function makeAppointment(v: NewAppointment, extra: Partial<Appointment> = {}): A
     patientPhone: p.phone,
     therapistId: v.therapistId,
     branchId: v.branchId,
-    visitType: v.visitType,
+    visitType: v.visitType ?? 'clinic',
     homeAddress: v.visitType === 'home' ? (v.homeAddress ?? p.address) : null,
     startsAt: v.startsAt,
     endsAt: v.endsAt,
     status: 'confirmed',
     statusReason: null,
     statusNote: null,
-    source: v.source,
+    source: v.source ?? 'phone',
     notes: v.notes ?? null,
     inquiryId: null,
     packageId: null,
@@ -254,8 +270,8 @@ export const mockPatients = {
       fullName: v.fullName.trim(),
       phone: v.phone,
       email: v.email || null,
-      preferredDate: v.preferredDate,
-      preferredSlot: v.preferredSlot,
+      preferredDate: v.preferredDate ?? null,
+      preferredSlot: v.preferredSlot ?? 'any',
       reason: v.reason || null,
       branchId: branch.id,
       status: 'new',
@@ -276,12 +292,19 @@ export const mockPatients = {
     need('settings.branches.manage');
     if (db.branches.some((b) => b.code === v.code))
       return fail(409, 'Another branch uses this code.', 'code_in_use');
-    const b: Branch = { ...v, id: nextId('br'), archivedAt: null };
+    const b: Branch = {
+      ...v,
+      address: v.address ?? null,
+      phone: v.phone ?? null,
+      isPublic: v.isPublic ?? true,
+      id: nextId('br'),
+      archivedAt: null,
+    };
     db.branches.push(b);
     return latency(b);
   },
 
-  async updateBranch(id: string, v: Partial<NewBranch> & { archived?: boolean }): Promise<Branch> {
+  async updateBranch(id: string, v: UpdateBranch): Promise<Branch> {
     need('settings.branches.manage');
     const b = db.branches.find((x) => x.id === id);
     if (!b) return fail(404, 'Branch not found.', 'not_found');
@@ -304,6 +327,7 @@ export const mockPatients = {
           memberId: m.id,
           fullName: p.fullName,
           shortName: shortOf(p.fullName),
+          takesAppointments: true,
           initials: p.initials,
         };
       }),
@@ -336,12 +360,12 @@ export const mockPatients = {
     );
   },
 
-  async createTimeOff(v: Omit<TimeOff, 'id'>): Promise<TimeOff> {
+  async createTimeOff(v: NewTimeOff): Promise<TimeOff> {
     const s = need('appointments.manage');
     if (s === 'own' && v.memberId !== me())
       return fail(403, "You don't have access to this.", 'forbidden');
     if (!(v.to > v.from)) return fail(400, 'End must be after start.', 'bad_request');
-    const o = { ...v, id: nextId('off') };
+    const o: TimeOff = { ...v, reason: v.reason ?? null, id: nextId('off') };
     db.timeOff.push(o);
     return latency(o);
   },
@@ -437,7 +461,12 @@ export const mockPatients = {
         k.sessionsUsed += 1;
         a.packageId = k.id;
       }
-      if (v.payment) recordIncome(a.patientId, { ...v.payment, appointmentId: a.id });
+      if (v.payment)
+        recordIncome(
+          a.patientId,
+          { ...v.payment, branchId: a.branchId },
+          dayMonth(dateOf(a.startsAt)),
+        );
       a.status = 'completed';
     } else {
       Object.assign(a, { status: v.status, statusReason: v.reason, statusNote: v.note ?? null });
@@ -462,10 +491,7 @@ export const mockPatients = {
     return latency(c, 40);
   },
 
-  async updateInquiry(
-    id: string,
-    v: { status: 'new' | 'contacted' | 'closed'; closeReason?: Inquiry['closeReason'] },
-  ): Promise<Inquiry> {
+  async updateInquiry(id: string, v: UpdateInquiry): Promise<Inquiry> {
     need('patients.manage', 'all');
     const i = db.inquiries.find((x) => x.id === id);
     if (!i) return fail(404, 'Request not found.', 'not_found');
@@ -474,15 +500,12 @@ export const mockPatients = {
     if (v.status === 'closed' && !v.closeReason) return fail(400, 'Pick a reason.', 'bad_request');
     Object.assign(i, {
       status: v.status,
-      closeReason: v.status === 'closed' ? v.closeReason : null,
+      closeReason: v.status === 'closed' ? (v.closeReason ?? null) : null,
     });
     return latency(i);
   },
 
-  async convertInquiry(
-    id: string,
-    v: ConvertInquiry,
-  ): Promise<{ patient: Patient; appointment: Appointment | null }> {
+  async convertInquiry(id: string, v: ConvertInquiry): Promise<ConvertResult> {
     need('patients.manage', 'all');
     const i = db.inquiries.find((x) => x.id === id);
     if (!i) return fail(404, 'Request not found.', 'not_found');
@@ -530,7 +553,10 @@ export const mockPatients = {
       patientId: patient.id,
       appointmentId: appointment?.id ?? null,
     });
-    return latency({ patient, appointment });
+    return latency({
+      patient: { id: patient.id, fullName: patient.fullName, phone: patient.phone, created },
+      appointment,
+    });
   },
 
   // --- patients ---------------------------------------------------------------------------------
@@ -556,12 +582,26 @@ export const mockPatients = {
     need('patients.manage');
     if (db.patients.some((p) => samePhone(p.phone, v.phone)))
       return fail(409, 'Another patient already has this phone.', 'phone_in_use');
-    const p: Patient = { ...v, id: nextId('pt'), createdAt: new Date().toISOString() };
+    const p: Patient = {
+      fullName: v.fullName,
+      phone: v.phone,
+      email: v.email ?? null,
+      dateOfBirth: v.dateOfBirth ?? null,
+      age: v.age ?? null,
+      gender: v.gender ?? 'unspecified',
+      address: v.address ?? null,
+      referralSource: v.referralSource ?? null,
+      referralNote: v.referralNote ?? null,
+      chiefComplaint: v.chiefComplaint ?? null,
+      branchId: v.branchId ?? null,
+      id: nextId('pt'),
+      createdAt: new Date().toISOString(),
+    };
     db.patients.push(p);
     return latency(p);
   },
 
-  async updatePatient(id: string, v: Partial<NewPatient>): Promise<Patient> {
+  async updatePatient(id: string, v: UpdatePatient): Promise<Patient> {
     const s = need('patients.manage');
     const p = db.patients.find((x) => x.id === id);
     if (!p || !visiblePatient(s, id)) return fail(404, 'Patient not found.', 'not_found');
@@ -597,16 +637,14 @@ export const mockPatients = {
     );
   },
 
-  async createNote(
-    patientId: string,
-    v: Pick<PatientNote, 'kind' | 'body' | 'appointmentId'>,
-  ): Promise<PatientNote> {
+  async createNote(patientId: string, v: NewPatientNote): Promise<PatientNote> {
     const s = need('patients.clinical');
     if (!visiblePatient(s, patientId)) return fail(404, 'Patient not found.', 'not_found');
     if (!v.body.trim()) return fail(400, 'Write the note first.', 'bad_request');
     const key = mockUserKey();
     const n: PatientNote = {
-      ...v,
+      kind: v.kind,
+      appointmentId: v.appointmentId ?? null,
       body: v.body.trim(),
       id: nextId('note'),
       patientId,
@@ -631,12 +669,11 @@ export const mockPatients = {
       soldOn: todayIso(),
     };
     db.packages.push(k);
-    recordIncome(patientId, {
-      amountPaise: v.pricePaise,
-      mode: v.mode,
-      description: `Package · ${v.name}`,
-      branchId: v.branchId,
-    });
+    recordIncome(
+      patientId,
+      { amountPaise: v.pricePaise, mode: v.mode, kind: 'package', branchId: v.branchId },
+      v.name,
+    );
     return latency(k);
   },
 

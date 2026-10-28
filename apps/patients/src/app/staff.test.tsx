@@ -91,7 +91,7 @@ describe('patients app (staff)', () => {
 
     await user.click(screen.getByRole('tab', { name: 'Payments' }));
     expect(await screen.findByText('3 left')).toBeInTheDocument();
-    expect(await screen.findByText(/Session · Fri/)).toBeInTheDocument();
+    expect(await screen.findByText(/Session · 30 Oct/)).toBeInTheDocument();
   });
 
   it('hides clinical notes from the front desk', async () => {
