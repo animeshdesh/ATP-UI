@@ -74,6 +74,216 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/branches": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Clinic branches (any member) */
+        get: {
+            parameters: {
+                query?: never;
+                header?: {
+                    /** @description Active clinic. Optional when the user belongs to exactly one clinic. */
+                    "x-clinic-id"?: string;
+                };
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Branch"][];
+                    };
+                };
+                /** @description Unauthenticated */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Forbidden */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        /** Add a branch (settings.branches.manage) */
+        post: {
+            parameters: {
+                query?: never;
+                header?: {
+                    /** @description Active clinic. Optional when the user belongs to exactly one clinic. */
+                    "x-clinic-id"?: string;
+                };
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["NewBranch"];
+                };
+            };
+            responses: {
+                /** @description Created */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Branch"];
+                    };
+                };
+                /** @description Bad request */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Unauthenticated */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Forbidden */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Conflict */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/branches/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Edit, hide from /book, or archive a branch (settings.branches.manage) */
+        patch: {
+            parameters: {
+                query?: never;
+                header?: {
+                    /** @description Active clinic. Optional when the user belongs to exactly one clinic. */
+                    "x-clinic-id"?: string;
+                };
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["UpdateBranch"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Branch"];
+                    };
+                };
+                /** @description Bad request */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Unauthenticated */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Forbidden */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Not found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Conflict */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+            };
+        };
+        trace?: never;
+    };
     "/v1/budgets": {
         parameters: {
             query?: never;
@@ -487,6 +697,1090 @@ export interface paths {
                 };
                 /** @description Not found */
                 404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/people": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Clinic people for pickers and filters (any member) */
+        get: {
+            parameters: {
+                query?: never;
+                header?: {
+                    /** @description Active clinic. Optional when the user belongs to exactly one clinic. */
+                    "x-clinic-id"?: string;
+                };
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Person"][];
+                    };
+                };
+                /** @description Unauthenticated */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Forbidden */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/partners": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Partners (finance.settlement.manage or finance.report.view) */
+        get: {
+            parameters: {
+                query?: never;
+                header?: {
+                    /** @description Active clinic. Optional when the user belongs to exactly one clinic. */
+                    "x-clinic-id"?: string;
+                };
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Partner"][];
+                    };
+                };
+                /** @description Unauthenticated */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Forbidden */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        /**
+         * Make an active member a partner (finance.settlement.manage)
+         * @description Re-adding a deactivated partner reactivates them.
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: {
+                    /** @description Active clinic. Optional when the user belongs to exactly one clinic. */
+                    "x-clinic-id"?: string;
+                };
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["AddPartner"];
+                };
+            };
+            responses: {
+                /** @description Added */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Partner"];
+                    };
+                };
+                /** @description Bad request */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Unauthenticated */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Forbidden */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Conflict */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/partners/{id}/deactivate": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Deactivate a partner (finance.settlement.manage). History is kept. */
+        post: {
+            parameters: {
+                query?: never;
+                header?: {
+                    /** @description Active clinic. Optional when the user belongs to exactly one clinic. */
+                    "x-clinic-id"?: string;
+                };
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Partner"];
+                    };
+                };
+                /** @description Unauthenticated */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Forbidden */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Not found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/partners/{id}/reactivate": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Reactivate a partner (finance.settlement.manage). History is kept. */
+        post: {
+            parameters: {
+                query?: never;
+                header?: {
+                    /** @description Active clinic. Optional when the user belongs to exactly one clinic. */
+                    "x-clinic-id"?: string;
+                };
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Partner"];
+                    };
+                };
+                /** @description Unauthenticated */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Forbidden */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Not found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/therapists": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Members who can be booked (appointments.manage) */
+        get: {
+            parameters: {
+                query?: never;
+                header?: {
+                    /** @description Active clinic. Optional when the user belongs to exactly one clinic. */
+                    "x-clinic-id"?: string;
+                };
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Therapist"][];
+                    };
+                };
+                /** @description Unauthenticated */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Forbidden */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/members/{id}/working-hours": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Weekly working hours of a member (appointments.manage) */
+        get: {
+            parameters: {
+                query?: never;
+                header?: {
+                    /** @description Active clinic. Optional when the user belongs to exactly one clinic. */
+                    "x-clinic-id"?: string;
+                };
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["WorkingHours"][];
+                    };
+                };
+                /** @description Unauthenticated */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Forbidden */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Not found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+            };
+        };
+        /** Replace a member's weekly hours (own with scope 'own') */
+        put: {
+            parameters: {
+                query?: never;
+                header?: {
+                    /** @description Active clinic. Optional when the user belongs to exactly one clinic. */
+                    "x-clinic-id"?: string;
+                };
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["WorkingHours"][];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["WorkingHours"][];
+                    };
+                };
+                /** @description Bad request */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Unauthenticated */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Forbidden */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Not found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+            };
+        };
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/time-off": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Time off from today on (own only with scope 'own') */
+        get: {
+            parameters: {
+                query?: never;
+                header?: {
+                    /** @description Active clinic. Optional when the user belongs to exactly one clinic. */
+                    "x-clinic-id"?: string;
+                };
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["TimeOff"][];
+                    };
+                };
+                /** @description Unauthenticated */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Forbidden */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        /** Add time off; blocks free slots (A-03) */
+        post: {
+            parameters: {
+                query?: never;
+                header?: {
+                    /** @description Active clinic. Optional when the user belongs to exactly one clinic. */
+                    "x-clinic-id"?: string;
+                };
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["NewTimeOff"];
+                };
+            };
+            responses: {
+                /** @description Created */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["TimeOff"];
+                    };
+                };
+                /** @description Bad request */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Unauthenticated */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Forbidden */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/time-off/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Remove time off */
+        delete: {
+            parameters: {
+                query?: never;
+                header?: {
+                    /** @description Active clinic. Optional when the user belongs to exactly one clinic. */
+                    "x-clinic-id"?: string;
+                };
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Removed */
+                204: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Unauthenticated */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Forbidden */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Not found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+            };
+        };
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/calendar": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Appointments and time off in a date range, max 31 days (A-02) */
+        get: {
+            parameters: {
+                query: {
+                    from: string;
+                    to: string;
+                    therapistId?: string;
+                    branchId?: string;
+                };
+                header?: {
+                    /** @description Active clinic. Optional when the user belongs to exactly one clinic. */
+                    "x-clinic-id"?: string;
+                };
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["CalendarData"];
+                    };
+                };
+                /** @description Bad request */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Unauthenticated */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Forbidden */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/availability/free-slots": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Free start times: working hours − time off − confirmed appointments (A-03) */
+        get: {
+            parameters: {
+                query: {
+                    therapistId: string;
+                    branchId: string;
+                    date: string;
+                    duration?: number;
+                };
+                header?: {
+                    /** @description Active clinic. Optional when the user belongs to exactly one clinic. */
+                    "x-clinic-id"?: string;
+                };
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": string[];
+                    };
+                };
+                /** @description Bad request */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Unauthenticated */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Forbidden */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/appointments": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Book (409 slot_taken on a clash; 409 outside_hours unless force) */
+        post: {
+            parameters: {
+                query?: never;
+                header?: {
+                    /** @description Active clinic. Optional when the user belongs to exactly one clinic. */
+                    "x-clinic-id"?: string;
+                };
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["NewAppointment"];
+                };
+            };
+            responses: {
+                /** @description Created */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Appointment"];
+                    };
+                };
+                /** @description Bad request */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Unauthenticated */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Forbidden */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Conflict */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/appointments/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Reschedule or edit notes (same checks as booking) */
+        patch: {
+            parameters: {
+                query?: never;
+                header?: {
+                    /** @description Active clinic. Optional when the user belongs to exactly one clinic. */
+                    "x-clinic-id"?: string;
+                };
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["UpdateAppointment"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Appointment"];
+                    };
+                };
+                /** @description Bad request */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Unauthenticated */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Forbidden */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Not found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Conflict */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+            };
+        };
+        trace?: never;
+    };
+    "/v1/appointments/{id}/status": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Complete (package session, payment), no-show / cancel with reason, or undo (A-07) */
+        post: {
+            parameters: {
+                query?: never;
+                header?: {
+                    /** @description Active clinic. Optional when the user belongs to exactly one clinic. */
+                    "x-clinic-id"?: string;
+                };
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["AppointmentStatusChange"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Appointment"];
+                    };
+                };
+                /** @description Bad request */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Unauthenticated */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Forbidden */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Not found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Conflict */
+                409: {
                     headers: {
                         [name: string]: unknown;
                     };
@@ -1119,6 +2413,419 @@ export interface paths {
         };
         put?: never;
         post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/public/clinics/{slug}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Clinic name and public branches for the booking page (no auth) */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    slug: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["PublicClinic"];
+                    };
+                };
+                /** @description Not found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/public/clinics/{slug}/inquiries": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Send a booking request (no auth; 5 per 15 min per IP; honeypot `website`) */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    slug: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["InquiryRequest"];
+                };
+            };
+            responses: {
+                /** @description Received */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @enum {boolean} */
+                            ok: true;
+                        };
+                    };
+                };
+                /** @description Bad request */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Not found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Too many requests */
+                429: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/inquiries": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Request queue, newest first (patients.manage, scope all) */
+        get: {
+            parameters: {
+                query?: {
+                    status?: components["schemas"]["InquiryStatus"];
+                };
+                header?: {
+                    /** @description Active clinic. Optional when the user belongs to exactly one clinic. */
+                    "x-clinic-id"?: string;
+                };
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Inquiry"][];
+                    };
+                };
+                /** @description Unauthenticated */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Forbidden */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/inquiries/counts": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Badge counts per status */
+        get: {
+            parameters: {
+                query?: never;
+                header?: {
+                    /** @description Active clinic. Optional when the user belongs to exactly one clinic. */
+                    "x-clinic-id"?: string;
+                };
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["InquiryCounts"];
+                    };
+                };
+                /** @description Unauthenticated */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Forbidden */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/inquiries/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Mark contacted, reopen, or close with a reason (409 inquiry_closed once booked) */
+        patch: {
+            parameters: {
+                query?: never;
+                header?: {
+                    /** @description Active clinic. Optional when the user belongs to exactly one clinic. */
+                    "x-clinic-id"?: string;
+                };
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["UpdateInquiry"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Inquiry"];
+                    };
+                };
+                /** @description Bad request */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Unauthenticated */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Forbidden */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Not found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Conflict */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+            };
+        };
+        trace?: never;
+    };
+    "/v1/inquiries/{id}/convert": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Find or create the patient by phone, optionally book; one transaction */
+        post: {
+            parameters: {
+                query?: never;
+                header?: {
+                    /** @description Active clinic. Optional when the user belongs to exactly one clinic. */
+                    "x-clinic-id"?: string;
+                };
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["ConvertInquiry"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ConvertResult"];
+                    };
+                };
+                /** @description Bad request */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Unauthenticated */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Forbidden */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Not found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Conflict */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+            };
+        };
         delete?: never;
         options?: never;
         head?: never;
@@ -1851,17 +3558,20 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/v1/people": {
+    "/v1/patients": {
         parameters: {
             query?: never;
             header?: never;
             path?: never;
             cookie?: never;
         };
-        /** Clinic people for pickers and filters (any member) */
+        /** Patients, newest activity first; search by name or phone (patients.view) */
         get: {
             parameters: {
-                query?: never;
+                query?: {
+                    q?: string;
+                    limit?: number;
+                };
                 header?: {
                     /** @description Active clinic. Optional when the user belongs to exactly one clinic. */
                     "x-clinic-id"?: string;
@@ -1877,7 +3587,7 @@ export interface paths {
                         [name: string]: unknown;
                     };
                     content: {
-                        "application/json": components["schemas"]["Person"][];
+                        "application/json": components["schemas"]["PatientSummary"][];
                     };
                 };
                 /** @description Unauthenticated */
@@ -1901,67 +3611,7 @@ export interface paths {
             };
         };
         put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/v1/partners": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /** Partners (finance.settlement.manage or finance.report.view) */
-        get: {
-            parameters: {
-                query?: never;
-                header?: {
-                    /** @description Active clinic. Optional when the user belongs to exactly one clinic. */
-                    "x-clinic-id"?: string;
-                };
-                path?: never;
-                cookie?: never;
-            };
-            requestBody?: never;
-            responses: {
-                /** @description OK */
-                200: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["Partner"][];
-                    };
-                };
-                /** @description Unauthenticated */
-                401: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-                /** @description Forbidden */
-                403: {
-                    headers: {
-                        [name: string]: unknown;
-                    };
-                    content: {
-                        "application/json": components["schemas"]["ErrorResponse"];
-                    };
-                };
-            };
-        };
-        put?: never;
-        /**
-         * Make an active member a partner (finance.settlement.manage)
-         * @description Re-adding a deactivated partner reactivates them.
-         */
+        /** Add a patient; 409 phone_in_use when the phone belongs to another (patients.manage) */
         post: {
             parameters: {
                 query?: never;
@@ -1974,17 +3624,17 @@ export interface paths {
             };
             requestBody?: {
                 content: {
-                    "application/json": components["schemas"]["AddPartner"];
+                    "application/json": components["schemas"]["NewPatient"];
                 };
             };
             responses: {
-                /** @description Added */
+                /** @description Created */
                 201: {
                     headers: {
                         [name: string]: unknown;
                     };
                     content: {
-                        "application/json": components["schemas"]["Partner"];
+                        "application/json": components["schemas"]["Patient"];
                     };
                 };
                 /** @description Bad request */
@@ -2031,17 +3681,15 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/v1/partners/{id}/deactivate": {
+    "/v1/patients/{id}": {
         parameters: {
             query?: never;
             header?: never;
             path?: never;
             cookie?: never;
         };
-        get?: never;
-        put?: never;
-        /** Deactivate a partner (finance.settlement.manage). History is kept. */
-        post: {
+        /** Profile with appointments, payments and packages (patients.view) */
+        get: {
             parameters: {
                 query?: never;
                 header?: {
@@ -2061,7 +3709,216 @@ export interface paths {
                         [name: string]: unknown;
                     };
                     content: {
-                        "application/json": components["schemas"]["Partner"];
+                        "application/json": components["schemas"]["PatientProfile"];
+                    };
+                };
+                /** @description Unauthenticated */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Forbidden */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Not found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Edit or archive a patient (patients.manage) */
+        patch: {
+            parameters: {
+                query?: never;
+                header?: {
+                    /** @description Active clinic. Optional when the user belongs to exactly one clinic. */
+                    "x-clinic-id"?: string;
+                };
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["UpdatePatient"];
+                };
+            };
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Patient"];
+                    };
+                };
+                /** @description Bad request */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Unauthenticated */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Forbidden */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Not found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Conflict */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+            };
+        };
+        trace?: never;
+    };
+    "/v1/patients/{id}/notes": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Clinical notes, newest first (patients.clinical) */
+        get: {
+            parameters: {
+                query?: never;
+                header?: {
+                    /** @description Active clinic. Optional when the user belongs to exactly one clinic. */
+                    "x-clinic-id"?: string;
+                };
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["PatientNote"][];
+                    };
+                };
+                /** @description Unauthenticated */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Forbidden */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Not found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        /** Add a clinical note (patients.clinical) */
+        post: {
+            parameters: {
+                query?: never;
+                header?: {
+                    /** @description Active clinic. Optional when the user belongs to exactly one clinic. */
+                    "x-clinic-id"?: string;
+                };
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["NewPatientNote"];
+                };
+            };
+            responses: {
+                /** @description Created */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["PatientNote"];
+                    };
+                };
+                /** @description Bad request */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
                     };
                 };
                 /** @description Unauthenticated */
@@ -2099,7 +3956,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/v1/partners/{id}/reactivate": {
+    "/v1/patient-notes/{id}": {
         parameters: {
             query?: never;
             header?: never;
@@ -2108,8 +3965,9 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Reactivate a partner (finance.settlement.manage). History is kept. */
-        post: {
+        post?: never;
+        /** Soft-delete a note */
+        delete: {
             parameters: {
                 query?: never;
                 header?: {
@@ -2123,13 +3981,237 @@ export interface paths {
             };
             requestBody?: never;
             responses: {
+                /** @description Deleted */
+                204: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Unauthenticated */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Forbidden */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Not found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+            };
+        };
+        options?: never;
+        head?: never;
+        /** Edit a note (author, or patients.clinical all); edits are audited */
+        patch: {
+            parameters: {
+                query?: never;
+                header?: {
+                    /** @description Active clinic. Optional when the user belongs to exactly one clinic. */
+                    "x-clinic-id"?: string;
+                };
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["UpdatePatientNote"];
+                };
+            };
+            responses: {
                 /** @description OK */
                 200: {
                     headers: {
                         [name: string]: unknown;
                     };
                     content: {
-                        "application/json": components["schemas"]["Partner"];
+                        "application/json": components["schemas"]["PatientNote"];
+                    };
+                };
+                /** @description Bad request */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Unauthenticated */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Forbidden */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Not found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+            };
+        };
+        trace?: never;
+    };
+    "/v1/patients/{id}/packages": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Sell a package; records Package income in money (patients.manage + finance.entry.create) */
+        post: {
+            parameters: {
+                query?: never;
+                header?: {
+                    /** @description Active clinic. Optional when the user belongs to exactly one clinic. */
+                    "x-clinic-id"?: string;
+                };
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["NewPackage"];
+                };
+            };
+            responses: {
+                /** @description Created */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["PatientPackage"];
+                    };
+                };
+                /** @description Bad request */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Unauthenticated */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Forbidden */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Not found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/patients/{id}/payments": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Record a payment as income in money, tagged with patient and branch (A-05) */
+        post: {
+            parameters: {
+                query?: never;
+                header?: {
+                    /** @description Active clinic. Optional when the user belongs to exactly one clinic. */
+                    "x-clinic-id"?: string;
+                };
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["NewPatientPayment"];
+                };
+            };
+            responses: {
+                /** @description Created */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["PatientPayment"];
+                    };
+                };
+                /** @description Bad request */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
                     };
                 };
                 /** @description Unauthenticated */
@@ -3275,6 +5357,7 @@ export interface paths {
                     paymentMode?: components["schemas"]["PaymentMode"];
                     memberId?: string;
                     party?: "clinic";
+                    patientId?: string;
                     from?: string;
                     to?: string;
                     cursor?: string;
@@ -3816,6 +5899,32 @@ export interface components {
             items: components["schemas"]["AuditEntry"][];
             nextCursor: string | null;
         };
+        Branch: {
+            /** Format: uuid */
+            id: string;
+            name: string;
+            code: string;
+            address: string | null;
+            phone: string | null;
+            isPublic: boolean;
+            archivedAt: string | null;
+        };
+        NewBranch: {
+            name: string;
+            code: string;
+            address?: string | null;
+            phone?: string | null;
+            /** @default true */
+            isPublic: boolean;
+        };
+        UpdateBranch: {
+            name?: string;
+            code?: string;
+            address?: string | null;
+            phone?: string | null;
+            isPublic?: boolean;
+            archived?: boolean;
+        };
         BudgetLine: {
             /** Format: uuid */
             categoryId: string;
@@ -3938,6 +6047,215 @@ export interface components {
             entryDate?: string;
             /** @default  */
             note: string;
+        };
+        Person: {
+            /** Format: uuid */
+            memberId: string;
+            /** Format: uuid */
+            userId: string;
+            name: string;
+            initials: string;
+            isPartner: boolean;
+            /** @enum {string} */
+            status: "active" | "deactivated";
+        };
+        Partner: {
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            memberId: string;
+            name: string;
+            /** @enum {string} */
+            status: "active" | "deactivated";
+            since: string;
+            deactivatedAt: string | null;
+        };
+        AddPartner: {
+            /** Format: uuid */
+            memberId: string;
+        };
+        PatientPayment: {
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            patientId: string;
+            /**
+             * @description Integer paise (₹1 = 100)
+             * @example 60000
+             */
+            amountPaise: number;
+            mode: components["schemas"]["PaymentMode"];
+            /**
+             * Format: date
+             * @example 2026-10-14
+             */
+            occurredOn: string;
+            description: string;
+            /** Format: uuid */
+            branchId: string | null;
+        };
+        /** @enum {string} */
+        PaymentMode: "cash" | "upi" | "card" | "bank_transfer";
+        PatientPackage: {
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            patientId: string;
+            name: string;
+            sessionsTotal: number;
+            sessionsUsed: number;
+            /**
+             * @description Integer paise (₹1 = 100)
+             * @example 60000
+             */
+            pricePaise: number;
+            /**
+             * Format: date
+             * @example 2026-10-14
+             */
+            soldOn: string;
+        };
+        Appointment: {
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            patientId: string;
+            patientName: string;
+            patientPhone: string;
+            /** Format: uuid */
+            therapistId: string;
+            /** Format: uuid */
+            branchId: string;
+            visitType: components["schemas"]["VisitType"];
+            homeAddress: string | null;
+            startsAt: string;
+            endsAt: string;
+            status: components["schemas"]["AppointmentStatus"];
+            statusReason: components["schemas"]["StatusReason"] | null;
+            statusNote: string | null;
+            /** @enum {string} */
+            source: "phone" | "walk_in" | "web";
+            notes: string | null;
+            /** Format: uuid */
+            inquiryId: string | null;
+            /** Format: uuid */
+            packageId: string | null;
+        };
+        /** @enum {string} */
+        VisitType: "clinic" | "home";
+        /** @enum {string} */
+        AppointmentStatus: "confirmed" | "completed" | "no_show" | "cancelled";
+        /** @enum {string} */
+        StatusReason: "patient_request" | "therapist_unavailable" | "no_response" | "rescheduled" | "other";
+        AppointmentStatusChange: {
+            /** @enum {string} */
+            status: "completed";
+            /** Format: uuid */
+            packageId?: string | null;
+            payment?: {
+                amountPaise: number;
+                mode: components["schemas"]["PaymentMode"];
+                /** @enum {string} */
+                kind: "session" | "home_visit" | "assessment" | "package" | "other";
+                /**
+                 * Format: date
+                 * @example 2026-10-14
+                 */
+                entryDate?: string;
+            } | null;
+        } | {
+            /** @enum {string} */
+            status: "no_show" | "cancelled";
+            reason: components["schemas"]["StatusReason"];
+            note?: string | null;
+        } | {
+            /** @enum {string} */
+            status: "confirmed";
+        };
+        Therapist: {
+            /** Format: uuid */
+            memberId: string;
+            fullName: string;
+            shortName: string;
+            initials: string;
+            takesAppointments: boolean;
+        };
+        WorkingHours: {
+            weekday: number;
+            start: string;
+            end: string;
+            /** Format: uuid */
+            branchId: string;
+            visitType: components["schemas"]["VisitType"];
+        };
+        TimeOff: {
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            memberId: string;
+            from: string;
+            to: string;
+            reason: string | null;
+        };
+        NewTimeOff: {
+            /** Format: uuid */
+            memberId: string;
+            /** Format: date-time */
+            from: string;
+            /** Format: date-time */
+            to: string;
+            reason?: string | null;
+        };
+        CalendarData: {
+            appointments: components["schemas"]["Appointment"][];
+            timeOff: components["schemas"]["TimeOff"][];
+        };
+        NewAppointment: {
+            /** Format: uuid */
+            therapistId: string;
+            /** Format: uuid */
+            branchId: string;
+            visitType?: components["schemas"]["VisitType"];
+            homeAddress?: string | null;
+            /**
+             * Format: date-time
+             * @example 2026-10-28T10:00:00+05:30
+             */
+            startsAt: string;
+            /**
+             * Format: date-time
+             * @example 2026-10-28T10:00:00+05:30
+             */
+            endsAt: string;
+            force?: boolean;
+            /** Format: uuid */
+            patientId: string;
+            /**
+             * @default phone
+             * @enum {string}
+             */
+            source: "phone" | "walk_in" | "web";
+            notes?: string | null;
+        };
+        UpdateAppointment: {
+            /** Format: uuid */
+            therapistId?: string;
+            /** Format: uuid */
+            branchId?: string;
+            visitType?: components["schemas"]["VisitType"];
+            homeAddress?: string | null;
+            /**
+             * Format: date-time
+             * @example 2026-10-28T10:00:00+05:30
+             */
+            startsAt?: string;
+            /**
+             * Format: date-time
+             * @example 2026-10-28T10:00:00+05:30
+             */
+            endsAt?: string;
+            force?: boolean;
+            notes?: string | null;
         };
         Category: {
             /** Format: uuid */
@@ -4080,14 +6398,111 @@ export interface components {
                 expensePaise: number;
             }[];
         };
-        /** @enum {string} */
-        PaymentMode: "cash" | "upi" | "card" | "bank_transfer";
         HealthResponse: {
             /** @enum {string} */
             status: "ok" | "degraded";
             /** @enum {string} */
             db: "ok" | "down";
             uptimeSec: number;
+        };
+        Inquiry: {
+            /** Format: uuid */
+            id: string;
+            fullName: string;
+            phone: string;
+            email: string | null;
+            /**
+             * Format: date
+             * @example 2026-10-14
+             */
+            preferredDate: string | null;
+            preferredSlot: components["schemas"]["PreferredSlot"];
+            reason: string | null;
+            /** Format: uuid */
+            branchId: string | null;
+            status: components["schemas"]["InquiryStatus"];
+            closeReason: components["schemas"]["CloseReason"] | null;
+            /** Format: uuid */
+            patientId: string | null;
+            /** Format: uuid */
+            appointmentId: string | null;
+            createdAt: string;
+        };
+        /** @enum {string} */
+        PreferredSlot: "morning" | "afternoon" | "evening" | "any";
+        /** @enum {string} */
+        InquiryStatus: "new" | "contacted" | "booked" | "closed";
+        /** @enum {string} */
+        CloseReason: "not_interested" | "duplicate" | "wrong_number" | "other";
+        InquiryCounts: {
+            new: number;
+            contacted: number;
+            booked: number;
+            closed: number;
+        };
+        PublicClinic: {
+            name: string;
+            branches: {
+                /** Format: uuid */
+                id: string;
+                name: string;
+                code: string;
+                address: string | null;
+                phone: string | null;
+            }[];
+        };
+        InquiryRequest: {
+            fullName: string;
+            phone: string;
+            email?: string | null;
+            /**
+             * Format: date
+             * @example 2026-10-14
+             */
+            preferredDate?: string | null;
+            preferredSlot?: components["schemas"]["PreferredSlot"];
+            reason?: string | null;
+            /** Format: uuid */
+            branchId: string;
+            website?: string;
+        };
+        UpdateInquiry: {
+            /** @enum {string} */
+            status: "new" | "contacted" | "closed";
+            closeReason?: components["schemas"]["CloseReason"];
+        };
+        ConvertInquiry: {
+            /** Format: uuid */
+            patientId?: string | null;
+            appointment?: {
+                /** Format: uuid */
+                therapistId: string;
+                /** Format: uuid */
+                branchId: string;
+                visitType?: components["schemas"]["VisitType"];
+                homeAddress?: string | null;
+                /**
+                 * Format: date-time
+                 * @example 2026-10-28T10:00:00+05:30
+                 */
+                startsAt: string;
+                /**
+                 * Format: date-time
+                 * @example 2026-10-28T10:00:00+05:30
+                 */
+                endsAt: string;
+                force?: boolean;
+            } | null;
+        };
+        ConvertResult: {
+            patient: {
+                /** Format: uuid */
+                id: string;
+                fullName: string;
+                phone: string;
+                created: boolean;
+            };
+            appointment: components["schemas"]["Appointment"] | null;
         };
         CreateInvite: {
             displayName: string;
@@ -4192,31 +6607,152 @@ export interface components {
             displayName?: string;
             roleIds?: string[];
         };
-        Person: {
+        Patient: {
             /** Format: uuid */
-            memberId: string;
+            id: string;
+            fullName: string;
+            phone: string;
+            email: string | null;
+            /**
+             * Format: date
+             * @example 2026-10-14
+             */
+            dateOfBirth: string | null;
+            age: number | null;
+            gender: components["schemas"]["Gender"];
+            address: string | null;
+            referralSource: components["schemas"]["ReferralSource"] | null;
+            referralNote: string | null;
+            chiefComplaint: string | null;
             /** Format: uuid */
-            userId: string;
-            name: string;
-            initials: string;
-            isPartner: boolean;
-            /** @enum {string} */
-            status: "active" | "deactivated";
+            branchId: string | null;
+            createdAt: string;
         };
-        Partner: {
+        /** @enum {string} */
+        Gender: "female" | "male" | "other" | "unspecified";
+        /** @enum {string} */
+        ReferralSource: "doctor" | "friend" | "google" | "walk_in" | "other";
+        PatientSummary: {
+            /** Format: uuid */
+            id: string;
+            fullName: string;
+            phone: string;
+            email: string | null;
+            /**
+             * Format: date
+             * @example 2026-10-14
+             */
+            dateOfBirth: string | null;
+            age: number | null;
+            gender: components["schemas"]["Gender"];
+            address: string | null;
+            referralSource: components["schemas"]["ReferralSource"] | null;
+            referralNote: string | null;
+            chiefComplaint: string | null;
+            /** Format: uuid */
+            branchId: string | null;
+            createdAt: string;
+            /** Format: uuid */
+            therapistId: string | null;
+            visits: number;
+            noShows: number;
+            lastVisit: string | null;
+            nextAppointment: components["schemas"]["Appointment"] | null;
+            activePackage: components["schemas"]["PatientPackage"] | null;
+        };
+        PatientProfile: {
+            patient: components["schemas"]["PatientSummary"];
+            appointments: components["schemas"]["Appointment"][];
+            payments: components["schemas"]["PatientPayment"][];
+            packages: components["schemas"]["PatientPackage"][];
+        };
+        NewPatient: {
+            fullName: string;
+            phone: string;
+            email?: string | null;
+            /**
+             * Format: date
+             * @example 2026-10-14
+             */
+            dateOfBirth?: string | null;
+            age?: number | null;
+            gender?: components["schemas"]["Gender"];
+            address?: string | null;
+            referralSource?: components["schemas"]["ReferralSource"] | null;
+            referralNote?: string | null;
+            chiefComplaint?: string | null;
+            /** Format: uuid */
+            branchId?: string | null;
+        };
+        UpdatePatient: {
+            fullName?: string;
+            phone?: string;
+            email?: string | null;
+            /**
+             * Format: date
+             * @example 2026-10-14
+             */
+            dateOfBirth?: string | null;
+            age?: number | null;
+            gender?: components["schemas"]["Gender"];
+            address?: string | null;
+            referralSource?: components["schemas"]["ReferralSource"] | null;
+            referralNote?: string | null;
+            chiefComplaint?: string | null;
+            /** Format: uuid */
+            branchId?: string | null;
+            archived?: boolean;
+        };
+        PatientNote: {
             /** Format: uuid */
             id: string;
             /** Format: uuid */
-            memberId: string;
-            name: string;
-            /** @enum {string} */
-            status: "active" | "deactivated";
-            since: string;
-            deactivatedAt: string | null;
-        };
-        AddPartner: {
+            patientId: string;
+            kind: components["schemas"]["NoteKind"];
+            body: string;
             /** Format: uuid */
-            memberId: string;
+            appointmentId: string | null;
+            /** Format: uuid */
+            authorId: string;
+            authorName: string;
+            createdAt: string;
+        };
+        /** @enum {string} */
+        NoteKind: "diagnosis" | "plan" | "session" | "general";
+        NewPatientNote: {
+            kind: components["schemas"]["NoteKind"];
+            body: string;
+            /** Format: uuid */
+            appointmentId?: string | null;
+        };
+        UpdatePatientNote: {
+            kind?: components["schemas"]["NoteKind"];
+            body?: string;
+        };
+        NewPackage: {
+            name: string;
+            sessionsTotal: number;
+            /**
+             * @description Integer paise (₹1 = 100)
+             * @example 60000
+             */
+            pricePaise: number;
+            mode: components["schemas"]["PaymentMode"];
+            /** Format: uuid */
+            branchId: string;
+        };
+        NewPatientPayment: {
+            amountPaise: number;
+            mode: components["schemas"]["PaymentMode"];
+            /** @enum {string} */
+            kind: "session" | "home_visit" | "assessment" | "package" | "other";
+            /** Format: uuid */
+            branchId: string;
+            /**
+             * Format: date
+             * @example 2026-10-14
+             */
+            entryDate?: string;
         };
         PartyRef: {
             /** @enum {string} */
@@ -4527,6 +7063,14 @@ export interface components {
                 userId: string;
                 name: string;
             };
+            /** Format: uuid */
+            patientId: string | null;
+            branch: {
+                /** Format: uuid */
+                id: string;
+                code: string;
+                name: string;
+            } | null;
             createdAt: string;
             updatedAt: string;
             canEdit: boolean;

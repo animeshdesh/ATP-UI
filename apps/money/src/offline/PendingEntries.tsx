@@ -25,6 +25,8 @@ function asTransaction(item: OutboxItem): Transaction {
     hasReceipt: !!item.receipt,
     settled: false,
     fund: null,
+    patientId: null,
+    branch: null,
     recordedBy: { userId: item.userKey, name: item.display.recordedByName },
     createdAt: at,
     updatedAt: at,
