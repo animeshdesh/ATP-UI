@@ -16,7 +16,7 @@ Screens are built ahead of the contract on the in-memory mock (D-012); an F3 lev
 | F3e   | Budgets & funds                                                                    | backend L6            | done                                 |
 | F3f   | Reports: PDF/CSV/XLSX download, share sheet                                        | backend L7            | done                                 |
 | F4    | Settings: categories, partners, roles, members, invites                            | backend L2–L3         | in-progress (on real API; leftovers) |
-| F5    | Monorepo split: `apps/money`, `packages/ui`, `packages/core` (no behaviour change) | —                     | todo                                 |
+| F5    | Monorepo split: `apps/money`, `packages/ui`, `packages/core` (no behaviour change) | —                     | done                                 |
 | F6    | `apps/patients` scaffold: PWA, routes, auth, permission nav, mocks                 | F5, backend V2 spec   | todo                                 |
 | F7    | Public `/book` + inquiry queue                                                     | Claude Design, L11    | blocked (design)                     |
 | F8    | Calendar, appointment sheet, availability                                          | Claude Design, L10    | blocked (design)                     |

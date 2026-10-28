@@ -20,5 +20,5 @@ jobs:
       - run: pnpm lint
       - run: pnpm typecheck
       - run: pnpm test
-      # Compile check only; deployed builds (production/staging) need Supabase env from secrets.
-      - run: pnpm build --mode development
+      # Compile check only; deployed builds need Supabase env from Pages variables.
+      - run: pnpm -r --filter "./apps/*" build --mode development

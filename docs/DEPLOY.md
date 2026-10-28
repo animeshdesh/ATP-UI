@@ -16,16 +16,16 @@ Promote `main` → `production` with a reviewed PR, like the backend.
 ## Pages project settings
 
 - Git integration on `animeshdesh/ATP-UI`, root directory `/`, production branch `production`.
-- Build command `pnpm build`, output directory `dist`.
+- Build command `pnpm --filter money build`, output directory `apps/money/dist` (pnpm workspace since F5; `pnpm install` runs at the root). The patients app gets its own project (`atp-patients`, `pnpm --filter patients build`, `apps/patients/dist`).
 - Set `NODE_VERSION=24` and `PNPM_VERSION=12.10.1` as Pages environment variables in both environments (don't rely on the build image honouring `.nvmrc` / `packageManager`). Confirm both versions in the first build log.
 - Environment variables, per environment (all public, plain variables):
   - `VITE_API_URL`: absolute https URL from the table above
   - `VITE_SUPABASE_URL`, `VITE_SUPABASE_PUBLISHABLE_KEY`: that environment's Supabase project (Singapore)
   - Optional `VITE_PHONE_AUTH=true` (phone + password sign-in and phone invites; needs a Supabase SMS provider) and `VITE_MAGIC_LINK=true` (needs Supabase SMTP). Unset = off: sign-in is email + password, and accounts come from invites or `bootstrap-clinic`.
 
-`vite.config.ts` fails the build when any of these is missing, when `VITE_API_URL` isn't absolute https, or when `VITE_AUTH=mock`, so mock auth can never ship. Preview builds of other branches also use the Preview (staging) variables.
+`apps/<app>/vite.config.ts` fails the build when any of these is missing, when `VITE_API_URL` isn't absolute https, or when `VITE_AUTH=mock`, so mock auth can never ship. Preview builds of other branches also use the Preview (staging) variables.
 
-## What ships with `dist/`
+## What ships with `apps/<app>/dist/`
 
 - `_headers` (from `public/`): `/assets/*` and `/workbox-*` → `public, max-age=31536000, immutable`; everything else → `no-cache` (index.html, sw.js, registerSW.js, manifest, icons, SVGs), plus `nosniff` and `Referrer-Policy`.
 - `_routes.json` (from `public/`): runs the Pages Function only on `/assets/*` and `/workbox-*`.

@@ -10,9 +10,11 @@ export default tseslint.config(
       'dist',
       'dev-dist',
       'coverage',
-      'design',
-      'public/mockServiceWorker.js',
-      'src/api/schema.d.ts',
+      '**/dist',
+      '**/dev-dist',
+      '**/design',
+      '**/public/mockServiceWorker.js',
+      'packages/core/src/api/schema.d.ts',
     ],
   },
   {
@@ -32,10 +34,11 @@ export default tseslint.config(
   {
     // Providers co-locate their hook; router/providers are not hot-reloaded components.
     files: [
-      'src/app/**',
+      'apps/*/src/app/**',
       '**/*Context.tsx',
-      'src/components/ui/Toast.tsx',
-      'src/features/dashboard/PeriodSwitch.tsx',
+      'packages/core/src/*.tsx',
+      'packages/ui/src/Toast.tsx',
+      'apps/money/src/features/dashboard/PeriodSwitch.tsx',
     ],
     rules: { 'react-refresh/only-export-components': 'off' },
   },

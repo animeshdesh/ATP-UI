@@ -7,18 +7,17 @@
     "node": ">=24"
   },
   "scripts": {
-    "dev": "vite",
-    "build": "tsc -b && vite build",
-    "preview": "vite preview",
-    "typecheck": "tsc -b --noEmit",
+    "dev": "pnpm --filter money dev",
+    "dev:patients": "pnpm --filter patients dev",
+    "build": "pnpm -r build",
+    "typecheck": "pnpm -r typecheck",
     "lint": "eslint .",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "test": "vitest run",
-    "test:watch": "vitest",
-    "api:types": "openapi-typescript ../atp-backend/contracts/openapi.json -o src/api/schema.d.ts",
+    "test": "pnpm -r test",
+    "api:types": "openapi-typescript ../atp-backend/contracts/openapi.json -o packages/core/src/api/schema.d.ts",
     "check": "pnpm lint && pnpm typecheck && pnpm test",
-    "seed:demo": "node scripts/seed-demo.mjs"
+    "seed:demo": "pnpm --filter money seed:demo"
   },
   "packageManager": "pnpm@12.10.1",
   "dependencies": {

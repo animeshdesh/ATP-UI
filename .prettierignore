@@ -1,4 +1,4 @@
-design
-public/mockServiceWorker.js
-src/api/schema.d.ts
+**/design
+**/public/mockServiceWorker.js
+packages/core/src/api/schema.d.ts
 pnpm-lock.yaml
