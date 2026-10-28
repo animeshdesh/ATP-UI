@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Archive, PiggyBank, Plus } from 'lucide-react';
 import { useBudgetMutations, useBudgets, useFunds } from '@/api/queries';
-import { useSession, monthYear } from '@atp/core';
+import { useSession, monthYear, inr, rupeesToPaise } from '@atp/core';
 import {
   Button,
   Dialog,
@@ -17,7 +17,6 @@ import {
   cn,
 } from '@atp/ui';
 import type { BudgetLine, Fund, FundRule, Tone } from '@atp/core';
-import { inr, rupeesToPaise } from '@/lib/money';
 
 /** PRD 5.4: warning at 80%, alert at 100% (`status` from the API). */
 const STATUS: Record<

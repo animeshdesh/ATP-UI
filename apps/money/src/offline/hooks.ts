@@ -6,21 +6,9 @@ import { useAuthedSession } from '@atp/core';
 import { useToast } from '@atp/ui';
 import { flushOutbox, outbox, type OutboxItem, type SendResult } from './outbox';
 
-const subscribeOnline = (cb: () => void) => {
-  window.addEventListener('online', cb);
-  window.addEventListener('offline', cb);
-  return () => {
-    window.removeEventListener('online', cb);
-    window.removeEventListener('offline', cb);
-  };
-};
+import { useOnline } from '@atp/core';
 
-export const useOnline = () =>
-  useSyncExternalStore(
-    subscribeOnline,
-    () => navigator.onLine,
-    () => true,
-  );
+export { useOnline };
 
 /** Outbox items for the signed-in user. */
 export function useOutbox(): OutboxItem[] {

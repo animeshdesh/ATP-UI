@@ -23,8 +23,8 @@ import {
   monthShort,
   monthYear,
   todayIso,
+  inr,
 } from '@atp/core';
-import { inr } from '@/lib/money';
 import { canShareFiles, download, shareOrDownload } from '@/lib/share';
 
 const RECEIPT_OPTIONS = [

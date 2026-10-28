@@ -11,6 +11,8 @@ export { auth } from './api/auth';
 export * from './lib/env';
 export * from './lib/supabase';
 export * from './lib/dates';
+export * from './lib/money';
+export { useOnline } from './lib/online';
 export * from './session';
 export { Providers, makeQueryClient } from './Providers';
 export { BrandProvider, useBrand, type Brand } from './brand';

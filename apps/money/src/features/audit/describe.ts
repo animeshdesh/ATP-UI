@@ -1,6 +1,5 @@
 import type { AuditRow, Tone } from '@atp/core';
-import { parseTimestamp } from '@atp/core';
-import { inr } from '@/lib/money';
+import { parseTimestamp, inr } from '@atp/core';
 
 export interface AuditView {
   action: 'Created' | 'Edited' | 'Deleted';

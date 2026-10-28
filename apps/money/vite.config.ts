@@ -8,7 +8,7 @@ import { VitePWA } from 'vite-plugin-pwa';
 
 /**
  * Deployed builds (production, staging) must talk to the real API and Supabase. Without this
- * check a missing variable would silently fall back to mock auth (src/lib/env.ts).
+ * check a missing variable would silently fall back to mock auth (@atp/core lib/env.ts).
  */
 function requireDeployEnv(mode: string, command: string) {
   if (command !== 'build' || mode === 'development' || mode === 'test') return;

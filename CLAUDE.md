@@ -26,7 +26,7 @@ All dependencies are declared in the root `package.json`. Packages are source-on
 
 - Cloudflare Pages, one project per app, production branch only (D-042): build `pnpm --filter <app> build`, output `apps/<app>/dist`. Setup and checks: `docs/DEPLOY.md`.
 - The API is on its own origin (Railway): `VITE_API_URL`, `VITE_SUPABASE_URL`, `VITE_SUPABASE_PUBLISHABLE_KEY` come from Pages environment variables; deployed builds fail without them (`apps/<app>/vite.config.ts`), so mock auth can never ship.
-- Each app ships `public/_headers`, `public/_routes.json` and `functions/[[path]].ts` (stale-chunk 404). Never add a catch-all `_redirects` or a `404.html`.
+- Each app ships `public/_headers` and `public/_routes.json`; the stale-chunk 404 Pages Function is `functions/[[path]].ts` at the repo root (Pages reads `functions/` from the project root directory `/`, so both projects share it). Never add a catch-all `_redirects` or a `404.html`.
 - CI (`.github/workflows/ci.yml`): format, lint, typecheck, tests, development-mode build of every app.
 
 ## Layout (per app, e.g. `apps/money/src`)

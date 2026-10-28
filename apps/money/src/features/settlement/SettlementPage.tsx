@@ -12,7 +12,7 @@ import {
   useUndoSettlement,
 } from '@/api/queries';
 import { formatAt } from '@/features/audit/describe';
-import { useSession, initials, dateRange, longDate } from '@atp/core';
+import { useSession, initials, dateRange, longDate, inr } from '@atp/core';
 import {
   Avatar,
   Button,
@@ -27,7 +27,6 @@ import {
   cn,
 } from '@atp/ui';
 import type { PartyRef, SettlementPosition } from '@atp/core';
-import { inr } from '@/lib/money';
 
 const partyName = (p: PartyRef) => (p.kind === 'clinic' ? 'Clinic account' : p.name);
 const shortDate = (iso: string) => longDate(iso).replace(/^\w+, /, '');

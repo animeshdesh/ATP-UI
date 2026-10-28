@@ -14,5 +14,5 @@ export {
   type Tone,
 } from './Display';
 export { Dialog, Sheet } from './Overlay';
-export { ToastProvider, useToast } from './Toast';
+export { ToastProvider, useToast, type ToastOptions } from './Toast';
 export { cn } from './cn';

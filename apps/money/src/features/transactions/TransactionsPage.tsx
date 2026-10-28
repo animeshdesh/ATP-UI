@@ -1,10 +1,15 @@
 import { useDeferredValue, useState } from 'react';
 import { Search } from 'lucide-react';
 import { useCategories, usePeople, useTransactions } from '@/api/queries';
-import { useSession, PAYMENT_MODES, PAYMENT_MODE_LABEL, type TransactionQuery } from '@atp/core';
+import {
+  useSession,
+  PAYMENT_MODES,
+  PAYMENT_MODE_LABEL,
+  type TransactionQuery,
+  inr,
+} from '@atp/core';
 import { Button, EmptyState, Loading, Note, Segmented, Select, Stat, StatGrid } from '@atp/ui';
 import { useEditEntry } from '@/features/entry/QuickAddContext';
-import { inr } from '@/lib/money';
 import { PendingEntries } from '@/offline/PendingEntries';
 import { EntryRow } from './EntryRow';
 

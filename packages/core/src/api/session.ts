@@ -45,6 +45,7 @@ export function sessionFromMe(me: Me): Session | ClinicPick {
     roleLabel: roleNames.join(', ') || 'Member',
     clinicId: c.id,
     clinicName: c.name,
+    memberId: c.memberId,
     permissions: c.permissions as Record<PermissionKey, Scope>,
   };
 }

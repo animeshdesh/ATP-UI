@@ -1,7 +1,6 @@
 import type { ReactNode } from 'react';
 import { ChevronRight, Lock, Paperclip } from 'lucide-react';
-import { PAYMENT_MODE_LABEL, type Transaction, dayOfMonth, monthShort } from '@atp/core';
-import { signedInr } from '@/lib/money';
+import { PAYMENT_MODE_LABEL, type Transaction, dayOfMonth, monthShort, signedInr } from '@atp/core';
 import { cn } from '@atp/ui';
 
 interface Props {

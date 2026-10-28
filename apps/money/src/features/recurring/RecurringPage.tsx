@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { CircleCheck, Plus } from 'lucide-react';
 import { Link } from 'react-router';
 import { useCategories, useRecurring, useRecurringMutations } from '@/api/queries';
-import { useSession, monthShort } from '@atp/core';
+import { useSession, monthShort, inr, rupeesToPaise } from '@atp/core';
 import {
   Button,
   Dialog,
@@ -18,7 +18,6 @@ import {
   cn,
 } from '@atp/ui';
 import { useQuickAdd } from '@/features/entry/QuickAddContext';
-import { inr, rupeesToPaise } from '@/lib/money';
 import { logPrefill, recurringStatus } from './status';
 
 export function RecurringPage() {

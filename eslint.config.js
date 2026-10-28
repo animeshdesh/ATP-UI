@@ -39,6 +39,10 @@ export default tseslint.config(
       'packages/core/src/*.tsx',
       'packages/ui/src/Toast.tsx',
       'apps/money/src/features/dashboard/PeriodSwitch.tsx',
+      // Sheets and the calendar kit export their labels and hooks next to the components.
+      'apps/patients/src/features/calendar/*.tsx',
+      'apps/patients/src/features/inquiries/ConvertSheet.tsx',
+      'apps/patients/src/features/patients/NewPatientSheet.tsx',
     ],
     rules: { 'react-refresh/only-export-components': 'off' },
   },

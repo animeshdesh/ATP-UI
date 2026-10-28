@@ -35,6 +35,9 @@ export type PermissionKey =
   | 'audit.view'
   | 'appointments.manage'
   | 'patients.view'
+  | 'patients.manage'
+  | 'patients.clinical'
+  | 'settings.branches.manage'
   | 'inventory.manage';
 
 export interface Person {
@@ -51,6 +54,8 @@ export interface Session {
   role: RoleKey;
   roleLabel: string;
   clinicId: string;
+  /** My membership in the active clinic (therapist id on appointments, `own` scope). */
+  memberId: string;
   clinicName: string;
   permissions: Record<PermissionKey, Scope>;
 }

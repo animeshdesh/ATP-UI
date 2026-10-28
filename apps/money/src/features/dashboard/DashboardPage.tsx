@@ -1,13 +1,12 @@
 import { Check, Lock, TriangleAlert } from 'lucide-react';
 import { useNavigate } from 'react-router';
 import { useDashboard, useRecurring, useSettlement, useTransactionPage } from '@/api/queries';
-import { useSession } from '@atp/core';
+import { useSession, inr } from '@atp/core';
 import { Button, Loading, SectionHeader, Stat, StatGrid, Tag, cn } from '@atp/ui';
 import type { AttentionItem, DashboardData, PartyRef, RecurringItem } from '@atp/core';
 import { useEditEntry, useQuickAdd } from '@/features/entry/QuickAddContext';
 import { logPrefill, recurringStatus } from '@/features/recurring/status';
 import { EntryRow } from '@/features/transactions/EntryRow';
-import { inr } from '@/lib/money';
 import { PeriodSwitch, usePeriod } from './PeriodSwitch';
 import { change, periodRanges } from './periods';
 

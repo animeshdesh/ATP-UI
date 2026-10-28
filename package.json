@@ -14,10 +14,11 @@
     "lint": "eslint .",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "test": "pnpm -r test",
+    "test": "pnpm -r test && pnpm test:functions",
     "api:types": "openapi-typescript ../atp-backend/contracts/openapi.json -o packages/core/src/api/schema.d.ts",
     "check": "pnpm lint && pnpm typecheck && pnpm test",
-    "seed:demo": "pnpm --filter money seed:demo"
+    "seed:demo": "pnpm --filter money seed:demo",
+    "test:functions": "vitest run --dir functions"
   },
   "packageManager": "pnpm@12.10.1",
   "dependencies": {

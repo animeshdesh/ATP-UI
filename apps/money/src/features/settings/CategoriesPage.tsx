@@ -3,7 +3,7 @@ import { Archive, ArrowDown, ArrowUp, Pencil, Repeat } from 'lucide-react';
 import { useCategories, useCategoryMutations, useRecurring } from '@/api/queries';
 import { Button, Dialog, Field, IconButton, Input, Loading, Segmented, useToast } from '@atp/ui';
 import type { Category, EntryType } from '@atp/core';
-import { inr } from '@/lib/money';
+import { inr } from '@atp/core';
 
 const TABS = [
   { value: 'expense', label: 'Expense' },

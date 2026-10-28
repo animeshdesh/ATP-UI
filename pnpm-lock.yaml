@@ -279,6 +279,15 @@ importers:
         specifier: workspace:*
         version: link:../../packages/ui
 
+  apps/patients:
+    dependencies:
+      '@atp/core':
+        specifier: workspace:*
+        version: link:../../packages/core
+      '@atp/ui':
+        specifier: workspace:*
+        version: link:../../packages/ui
+
   packages/core:
     dependencies:
       '@atp/ui':

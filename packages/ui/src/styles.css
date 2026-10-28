@@ -137,3 +137,12 @@
   font-weight: 600;
   color: var(--color-neutral-700);
 }
+
+/* Time off on the calendar: hatched, can't be booked */
+@utility hatch {
+  background: repeating-linear-gradient(
+    135deg,
+    var(--color-neutral-200) 0 6px,
+    var(--color-neutral-100) 6px 12px
+  );
+}

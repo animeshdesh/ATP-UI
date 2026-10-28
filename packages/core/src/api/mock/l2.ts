@@ -44,6 +44,9 @@ export const CATALOG: PermissionDef[] = [
   P('audit.view', 'View audit log', false),
   P('appointments.manage', 'Appointments', true, 'v2'),
   P('patients.view', 'Patient records', true, 'v2'),
+  P('patients.manage', 'Manage patients & requests', true, 'v2'),
+  P('patients.clinical', 'Clinical notes', true, 'v2'),
+  P('settings.branches.manage', 'Manage branches', false, 'v2'),
   P('inventory.manage', 'Inventory', false, 'v3'),
 ];
 
@@ -70,6 +73,8 @@ const seedRoles = (): Role[] => [
       'finance.entry.edit_own': 'own',
       'appointments.manage': 'own',
       'patients.view': 'own',
+      'patients.manage': 'own',
+      'patients.clinical': 'own',
     },
   },
   {
@@ -84,6 +89,7 @@ const seedRoles = (): Role[] => [
       'finance.entry.edit_own': 'own',
       'appointments.manage': 'all',
       'patients.view': 'all',
+      'patients.manage': 'all',
     },
   },
   {
@@ -320,6 +326,7 @@ function buildSession(): Session {
     roleLabel: ROLE_LABEL[role],
     clinicId: CLINIC.id,
     clinicName: CLINIC.name,
+    memberId: memberIdOf(USER_FOR_ROLE[role]) ?? '',
     permissions: Object.fromEntries(
       CATALOG.map((p) => [p.key, mockScope(p.key as PermissionKey)]),
     ) as Session['permissions'],

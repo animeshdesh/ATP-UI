@@ -30,10 +30,11 @@ import {
   secondsSince,
   shortWeekday,
   todayIso,
+  inr,
+  rupeesToPaise,
 } from '@atp/core';
 import { Button, Field, Input, Segmented, Select, Sheet, useToast, cn } from '@atp/ui';
 import { tooLarge } from '@/lib/image';
-import { inr, rupeesToPaise } from '@/lib/money';
 import { useOnline } from '@/offline/hooks';
 import type { QuickAddPrefill } from './QuickAddContext';
 
