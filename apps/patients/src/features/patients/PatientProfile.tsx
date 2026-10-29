@@ -713,9 +713,8 @@ function Payments({ data }: { data: Profile }) {
         <RecordPaymentSheet
           patientId={p.id}
           patientName={p.fullName}
-          defaultPaise={
-            sheet === 'dues' || pending > 0 ? pending : last ? defaultFeePaise(last) : 80_000
-          }
+          defaultPaise={sheet === 'dues' ? pending : last ? defaultFeePaise(last) : 80_000}
+          dues={sheet === 'dues'}
           defaultKind={last?.visitType === 'home' ? 'home_visit' : 'session'}
           onClose={() => setSheet(null)}
         />

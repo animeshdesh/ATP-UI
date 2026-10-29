@@ -112,6 +112,7 @@ Release A (frontend only):
 Release B (needs backend L15 dues + plan, L16 push):
 
 - [x] Visit fee at completion (paid now / pay later), pending and advance on profile and list, Pending filter — 2026-10-29
+- [x] Per Animesh: Pay now always takes the full fee (no separate amount, no part payments); Collect is fixed to the pending amount. Request panel: Mark contacted / Close are bordered buttons like Call / WhatsApp — 2026-10-29
 - [x] Session plan (planned sessions, done / left), session numbers on visits, package history — 2026-10-29
 - [x] New-request phone notifications for `patients.manage = all` (web push, service worker `push-sw.js`), app badge, sign-out drops the device — 2026-10-29
 

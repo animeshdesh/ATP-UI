@@ -30,12 +30,26 @@ describe('dues and session plan', () => {
     const banner = await screen.findByRole('status');
     expect(banner).toHaveTextContent('₹800 pending for completed visits');
     await user.click(within(banner).getByRole('button', { name: 'Collect ₹800' }));
-    const pay = await screen.findByRole('dialog', { name: /Record payment/ });
-    expect(within(pay).getByLabelText('Amount')).toHaveValue('800');
-    await user.click(within(pay).getByRole('button', { name: 'Record ₹800' }));
+    // Exactly what is pending: no amount to edit (no part payments).
+    const pay = await screen.findByRole('dialog', { name: /Collect pending/ });
+    expect(within(pay).queryByLabelText('Amount')).not.toBeInTheDocument();
+    await user.click(within(pay).getByRole('button', { name: 'Collect ₹800' }));
     await user.click(screen.getByRole('tab', { name: 'Overview' }));
     expect(await screen.findByText('Pending')).toBeInTheDocument();
     expect(screen.queryByText('₹800 pending for completed visits')).not.toBeInTheDocument();
+  });
+
+  it('pay now records the full fee, with only the payment mode to pick', async () => {
+    await signInAs('frontdesk');
+    const { user } = renderApp('/patients/pt-amit?tab=visits');
+    await user.click((await screen.findAllByRole('button', { name: /Wed .* 18:00–18:45/ }))[0]!);
+    const sheet = await screen.findByRole('dialog', { name: 'Appointment' });
+    await user.click(within(sheet).getByRole('button', { name: 'Completed' }));
+    expect(within(sheet).getByRole('radio', { name: 'Pay now' })).toBeChecked();
+    expect(within(sheet).queryByLabelText(/Amount/)).not.toBeInTheDocument();
+    await user.click(within(sheet).getByRole('radio', { name: 'Cash' }));
+    await user.click(within(sheet).getByRole('button', { name: 'Mark completed' }));
+    expect(await screen.findByText('Completed · Amit Joshi · ₹800 Cash')).toBeInTheDocument();
   });
 
   it('filters the list to patients who owe', async () => {

@@ -141,18 +141,23 @@ export function SellPackageSheet({
   );
 }
 
-/** Manual payment (A-05): an income row in ATP Money with this patient. */
+/**
+ * Manual payment (A-05): an income row in ATP Money with this patient. `dues` collects exactly
+ * what is pending (D-052: no part payments), so the amount can't be edited.
+ */
 export function RecordPaymentSheet({
   patientId,
   patientName,
   defaultPaise,
   defaultKind = 'session',
+  dues,
   onClose,
 }: {
   patientId: string;
   patientName: string;
   defaultPaise: number;
   defaultKind?: PaymentKind;
+  dues?: boolean;
   onClose: () => void;
 }) {
   const toast = useToast();
@@ -167,7 +172,7 @@ export function RecordPaymentSheet({
   const save = async () => {
     try {
       await record.mutateAsync({ amountPaise: paise, mode, kind: what, branchId });
-      toast(`Payment recorded · ${inr(paise)} · ${patientName}`);
+      toast(`${dues ? 'Collected' : 'Payment recorded'} · ${inr(paise)} · ${patientName}`);
       onClose();
     } catch (e) {
       toast(e instanceof Error ? e.message : 'Could not save.', { danger: true });
@@ -178,7 +183,7 @@ export function RecordPaymentSheet({
     <Sheet
       open
       onClose={onClose}
-      title="Record payment"
+      title={dues ? 'Collect pending' : 'Record payment'}
       subtitle={patientName}
       footer={
         <Button
@@ -188,37 +193,46 @@ export function RecordPaymentSheet({
           disabled={paise < 1 || !branchId || record.isPending}
           onClick={save}
         >
-          Record {inr(paise)}
+          {dues ? 'Collect' : 'Record'} {inr(paise)}
         </Button>
       }
     >
-      <label className="flex items-center border-2 border-ink bg-white">
-        <span className="px-3 text-2xl font-extrabold">₹</span>
-        <input
-          aria-label="Amount"
-          inputMode="numeric"
-          value={amount}
-          onChange={(e) => setAmount(e.target.value.replace(/\D/g, ''))}
-          className="min-h-14 min-w-0 flex-1 border-0 text-[28px] font-extrabold tabular outline-none"
-        />
-      </label>
-      <div className="flex flex-col gap-1.5">
-        <Kicker>For</Kicker>
-        <div className="flex flex-wrap gap-1.5">
-          {(
-            [
-              ['session', 'Session'],
-              ['home_visit', 'Home visit'],
-              ['assessment', 'Assessment'],
-              ['other', 'Other'],
-            ] as const
-          ).map(([k, label]) => (
-            <Chip key={k} active={what === k} onClick={() => setWhat(k)}>
-              {label}
-            </Chip>
-          ))}
+      {dues ? (
+        <div className="flex flex-col gap-0.5 border-2 border-ink bg-white px-3 py-2.5">
+          <span className="kicker">Pending for completed visits</span>
+          <span className="text-[28px] font-extrabold tabular">{inr(paise)}</span>
         </div>
-      </div>
+      ) : (
+        <label className="flex items-center border-2 border-ink bg-white">
+          <span className="px-3 text-2xl font-extrabold">₹</span>
+          <input
+            aria-label="Amount"
+            inputMode="numeric"
+            value={amount}
+            onChange={(e) => setAmount(e.target.value.replace(/\D/g, ''))}
+            className="min-h-14 min-w-0 flex-1 border-0 text-[28px] font-extrabold tabular outline-none"
+          />
+        </label>
+      )}
+      {!dues && (
+        <div className="flex flex-col gap-1.5">
+          <Kicker>For</Kicker>
+          <div className="flex flex-wrap gap-1.5">
+            {(
+              [
+                ['session', 'Session'],
+                ['home_visit', 'Home visit'],
+                ['assessment', 'Assessment'],
+                ['other', 'Other'],
+              ] as const
+            ).map(([k, label]) => (
+              <Chip key={k} active={what === k} onClick={() => setWhat(k)}>
+                {label}
+              </Chip>
+            ))}
+          </div>
+        </div>
+      )}
       <ModeAndBranch mode={mode} setMode={setMode} branchId={branchId} setBranchId={setBranchId} />
       <div className="text-[13px] text-neutral-700">
         Recorded in ATP Money as Clinic session income, tagged with this branch.

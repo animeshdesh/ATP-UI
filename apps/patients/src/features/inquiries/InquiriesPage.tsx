@@ -309,6 +309,10 @@ function InquiryCard({ i, known }: { i: Inquiry; known: PatientSummary | null })
   );
 }
 
+/** Call, WhatsApp, Mark contacted and Close in the request panel share one look. */
+const secondary =
+  'flex min-h-11 items-center justify-center gap-1.5 border-2 border-ink bg-white font-bold text-ink no-underline hover:bg-accent-100 hover:text-ink';
+
 function MenuButton({
   icon: Icon,
   onClick,
@@ -504,10 +508,7 @@ function InquiryPanel({
             <ArrowRight aria-hidden size={17} />
           </button>
           <div className="grid grid-cols-2 gap-2">
-            <a
-              href={telLink(i.phone)}
-              className="flex min-h-11 items-center justify-center gap-1.5 border-2 border-ink font-bold text-ink no-underline hover:bg-accent-100 hover:text-ink"
-            >
+            <a href={telLink(i.phone)} className={secondary}>
               <Phone aria-hidden size={15} />
               Call
             </a>
@@ -518,7 +519,7 @@ function InquiryPanel({
               )}
               target="_blank"
               rel="noreferrer"
-              className="flex min-h-11 items-center justify-center gap-1.5 border-2 border-ink font-bold text-ink no-underline hover:bg-accent-100 hover:text-ink"
+              className={secondary}
             >
               <MessageCircle aria-hidden size={15} />
               WhatsApp
@@ -527,21 +528,23 @@ function InquiryPanel({
           {closing ? (
             <CloseReasons onPick={(r) => void actions.close(r).then(onClose)} />
           ) : (
-            <div className="flex gap-4">
+            <div className="grid grid-cols-2 gap-2">
               {i.status === 'new' && (
                 <button
                   type="button"
                   onClick={() => void actions.contacted()}
-                  className="border-0 bg-transparent p-0 text-sm font-semibold text-accent-700 underline"
+                  className={secondary}
                 >
+                  <PhoneOutgoing aria-hidden size={15} />
                   Mark contacted
                 </button>
               )}
               <button
                 type="button"
                 onClick={() => setClosing(true)}
-                className="border-0 bg-transparent p-0 text-sm font-semibold text-accent-700 underline"
+                className={cn(secondary, i.status !== 'new' && 'col-span-2')}
               >
+                <CircleX aria-hidden size={15} />
                 Close…
               </button>
             </div>

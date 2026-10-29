@@ -39,12 +39,12 @@ The source is the Claude Design project `b36a94e7-c670-4def-8152-d2aecc961820`. 
 - **App icon:** blue tile with a white mark (money keeps white with a blue mark), so the two installed apps differ on a phone. Tab icon `public/atp-mark-tab.svg`.
 - **Permissions on phones:** one role at a time (role chips, then a list with 44px scope buttons). The role × permission table shows from `lg` up.
 
-- **"Payment pending" tag:** the V2b token hold (D-045) is still out. Since F10, "pending" means a visit fee not yet paid (D-052): shown on visits ("₹800 pending", part-paid), the profile (Pending / Advance stat, Payments banner with "Collect") and the list (badge, "Pending ₹" filter), to Owner and Front desk only.
+- **"Payment pending" tag:** the V2b token hold (D-045) is still out. Since F10, "pending" means a visit fee not yet paid (D-052): shown on visits ("₹800 pending"), the profile (Pending / Advance stat, Payments banner with "Collect") and the list (badge, "Pending ₹" filter), to Owner and Front desk only.
 - **Mobile calendar branch chips:** dropped. The header branch picker does the same job.
 - **Desktop patients:** clicking a row opens the profile instead of a preview panel.
 - **Convert sheet:** no "Create a new one" option for a known phone. Phone is unique per clinic (PRD §6.3), so a known number always books that patient.
 - **Working hours:** the prototype's per-day "+" becomes an Edit mode per therapist (time, branch, clinic or home, remove).
 - **Sample week:** dated from the current week. In 2026, 28 Oct is a Wednesday; the prototype labelled it Tuesday.
-- **Session fee default:** ₹800 at the clinic, ₹1,200 for a home visit (`defaultFeePaise`), editable. Completing a visit without a package asks for the fee, then Paid now (amount + mode, part payments allowed) or Pay later (D-052).
+- **Session fee default:** ₹800 at the clinic, ₹1,200 for a home visit (`defaultFeePaise`), editable. Completing a visit without a package asks for the fee, then Pay now (the full fee; pick Cash / UPI / Card) or Pay later (D-052). No part payments: "Collect" on the profile takes exactly what is pending.
 - **Treatment plan (F10, D-053):** Overview card "6 of 12 sessions · 6 left" with Set / Edit plan; visits show "Session 6 of 12"; the list shows "6/12 sessions". Payments lists every package with Active / Used up.
 - **Notifications (F10, D-054):** My account → Notifications (Owner, Front desk) and a one-time card on Inquiries. On iPhone the setting shows the install steps first: Safari tabs cannot receive push. The app icon shows the new-request count where the Badging API exists.

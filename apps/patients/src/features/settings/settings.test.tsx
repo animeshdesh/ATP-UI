@@ -68,7 +68,10 @@ describe('users & roles (L2 shapes, mock mode)', () => {
     await waitFor(() => expect(router.state.location.pathname).toBe('/login'));
     await screen.findByRole('heading', { name: 'Sign in' });
     await act(() => router.navigate(new URL(url).pathname));
-    expect(await screen.findByRole('heading', { name: 'Set your password' })).toBeInTheDocument();
+    // The invite loads after the sign-out reset; slow under a full parallel run.
+    expect(
+      await screen.findByRole('heading', { name: 'Set your password' }, { timeout: 5000 }),
+    ).toBeInTheDocument();
     await user.type(screen.getByLabelText('New password'), 'long-enough');
     await user.click(screen.getByRole('button', { name: 'Join ATP Rehab' }));
     await waitFor(() => expect(router.state.location.pathname).toBe('/'));

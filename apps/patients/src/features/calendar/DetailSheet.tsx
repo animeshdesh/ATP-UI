@@ -65,7 +65,7 @@ export function DetailSheet({
   const profile = usePatient(a.patientId);
   const pkg = profile.data?.patient.activePackage ?? null;
   const [usePkg, setUsePkg] = useState(true);
-  // Package visit: optional extra payment. Otherwise a fee (D-052), paid now or later.
+  // Package visit: optional extra payment. Otherwise a fee (D-052): paid now in full, or later.
   const [pay, setPay] = useState(false);
   const [fee, setFee] = useState(String(defaultFeePaise(a) / 100));
   const [when, setWhen] = useState<'now' | 'later'>('now');
@@ -77,8 +77,15 @@ export function DetailSheet({
   const tName = therapists.name(a.therapistId);
   const canPay = can('patients.manage') && can('finance.entry.create');
   const feePaise = usingPkg ? null : rupeesToPaise(fee);
-  const paying = canPay && (usingPkg ? pay : when === 'now');
-  const received = paying ? rupeesToPaise(amount ?? fee) : 0;
+  const received = !canPay
+    ? 0
+    : usingPkg
+      ? pay
+        ? rupeesToPaise(amount ?? fee)
+        : 0
+      : when === 'now'
+        ? (feePaise ?? 0)
+        : 0;
   const pendingAfter = feePaise == null ? 0 : Math.max(feePaise - received, 0);
 
   const commit = async () => {
@@ -323,12 +330,10 @@ export function DetailSheet({
                   sub="Goes to ATP Money as income"
                 />
                 {pay && (
-                  <PaymentFields
-                    amount={amount ?? fee}
-                    setAmount={setAmount}
-                    payMode={payMode}
-                    setPayMode={setPayMode}
-                  />
+                  <>
+                    <RupeeInput label="Amount" value={amount ?? fee} onChange={setAmount} />
+                    <PayModes value={payMode} onChange={setPayMode} />
+                  </>
                 )}
               </>
             )
@@ -343,19 +348,12 @@ export function DetailSheet({
                   value={when}
                   onChange={setWhen}
                   options={[
-                    { value: 'now', label: 'Paid now' },
+                    { value: 'now', label: 'Pay now' },
                     { value: 'later', label: 'Pay later' },
                   ]}
                 />
               )}
-              {canPay && when === 'now' && (
-                <PaymentFields
-                  amount={amount ?? fee}
-                  setAmount={setAmount}
-                  payMode={payMode}
-                  setPayMode={setPayMode}
-                />
-              )}
+              {canPay && when === 'now' && <PayModes value={payMode} onChange={setPayMode} />}
               {pendingAfter > 0 && (
                 <div role="status" className="text-[13px] font-semibold text-warn-fg">
                   {inr(pendingAfter)} pending after this visit
@@ -392,28 +390,15 @@ function RupeeInput({
   );
 }
 
-function PaymentFields({
-  amount,
-  setAmount,
-  payMode,
-  setPayMode,
-}: {
-  amount: string;
-  setAmount: (v: string) => void;
-  payMode: PaymentMode;
-  setPayMode: (m: PaymentMode) => void;
-}) {
+function PayModes({ value, onChange }: { value: PaymentMode; onChange: (m: PaymentMode) => void }) {
   return (
-    <>
-      <RupeeInput label="Amount received" value={amount} onChange={setAmount} />
-      <Segmented
-        block
-        label="Payment mode"
-        value={payMode}
-        onChange={setPayMode}
-        options={PAYMENT_MODES_V2.map((m) => ({ value: m, label: PAYMENT_MODE_LABEL[m] }))}
-      />
-    </>
+    <Segmented
+      block
+      label="Payment mode"
+      value={value}
+      onChange={onChange}
+      options={PAYMENT_MODES_V2.map((m) => ({ value: m, label: PAYMENT_MODE_LABEL[m] }))}
+    />
   );
 }
 
