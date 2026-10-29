@@ -21,7 +21,7 @@ Screens are built ahead of the contract on the in-memory mock (D-012); an F3 lev
 | F7    | Public `/book` + inquiry queue                                                     | Claude Design, L11    | done (real API)                      |
 | F8    | Calendar, appointment sheet, availability                                          | Claude Design, L10    | done (real API)                      |
 | F9    | Patients: list, profile, notes, visits, packages, payments; money patient picker   | Claude Design, L9/L12 | done (real API); money picker todo   |
-| F10   | Staff phone features: account, member edit, install tip, dues + plan, push         | backend L15, L16      | in-progress                          |
+| F10   | Staff phone features: account, member edit, install tip, dues + plan, push         | backend L15, L16      | done (B needs backend release)       |
 
 ## F0 — Design import · `done`
 
@@ -103,7 +103,7 @@ Screens are built ahead of the contract on the in-memory mock (D-012); an F3 lev
 - [ ] Auto-email to the CA on the 1st (F-24): deferred by Animesh; UI option removed
 - [ ] Use the server filename once `Content-Disposition` is CORS-exposed (fallback pattern in use)
 
-## F10 — Staff phone features · `in-progress`
+## F10 — Staff phone features · `done`
 
 Release A (frontend only):
 
@@ -111,9 +111,9 @@ Release A (frontend only):
 
 Release B (needs backend L15 dues + plan, L16 push):
 
-- [ ] Visit fee at completion (paid now / pay later), pending and advance on profile and list, Pending filter
-- [ ] Session plan (planned sessions, done / left), session numbers on visits, package history
-- [ ] New-request phone notifications for `patients.manage = all` (web push, service worker `push-sw.js`), app badge
+- [x] Visit fee at completion (paid now / pay later), pending and advance on profile and list, Pending filter — 2026-10-29
+- [x] Session plan (planned sessions, done / left), session numbers on visits, package history — 2026-10-29
+- [x] New-request phone notifications for `patients.manage = all` (web push, service worker `push-sw.js`), app badge, sign-out drops the device — 2026-10-29
 
 ### How to swap a level from mock to API
 
@@ -143,3 +143,4 @@ Release B (needs backend L15 dues + plan, L16 push):
 | 2026-10-29 | Users & roles (members, invites, permission matrix) moved from money to `apps/patients` (D-051): API functions and hooks moved, nav/More entries, NoPermission copy; money shows "Manage users in ATP Patients" and redirects `/settings/users`, `/settings/roles`. Mocks follow D-050 (therapists see only entries they recorded). 73 tests; both builds green; live-checked on the local API (therapist 0 hits / 404 on an owner entry naming them; invite link on :5554). | Released 2026-10-29 (`main → production`, Pages `atp-ui` + `atp-patients`). Railway `APP_URL=https://patient.atprehab.si` set.                                         |
 | 2026-10-29 | Phone pass: patients app icon inverted (blue tile, white mark) and money renamed ATP Money on the home screen; mobile audit with Playwright at 360/390 px across both apps and all roles: before 94 small targets and 15 iOS-zoom fields, after 0 except one inline sentence link (Categories, exempt). Permission matrix becomes a role-by-role list below `lg`. 76 tests; both builds green.                                                                               | Released 2026-10-29 (`c10295b`; icon sha and both manifests verified live). Staff reinstall icons on iOS (DEPLOY.md).                                                  |
 | 2026-10-29 | F10 release A: `/account` in both apps (name via `PATCH /v1/me`, password via Supabase `updateUser` after re-checking the current one), reached from the header avatar, so money therapists and front desk can sign out on phones; member edit (rename, roles, `last_admin`) in Users & roles; iPhone Safari install tip in both shells and on sign-in. 81 tests; new screens checked at 360/390 px (no overflow, no small targets, no iOS-zoom fields).                     | Release A; then backend L15/L16 and F10 release B.                                                                                                                     |
+| 2026-10-29 | F10 release B on backend L15/L16: fee + paid now / pay later on completion, pending / advance and "Collect" on the profile, Pending filter and badges on the list, treatment plan card and session numbers, package history; notifications (setting on My account, nudge on Inquiries, `push-sw.js`, app badge, sign-out drops the device). 89 tests; new screens clean at 360/390 px.                                                                                       | Release B: backend migrations + VAPID keys, then both repos to production.                                                                                             |

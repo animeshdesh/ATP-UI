@@ -3565,11 +3565,12 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** Patients, newest activity first; search by name or phone (patients.view) */
+        /** Patients, newest activity first; search by name or phone; ?pending=true for dues (patients.view) */
         get: {
             parameters: {
                 query?: {
                     q?: string;
+                    pending?: "true" | "false";
                     limit?: number;
                 };
                 header?: {
@@ -4244,6 +4245,144 @@ export interface paths {
             };
         };
         delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/public/push/key": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Public key for subscribing a browser to notifications (not a secret; no auth) */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["PushKey"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/push/subscription": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Register this browser for new-request notifications (takes over its endpoint) */
+        put: {
+            parameters: {
+                query?: never;
+                header?: {
+                    /** @description Active clinic. Optional when the user belongs to exactly one clinic. */
+                    "x-clinic-id"?: string;
+                };
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["PushSubscription"];
+                };
+            };
+            responses: {
+                /** @description Saved */
+                204: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Bad request */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Unauthenticated */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+            };
+        };
+        post?: never;
+        /** Stop notifications on this browser */
+        delete: {
+            parameters: {
+                query?: never;
+                header?: {
+                    /** @description Active clinic. Optional when the user belongs to exactly one clinic. */
+                    "x-clinic-id"?: string;
+                };
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["PushEndpoint"];
+                };
+            };
+            responses: {
+                /** @description Removed */
+                204: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Bad request */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Unauthenticated */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+            };
+        };
         options?: never;
         head?: never;
         patch?: never;
@@ -6140,6 +6279,7 @@ export interface components {
             inquiryId: string | null;
             /** Format: uuid */
             packageId: string | null;
+            feePaise: number | null;
         };
         /** @enum {string} */
         VisitType: "clinic" | "home";
@@ -6152,6 +6292,7 @@ export interface components {
             status: "completed";
             /** Format: uuid */
             packageId?: string | null;
+            feePaise?: number | null;
             payment?: {
                 amountPaise: number;
                 mode: components["schemas"]["PaymentMode"];
@@ -6626,6 +6767,7 @@ export interface components {
             chiefComplaint: string | null;
             /** Format: uuid */
             branchId: string | null;
+            plannedSessions: number | null;
             createdAt: string;
         };
         /** @enum {string} */
@@ -6651,18 +6793,27 @@ export interface components {
             chiefComplaint: string | null;
             /** Format: uuid */
             branchId: string | null;
+            plannedSessions: number | null;
             createdAt: string;
             /** Format: uuid */
             therapistId: string | null;
             visits: number;
+            sessionsDone: number;
             noShows: number;
             lastVisit: string | null;
             nextAppointment: components["schemas"]["Appointment"] | null;
             activePackage: components["schemas"]["PatientPackage"] | null;
+            pendingPaise: number | null;
+            advancePaise: number | null;
+        };
+        PatientVisit: components["schemas"]["Appointment"] & {
+            sessionNo: number | null;
+            /** @enum {string|null} */
+            paymentStatus: "paid" | "part" | "pending" | null;
         };
         PatientProfile: {
             patient: components["schemas"]["PatientSummary"];
-            appointments: components["schemas"]["Appointment"][];
+            appointments: components["schemas"]["PatientVisit"][];
             payments: components["schemas"]["PatientPayment"][];
             packages: components["schemas"]["PatientPackage"][];
         };
@@ -6683,6 +6834,7 @@ export interface components {
             chiefComplaint?: string | null;
             /** Format: uuid */
             branchId?: string | null;
+            plannedSessions?: number | null;
         };
         UpdatePatient: {
             fullName?: string;
@@ -6701,6 +6853,7 @@ export interface components {
             chiefComplaint?: string | null;
             /** Format: uuid */
             branchId?: string | null;
+            plannedSessions?: number | null;
             archived?: boolean;
         };
         PatientNote: {
@@ -6753,6 +6906,19 @@ export interface components {
              * @example 2026-10-14
              */
             entryDate?: string;
+        };
+        PushKey: {
+            publicKey: string | null;
+        };
+        PushSubscription: {
+            endpoint: string;
+            keys: {
+                p256dh: string;
+                auth: string;
+            };
+        };
+        PushEndpoint: {
+            endpoint: string;
         };
         PartyRef: {
             /** @enum {string} */

@@ -65,37 +65,47 @@ export function DetailSheet({
   const profile = usePatient(a.patientId);
   const pkg = profile.data?.patient.activePackage ?? null;
   const [usePkg, setUsePkg] = useState(true);
-  const [pay, setPay] = useState<boolean | null>(null);
-  const [amount, setAmount] = useState(String(defaultFeePaise(a) / 100));
+  // Package visit: optional extra payment. Otherwise a fee (D-052), paid now or later.
+  const [pay, setPay] = useState(false);
+  const [fee, setFee] = useState(String(defaultFeePaise(a) / 100));
+  const [when, setWhen] = useState<'now' | 'later'>('now');
+  const [amount, setAmount] = useState<string | null>(null);
   const [payMode, setPayMode] = useState<PaymentMode>('upi');
-  const paying = pay ?? !pkg;
+  const usingPkg = !!pkg && usePkg;
 
   const branch = branches.byId(a.branchId);
   const tName = therapists.name(a.therapistId);
   const canPay = can('patients.manage') && can('finance.entry.create');
+  const feePaise = usingPkg ? null : rupeesToPaise(fee);
+  const paying = canPay && (usingPkg ? pay : when === 'now');
+  const received = paying ? rupeesToPaise(amount ?? fee) : 0;
+  const pendingAfter = feePaise == null ? 0 : Math.max(feePaise - received, 0);
 
   const commit = async () => {
     try {
       if (mode === 'complete') {
-        const paise = rupeesToPaise(amount);
+        if (!usingPkg && !fee.trim()) return toast('Enter the visit fee', { danger: true });
         const next = await setStatus.mutateAsync({
           id: a.id,
           change: {
             status: 'completed',
-            packageId: pkg && usePkg ? pkg.id : null,
+            packageId: usingPkg ? pkg.id : null,
+            feePaise,
             payment:
-              canPay && paying && paise > 0
+              received > 0
                 ? {
-                    amountPaise: paise,
+                    amountPaise: received,
                     mode: payMode,
                     kind: a.visitType === 'home' ? 'home_visit' : 'session',
                   }
                 : null,
           },
         });
-        toast(
-          `Completed · ${a.patientName}${canPay && paying && paise ? ` · ${inr(paise)} ${PAYMENT_MODE_LABEL[payMode]}` : ''}`,
-        );
+        const parts = [
+          received ? `${inr(received)} ${PAYMENT_MODE_LABEL[payMode]}` : '',
+          pendingAfter ? `${inr(pendingAfter)} pending` : '',
+        ].filter(Boolean);
+        toast(`Completed · ${a.patientName}${parts.map((x) => ` · ${x}`).join('')}`);
         setA(next);
       } else if (mode === 'no_show' || mode === 'cancelled') {
         if (!reason) return toast('Pick a reason', { danger: true });
@@ -303,43 +313,107 @@ export function DetailSheet({
           ) : (
             <div className="text-[13px] text-neutral-700">No active package for this patient.</div>
           )}
-          {canPay && (
-            <>
-              <Toggle
-                on={paying}
-                onClick={() => setPay(!paying)}
-                label="Record payment"
-                sub="Goes to ATP Money as income"
-              />
-              {paying && (
-                <div className="flex flex-col gap-2.5 border-2 border-ink bg-white p-3">
-                  <label className="flex items-center border-2 border-ink">
-                    <span className="px-3 text-lg font-extrabold">₹</span>
-                    <input
-                      aria-label="Amount"
-                      inputMode="numeric"
-                      value={amount}
-                      onChange={(e) => setAmount(e.target.value.replace(/[^\d]/g, ''))}
-                      className="min-h-12 min-w-0 flex-1 border-0 text-xl font-extrabold tabular outline-none"
-                    />
-                  </label>
-                  <Segmented
-                    block
-                    label="Payment mode"
-                    value={payMode}
-                    onChange={setPayMode}
-                    options={PAYMENT_MODES_V2.map((m) => ({
-                      value: m,
-                      label: PAYMENT_MODE_LABEL[m],
-                    }))}
+          {usingPkg ? (
+            canPay && (
+              <>
+                <Toggle
+                  on={pay}
+                  onClick={() => setPay(!pay)}
+                  label="Record a payment too"
+                  sub="Goes to ATP Money as income"
+                />
+                {pay && (
+                  <PaymentFields
+                    amount={amount ?? fee}
+                    setAmount={setAmount}
+                    payMode={payMode}
+                    setPayMode={setPayMode}
                   />
+                )}
+              </>
+            )
+          ) : (
+            <div className="flex flex-col gap-2.5 border-2 border-ink bg-white p-3">
+              <Kicker>Visit fee</Kicker>
+              <RupeeInput label="Visit fee" value={fee} onChange={setFee} />
+              {canPay && (
+                <Segmented
+                  block
+                  label="Payment"
+                  value={when}
+                  onChange={setWhen}
+                  options={[
+                    { value: 'now', label: 'Paid now' },
+                    { value: 'later', label: 'Pay later' },
+                  ]}
+                />
+              )}
+              {canPay && when === 'now' && (
+                <PaymentFields
+                  amount={amount ?? fee}
+                  setAmount={setAmount}
+                  payMode={payMode}
+                  setPayMode={setPayMode}
+                />
+              )}
+              {pendingAfter > 0 && (
+                <div role="status" className="text-[13px] font-semibold text-warn-fg">
+                  {inr(pendingAfter)} pending after this visit
                 </div>
               )}
-            </>
+            </div>
           )}
         </div>
       )}
     </Sheet>
+  );
+}
+
+function RupeeInput({
+  label,
+  value,
+  onChange,
+}: {
+  label: string;
+  value: string;
+  onChange: (v: string) => void;
+}) {
+  return (
+    <label className="flex items-center border-2 border-ink bg-white">
+      <span className="px-3 text-lg font-extrabold">₹</span>
+      <input
+        aria-label={label}
+        inputMode="numeric"
+        value={value}
+        onChange={(e) => onChange(e.target.value.replace(/[^\d]/g, ''))}
+        className="min-h-12 min-w-0 flex-1 border-0 text-xl font-extrabold tabular outline-none"
+      />
+    </label>
+  );
+}
+
+function PaymentFields({
+  amount,
+  setAmount,
+  payMode,
+  setPayMode,
+}: {
+  amount: string;
+  setAmount: (v: string) => void;
+  payMode: PaymentMode;
+  setPayMode: (m: PaymentMode) => void;
+}) {
+  return (
+    <>
+      <RupeeInput label="Amount received" value={amount} onChange={setAmount} />
+      <Segmented
+        block
+        label="Payment mode"
+        value={payMode}
+        onChange={setPayMode}
+        options={PAYMENT_MODES_V2.map((m) => ({ value: m, label: PAYMENT_MODE_LABEL[m] }))}
+      />
+    </>
   );
 }
 

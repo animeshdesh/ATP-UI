@@ -1,5 +1,6 @@
 /* Patients app on the real API (backend L9–L12, docs/V2.md). Same signatures as mock/patients.ts. */
 import { http, unwrap } from '@atp/core';
+import type { PushSubscriptionBody } from '@/domain/types';
 import type {
   CreateInvite,
   CreatedInvite,
@@ -103,8 +104,12 @@ export const realPatients = {
     unwrap(http.POST('/v1/inquiries/{id}/convert', { ...path(id), body: v })),
 
   // --- patients ---------------------------------------------------------------------------------
-  listPatients: (q = ''): Promise<PatientSummary[]> =>
-    unwrap(http.GET('/v1/patients', { params: { query: q ? { q } : {} } })),
+  listPatients: (q = '', opts: { pending?: boolean } = {}): Promise<PatientSummary[]> =>
+    unwrap(
+      http.GET('/v1/patients', {
+        params: { query: { ...(q && { q }), ...(opts.pending && { pending: 'true' as const }) } },
+      }),
+    ),
   createPatient: (v: NewPatient): Promise<Patient> =>
     unwrap(http.POST('/v1/patients', { body: v })),
   updatePatient: (id: string, v: UpdatePatient): Promise<Patient> =>
@@ -121,6 +126,16 @@ export const realPatients = {
     unwrap(http.POST('/v1/patients/{id}/packages', { ...path(patientId), body: v })),
   recordPayment: (patientId: string, v: NewPayment): Promise<Payment> =>
     unwrap(http.POST('/v1/patients/{id}/payments', { ...path(patientId), body: v })),
+
+  // --- new-request notifications (L16, D-054) ----------------------------------------------------
+  getPushKey: async (): Promise<string | null> =>
+    (await unwrap(http.GET('/v1/public/push/key'))).publicKey,
+  savePushSubscription: async (v: PushSubscriptionBody): Promise<void> => {
+    await unwrap(http.PUT('/v1/push/subscription', { body: v }));
+  },
+  deletePushSubscription: async (endpoint: string): Promise<void> => {
+    await unwrap(http.DELETE('/v1/push/subscription', { body: { endpoint } }));
+  },
 
   // --- users & roles (L2; managed here since D-051) ---------------------------------------------
   listPermissions: (): Promise<PermissionDef[]> => unwrap(http.GET('/v1/permissions')),

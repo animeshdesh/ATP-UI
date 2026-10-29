@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router';
 import { useAuthedSession, useSession } from '@atp/core';
 import { Avatar, Button, Note } from '@atp/ui';
 import { usePageHeader } from '@/app/header';
+import { dropPushSubscription } from '@/app/push';
 import { MONEY_URL, NAV, allowed, usersNavKey } from '@/app/nav';
 
 /** Phone-only overflow: availability, branches, users & roles, account, ATP Money, sign out. */
@@ -51,6 +52,7 @@ export function MorePage() {
         <Button
           variant="outline"
           onClick={async () => {
+            await dropPushSubscription();
             await signOut();
             navigate('/login');
           }}

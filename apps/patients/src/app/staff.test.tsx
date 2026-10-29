@@ -84,7 +84,7 @@ describe('patients app (staff)', () => {
     expect(
       within(sheet).getByRole('checkbox', { name: /Use 1 session of 10 sessions/ }),
     ).toBeChecked();
-    await user.click(within(sheet).getByRole('checkbox', { name: /Record payment/ }));
+    await user.click(within(sheet).getByRole('checkbox', { name: /Record a payment too/ }));
     await user.click(within(sheet).getByRole('button', { name: 'Mark completed' }));
     expect(await within(sheet).findByText('Marked completed.')).toBeInTheDocument();
     await user.click(within(sheet).getAllByRole('button', { name: 'Close' }).at(-1)!);

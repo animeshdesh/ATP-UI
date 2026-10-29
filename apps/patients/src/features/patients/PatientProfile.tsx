@@ -12,12 +12,12 @@ import {
 } from 'lucide-react';
 import { Link, useParams, useSearchParams } from 'react-router';
 import { PAYMENT_MODE_LABEL, inr, todayIso, useAuthedSession, useSession } from '@atp/core';
-import { Avatar, Button, Loading, cn, useToast } from '@atp/ui';
-import { useCreateNote, useNotes, usePatient } from '@/api/queries';
+import { Avatar, Button, Dialog, Field, Input, Loading, cn, useToast } from '@atp/ui';
+import { useCreateNote, useNotes, usePatient, useUpdatePatient } from '@/api/queries';
 import { useBranch } from '@/app/branch';
 import { usePageHeader } from '@/app/header';
 import { MONEY_URL } from '@/app/nav';
-import type { Appointment, NoteKind, PatientProfile as Profile } from '@/domain/types';
+import type { NoteKind, Package, PatientProfile as Profile, PatientVisit } from '@/domain/types';
 import { formatPhone, initialsOf, telLink, waLink } from '@/lib/contact';
 import { dateOf, dayLabel, dayMonth, relativeDay, timeRange } from '@/lib/time';
 import { useBooking } from '@/features/calendar/booking';
@@ -107,7 +107,7 @@ export function PatientProfile() {
     <div className="flex flex-col gap-4 lg:max-w-[880px]">
       <Link
         to="/patients"
-        className="flex items-center gap-1 self-start text-sm font-semibold no-underline"
+        className="-my-3 flex items-center gap-1 self-start py-3 text-sm font-semibold no-underline lg:my-0 lg:py-0"
       >
         <ChevronLeft aria-hidden size={16} />
         All patients
@@ -195,9 +195,7 @@ const Card = ({
   </section>
 );
 
-function PackageLine({ data }: { data: Profile }) {
-  const k = data.patient.activePackage;
-  if (!k) return null;
+function PackageLine({ k }: { k: Package }) {
   const left = k.sessionsTotal - k.sessionsUsed;
   return (
     <div className="flex flex-col gap-1.5">
@@ -218,25 +216,154 @@ function PackageLine({ data }: { data: Profile }) {
   );
 }
 
+/** How the visit was paid (D-052): package, or paid / part-paid / pending against its fee. */
+function VisitPayment({ a }: { a: PatientVisit }) {
+  if (a.status !== 'completed') return null;
+  if (a.packageId) return <> · Package</>;
+  if (a.feePaise == null || !a.paymentStatus) return null;
+  const fee = inr(a.feePaise);
+  if (a.paymentStatus === 'paid') return <> · {fee} paid</>;
+  return (
+    <b className="text-warn-fg">
+      {' '}
+      · {fee} {a.paymentStatus === 'part' ? 'part-paid' : 'pending'}
+    </b>
+  );
+}
+
+/** Planned course (D-053): sessions done across therapists against the plan. */
+function PlanCard({ data }: { data: Profile }) {
+  const { can } = useSession();
+  const p = data.patient;
+  const [editing, setEditing] = useState(false);
+  const done = p.sessionsDone;
+  const plan = p.plannedSessions;
+  return (
+    <Card title="Treatment plan">
+      {plan ? (
+        <div className="flex flex-col gap-1.5">
+          <div className="flex items-baseline justify-between gap-2">
+            <span className="text-lg font-extrabold">
+              {Math.min(done, plan)} of {plan} sessions
+            </span>
+            <span className="font-bold tabular">
+              {done >= plan ? 'Plan complete' : `${plan - done} left`}
+            </span>
+          </div>
+          <div className="h-2 border border-ink bg-white">
+            <div
+              className="h-full bg-accent"
+              style={{ width: `${Math.min(done / plan, 1) * 100}%` }}
+            />
+          </div>
+        </div>
+      ) : (
+        <div className="text-sm text-neutral-700">
+          {done} {done === 1 ? 'session' : 'sessions'} done · no plan set
+        </div>
+      )}
+      {can('patients.manage') && (
+        <Button size="sm" variant="outline" className="self-start" onClick={() => setEditing(true)}>
+          {plan ? 'Edit plan' : 'Set plan'}
+        </Button>
+      )}
+      {editing && <PlanDialog patientId={p.id} plan={plan} onClose={() => setEditing(false)} />}
+    </Card>
+  );
+}
+
+function PlanDialog({
+  patientId,
+  plan,
+  onClose,
+}: {
+  patientId: string;
+  plan: number | null;
+  onClose: () => void;
+}) {
+  const toast = useToast();
+  const update = useUpdatePatient();
+  const [value, setValue] = useState(plan ? String(plan) : '');
+  const [error, setError] = useState('');
+  const save = async (next: number | null) => {
+    if (next !== null && !(next >= 1 && next <= 200)) return setError('Enter 1 to 200 sessions.');
+    try {
+      await update.mutateAsync({ id: patientId, patch: { plannedSessions: next } });
+      toast(next ? `Plan set to ${next} sessions` : 'Plan removed');
+      onClose();
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Could not save.');
+    }
+  };
+  return (
+    <Dialog
+      open
+      onClose={onClose}
+      title="Treatment plan"
+      actions={
+        <>
+          {plan && (
+            <Button onClick={() => save(null)} disabled={update.isPending}>
+              Remove
+            </Button>
+          )}
+          <Button variant="primary" onClick={() => save(Number(value))} disabled={update.isPending}>
+            Save
+          </Button>
+        </>
+      }
+    >
+      <Field label="Planned sessions" hint="Total sessions the treatment needs.">
+        {(id) => (
+          <Input
+            id={id}
+            inputMode="numeric"
+            value={value}
+            onChange={(e) => {
+              setValue(e.target.value.replace(/\D/g, ''));
+              setError('');
+            }}
+          />
+        )}
+      </Field>
+      {error && (
+        <div role="alert" className="text-xs font-semibold text-danger-fg">
+          {error}
+        </div>
+      )}
+    </Dialog>
+  );
+}
+
 function Overview({ data, onBook }: { data: Profile; onBook: () => void }) {
   const { can } = useSession();
   const therapists = useTherapistMap();
   const booking = useBooking();
   const p = data.patient;
   const [selling, setSelling] = useState(false);
-  const stats: Array<[string, string]> = [
-    ['Visits', String(p.visits)],
-    ['Since', dayMonth(dateOf(p.createdAt))],
-    ['Paid', inr(data.payments.reduce((s, x) => s + x.amountPaise, 0))],
-    ['No-shows', String(p.noShows)],
+  // Pending / advance only for Owner and Front desk (null otherwise; D-052).
+  const balance: Array<[string, string, boolean]> =
+    p.pendingPaise == null
+      ? [['Since', dayMonth(dateOf(p.createdAt)), false]]
+      : p.advancePaise
+        ? [['Advance', inr(p.advancePaise), false]]
+        : [['Pending', inr(p.pendingPaise), p.pendingPaise > 0]];
+  const stats: Array<[string, string, boolean]> = [
+    ['Visits', String(p.visits), false],
+    ['Paid', inr(data.payments.reduce((s, x) => s + x.amountPaise, 0)), false],
+    ...balance,
+    ['No-shows', String(p.noShows), false],
   ];
   return (
     <div className="grid gap-4 lg:grid-cols-2">
       <div className="grid grid-cols-4 border-2 border-ink bg-white lg:col-span-2">
-        {stats.map(([l, v], i) => (
-          <div key={l} className={cn('px-3 py-2.5', i > 0 && 'border-l border-rule')}>
-            <div className="kicker">{l}</div>
-            <div className="text-lg font-extrabold tabular">{v}</div>
+        {stats.map(([l, v, warn], i) => (
+          <div
+            key={l}
+            className={cn('px-3 py-2.5', i > 0 && 'border-l border-rule', warn && 'bg-warn-bg')}
+          >
+            <div className={cn('kicker', warn && 'text-warn-fg')}>{l}</div>
+            <div className={cn('text-lg font-extrabold tabular', warn && 'text-warn-fg')}>{v}</div>
           </div>
         ))}
       </div>
@@ -282,9 +409,10 @@ function Overview({ data, onBook }: { data: Profile; onBook: () => void }) {
             Book again
           </Button>
         </Card>
+        <PlanCard data={data} />
         <Card title="Active package">
           {p.activePackage ? (
-            <PackageLine data={data} />
+            <PackageLine k={p.activePackage} />
           ) : (
             <div className="flex items-center justify-between gap-2">
               <span className="text-sm text-neutral-700">No active package</span>
@@ -319,7 +447,7 @@ function Notes({ data, appointmentId }: { data: Profile; appointmentId: string |
   const [kind, setKind] = useState<NoteKind>('session');
   const [body, setBody] = useState('');
   const today = todayIso();
-  const linked: Appointment | undefined =
+  const linked: PatientVisit | undefined =
     data.appointments.find((a) => a.id === appointmentId) ??
     data.appointments.find((a) => dateOf(a.startsAt) === today && a.status !== 'cancelled');
 
@@ -422,7 +550,8 @@ function Visits({ data }: { data: Profile }) {
     .filter((a) => a.status === 'confirmed' && a.endsAt >= now)
     .reverse();
   const past = data.appointments.filter((a) => !(a.status === 'confirmed' && a.endsAt >= now));
-  const row = (a: Appointment, clickable: boolean) => (
+  const plan = data.patient.plannedSessions;
+  const row = (a: PatientVisit, clickable: boolean) => (
     <button
       key={a.id}
       type="button"
@@ -435,8 +564,15 @@ function Visits({ data }: { data: Profile }) {
           {dayLabel(dateOf(a.startsAt))} · {timeRange(a.startsAt, a.endsAt)}
         </span>
         <span className="block text-xs text-neutral-700">
+          {a.sessionNo && (
+            <b className="text-ink">
+              Session {a.sessionNo}
+              {plan && ` of ${plan}`} ·{' '}
+            </b>
+          )}
           {therapists.short(a.therapistId)}
           {a.visitType === 'home' && ' · Home visit'}
+          <VisitPayment a={a} />
         </span>
       </span>
       <StatusTag status={a.status} />
@@ -481,12 +617,33 @@ function Visits({ data }: { data: Profile }) {
 function Payments({ data }: { data: Profile }) {
   const { can } = useSession();
   const branch = useBranch();
-  const [sheet, setSheet] = useState<'pay' | 'sell' | null>(null);
+  const [sheet, setSheet] = useState<'pay' | 'dues' | 'sell' | null>(null);
   const p = data.patient;
   const canMoney = can('patients.manage') && can('finance.entry.create');
   const last = data.appointments.find((a) => a.status !== 'cancelled');
+  const pending = p.pendingPaise ?? 0;
   return (
     <div className="flex flex-col gap-4">
+      {pending > 0 && (
+        <div
+          role="status"
+          className="flex flex-wrap items-center gap-3 border-2 border-warn-fg bg-warn-bg px-3.5 py-3 text-warn-fg"
+        >
+          <span className="flex-1 font-semibold">
+            <b className="text-lg tabular">{inr(pending)}</b> pending for completed visits
+          </span>
+          {canMoney && (
+            <Button size="sm" variant="outline" onClick={() => setSheet('dues')}>
+              Collect {inr(pending)}
+            </Button>
+          )}
+        </div>
+      )}
+      {!!p.advancePaise && (
+        <div className="text-sm font-semibold text-accent-800">
+          {inr(p.advancePaise)} paid ahead: the next visit fees come out of it.
+        </div>
+      )}
       {canMoney && (
         <div className="grid grid-cols-2 gap-2 lg:flex">
           <Button variant="primary" icon={IndianRupee} onClick={() => setSheet('pay')}>
@@ -497,10 +654,25 @@ function Payments({ data }: { data: Profile }) {
           </Button>
         </div>
       )}
-      {p.activePackage && (
-        <Card>
-          <PackageLine data={data} />
-        </Card>
+      {data.packages.length > 0 && (
+        <section aria-label="Packages" className="flex flex-col gap-2">
+          <h4 className="text-base">Packages</h4>
+          {data.packages.map((k) => (
+            <Card key={k.id}>
+              <span
+                className={cn(
+                  'self-start px-1.5 py-0.5 text-[11px] font-bold',
+                  k.sessionsUsed < k.sessionsTotal
+                    ? 'bg-accent-100 text-accent-800'
+                    : 'bg-neutral-200 text-neutral-800',
+                )}
+              >
+                {k.sessionsUsed < k.sessionsTotal ? 'Active' : 'Used up'}
+              </span>
+              <PackageLine k={k} />
+            </Card>
+          ))}
+        </section>
       )}
       <div className="flex items-baseline justify-between">
         <h4 className="text-base">Payments</h4>
@@ -508,7 +680,7 @@ function Payments({ data }: { data: Profile }) {
           href={`${MONEY_URL}/transactions`}
           target="_blank"
           rel="noreferrer"
-          className="text-sm font-semibold"
+          className="-my-3 py-3 text-sm font-semibold lg:my-0 lg:py-0"
         >
           Open in ATP Money →
         </a>
@@ -537,11 +709,13 @@ function Payments({ data }: { data: Profile }) {
       ) : (
         <div className="text-sm text-neutral-700">No payments yet.</div>
       )}
-      {sheet === 'pay' && (
+      {(sheet === 'pay' || sheet === 'dues') && (
         <RecordPaymentSheet
           patientId={p.id}
           patientName={p.fullName}
-          defaultPaise={last ? defaultFeePaise(last) : 80_000}
+          defaultPaise={
+            sheet === 'dues' || pending > 0 ? pending : last ? defaultFeePaise(last) : 80_000
+          }
           defaultKind={last?.visitType === 'home' ? 'home_visit' : 'session'}
           onClose={() => setSheet(null)}
         />

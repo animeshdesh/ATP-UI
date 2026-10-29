@@ -103,6 +103,7 @@ const P = (
   referralNote: rest.referralNote ?? null,
   chiefComplaint: rest.chiefComplaint ?? null,
   branchId: rest.branchId ?? 'br-kvn',
+  plannedSessions: rest.plannedSessions ?? null,
   createdAt: `${addDays(todayIso(), -rest.daysAgo)}T10:00:00+05:30`,
 });
 
@@ -116,6 +117,7 @@ export const seedPatients = (): Patient[] => [
     referralNote: 'Dr. Apte',
     chiefComplaint: 'Right knee pain after running',
     address: 'Flat 6, Shreeyash Apartments, Karvenagar, Pune',
+    plannedSessions: 12,
   }),
   P('pt-amit', 'Amit Joshi', '+919890437712', {
     daysAgo: 14,
@@ -249,6 +251,8 @@ export function seedAppointments(patients: Patient[]): Appointment[] {
       notes: null,
       inquiryId: null,
       packageId: null,
+      // Today's home visit to Sunita was done on "pay later" (D-052).
+      feePaise: id === 'b2' ? 120000 : null,
     };
   });
 }

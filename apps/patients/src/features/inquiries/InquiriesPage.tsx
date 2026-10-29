@@ -27,6 +27,7 @@ import { formatPhone, samePhone, telLink, waLink } from '@/lib/contact';
 import { ago, dateOf, relativeDay } from '@/lib/time';
 import { useBooking } from '@/features/calendar/booking';
 import { Chip, Kicker, useTherapistMap, whenLabel } from '@/features/calendar/common';
+import { PushNudge } from '@/features/account/NotificationsSetting';
 import { preferredLabel } from './ConvertSheet';
 
 const FILTERS: Array<[InquiryStatus, string]> = [
@@ -85,6 +86,7 @@ export function InquiriesPage() {
   return (
     <div className="flex min-h-0 flex-1 gap-6">
       <div className="flex min-w-0 flex-1 flex-col gap-3.5">
+        <PushNudge />
         <div
           role="tablist"
           aria-label="Status"

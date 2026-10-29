@@ -28,7 +28,7 @@ export const qk = {
     ['free-slots', q] as const,
   inquiries: (status?: InquiryStatus) => ['inquiries', status ?? 'all'] as const,
   inquiryCounts: ['inquiries', 'counts'] as const,
-  patients: (q: string) => ['patients', q] as const,
+  patients: (q: string, pending = false) => ['patients', q, pending] as const,
   patient: (id: string) => ['patient', id] as const,
   notes: (patientId: string) => ['notes', patientId] as const,
   publicClinic: (slug: string) => ['public-clinic', slug] as const,
@@ -79,8 +79,12 @@ export const useInquiryCounts = (enabled = true) =>
     refetchInterval: 60_000,
   });
 
-export const usePatients = (q = '') =>
-  useQuery({ queryKey: qk.patients(q), queryFn: () => api.listPatients(q) });
+/** `pending`: only patients who owe (D-052; Owner and Front desk). */
+export const usePatients = (q = '', pending = false) =>
+  useQuery({
+    queryKey: qk.patients(q, pending),
+    queryFn: () => api.listPatients(q, { pending }),
+  });
 
 export const usePatient = (id: string) =>
   useQuery({ queryKey: qk.patient(id), queryFn: () => api.getPatient(id) });
@@ -194,7 +198,12 @@ export function useRecordPayment(patientId: string) {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (v: NewPayment) => api.recordPayment(patientId, v),
-    onSettled: () => qc.invalidateQueries({ queryKey: qk.patient(patientId) }),
+    // Payments change dues on the profile and in the list (D-052).
+    onSettled: () =>
+      Promise.all([
+        qc.invalidateQueries({ queryKey: qk.patient(patientId) }),
+        qc.invalidateQueries({ queryKey: ['patients'] }),
+      ]),
   });
 }
 

@@ -64,6 +64,8 @@ export default defineConfig(({ mode, command }) => {
         },
         workbox: {
           globPatterns: ['**/*.{js,css,html,svg,png,woff2}'],
+          // Push and notification clicks for new booking requests (public/push-sw.js; D-054).
+          importScripts: ['push-sw.js'],
         },
       }),
     ],

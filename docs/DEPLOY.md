@@ -54,3 +54,10 @@ Supabase Auth must list `https://app.<domain>` / `https://staging.<domain>` as S
 - Phones that already have the app installed:
   - **Android (Chrome):** picks up the new icon and name by itself once the app is opened. This can take up to about a day; reinstall if it doesn't.
   - **iOS:** never refreshes a home-screen icon. Delete it, open the site in Safari, then Share → Add to Home Screen.
+
+## New-request notifications (patients app, D-054)
+
+- The API serves its VAPID public key at `/v1/public/push/key`; until Railway has `VAPID_PUBLIC_KEY` / `VAPID_PRIVATE_KEY`, the Notifications setting says "not switched on for the clinic yet". No Pages variable is needed.
+- `public/push-sw.js` is pulled into the generated service worker (`workbox.importScripts`); `_headers` serves it no-cache like other non-hashed files.
+- Staff turn it on per phone: My account → Notifications → Turn on (Owner and Front desk only). Android Chrome: works in the browser or the installed app. iPhone: only in the app added to the home screen (iOS 16.4+); Safari tabs show the install steps instead.
+- Signing out removes the phone's subscription, so a shared phone stops getting alerts.

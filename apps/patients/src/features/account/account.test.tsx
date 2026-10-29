@@ -1,5 +1,6 @@
 import { screen, within } from '@testing-library/react';
-import { afterEach, describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
+import { mockPushEndpoints } from '@/api/mock/patients';
 import { renderApp, signInAs } from '@/test/render';
 
 const IPHONE_SAFARI =
@@ -78,6 +79,97 @@ describe('install tip', () => {
       await screen.findByRole('heading', { name: 'Sign in' });
       expect(screen.queryByRole('note', { name: 'Install the app' })).not.toBeInTheDocument();
       unmount();
+    }
+  });
+});
+
+/** A browser with push support: a service worker registration whose PushManager we control. */
+function fakePushBrowser() {
+  let current: PushSubscription | null = null;
+  const sub = {
+    endpoint: 'https://push.example.test/send/abc',
+    toJSON: () => ({ endpoint: sub.endpoint, keys: { p256dh: 'BPk3', auth: 'aGk' } }),
+    unsubscribe: async () => {
+      current = null;
+      return true;
+    },
+  } as unknown as PushSubscription;
+  const reg = {
+    pushManager: {
+      getSubscription: async () => current,
+      subscribe: async () => (current = sub),
+    },
+  };
+  const requestPermission = vi.fn(async () => 'granted');
+  Object.defineProperty(window, 'PushManager', { value: class {}, configurable: true });
+  Object.defineProperty(window, 'Notification', {
+    value: { permission: 'default', requestPermission },
+    configurable: true,
+  });
+  Object.defineProperty(navigator, 'serviceWorker', {
+    value: { ready: Promise.resolve(reg), getRegistration: async () => reg },
+    configurable: true,
+  });
+  return () => {
+    for (const k of ['PushManager', 'Notification'] as const) delete (window as never)[k];
+    delete (navigator as never)['serviceWorker'];
+  };
+}
+
+describe('new request notifications (D-054)', () => {
+  afterEach(() => pretend(jsdomAgent));
+
+  it('turns alerts on and off for this phone, and drops them on sign-out', async () => {
+    const restore = fakePushBrowser();
+    try {
+      await signInAs('frontdesk');
+      const { user } = renderApp('/account');
+      const box = within(await screen.findByRole('region', { name: 'Notifications' }));
+      expect(await box.findByText('Off for this phone.')).toBeInTheDocument();
+      await user.click(box.getByRole('button', { name: 'Turn on' }));
+      expect(await box.findByText('On for this phone.')).toBeInTheDocument();
+      expect(mockPushEndpoints()).toEqual(['https://push.example.test/send/abc']);
+
+      await user.click(screen.getAllByRole('button', { name: 'Sign out' })[0]!);
+      await screen.findByRole('heading', { name: 'Sign in' });
+      expect(mockPushEndpoints()).toEqual([]);
+    } finally {
+      restore();
+    }
+  });
+
+  it('asks iPhone users to install the app first', async () => {
+    pretend(IPHONE_SAFARI);
+    await signInAs('owner');
+    renderApp('/account');
+    const box = within(await screen.findByRole('region', { name: 'Notifications' }));
+    expect(
+      await box.findByText('On iPhone, notifications work only in the installed app.'),
+    ).toBeInTheDocument();
+    expect(box.getByText(/Then open it from the home screen/)).toBeInTheDocument();
+  });
+
+  it('is not offered to a therapist, who has no request queue', async () => {
+    await signInAs('therapist');
+    renderApp('/account');
+    await screen.findByRole('region', { name: 'Password' });
+    expect(screen.queryByRole('region', { name: 'Notifications' })).not.toBeInTheDocument();
+  });
+
+  it('nudges once on the request queue while alerts are off', async () => {
+    const restore = fakePushBrowser();
+    try {
+      await signInAs('frontdesk');
+      const { user, unmount } = renderApp('/inquiries');
+      const nudge = await screen.findByRole('note', { name: 'Phone alerts' });
+      await user.click(within(nudge).getByRole('button', { name: 'Not now' }));
+      expect(screen.queryByRole('note', { name: 'Phone alerts' })).not.toBeInTheDocument();
+      unmount();
+      renderApp('/inquiries');
+      await screen.findByRole('tablist', { name: 'Status' });
+      expect(screen.queryByRole('note', { name: 'Phone alerts' })).not.toBeInTheDocument();
+    } finally {
+      restore();
     }
   });
 });

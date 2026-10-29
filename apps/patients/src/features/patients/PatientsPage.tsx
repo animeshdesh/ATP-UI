@@ -1,8 +1,8 @@
 import { useDeferredValue, useState } from 'react';
 import { ChevronRight, Search, UserPlus } from 'lucide-react';
 import { useNavigate } from 'react-router';
-import { useSession } from '@atp/core';
-import { Avatar, Button, Loading } from '@atp/ui';
+import { inr, useSession } from '@atp/core';
+import { Avatar, Button, Loading, Segmented } from '@atp/ui';
 import { usePatients } from '@/api/queries';
 import { useBranch } from '@/app/branch';
 import { usePageHeader } from '@/app/header';
@@ -14,6 +14,11 @@ import { NewPatientSheet } from './NewPatientSheet';
 
 const pkgLeft = (p: PatientSummary) =>
   p.activePackage ? `${p.activePackage.sessionsTotal - p.activePackage.sessionsUsed} left` : null;
+/** Treatment plan progress (D-053), e.g. "5/12 sessions". */
+const planLabel = (p: PatientSummary) =>
+  p.plannedSessions
+    ? `${Math.min(p.sessionsDone, p.plannedSessions)}/${p.plannedSessions} sessions`
+    : null;
 
 /** Patient list and search by name or phone (PRD §6.3). */
 export function PatientsPage() {
@@ -24,7 +29,11 @@ export function PatientsPage() {
   const [q, setQ] = useState('');
   const query = useDeferredValue(q.trim());
   const [adding, setAdding] = useState(false);
-  const { data = [], isPending } = usePatients(query);
+  // Dues are for Owner and Front desk (patients.manage at all; D-052).
+  const canDues = can('patients.manage', 'all');
+  const [show, setShow] = useState<'all' | 'pending'>('all');
+  const pendingOnly = canDues && show === 'pending';
+  const { data = [], isPending } = usePatients(query, pendingOnly);
   const rows = data.filter(
     (p) => branch.current === 'all' || p.branchId === branch.current || !p.branchId,
   );
@@ -45,22 +54,39 @@ export function PatientsPage() {
   return (
     <>
       <div className="flex flex-col gap-3.5">
-        <label className="flex items-center gap-2.5 border-2 border-ink bg-white px-3 lg:max-w-[420px]">
-          <Search aria-hidden size={17} />
-          <input
-            aria-label="Search patients"
-            value={q}
-            onChange={(e) => setQ(e.target.value)}
-            placeholder="Search name or phone"
-            className="min-h-12 min-w-0 flex-1 border-0 bg-transparent text-base outline-none"
-          />
-        </label>
+        <div className="flex flex-wrap items-center gap-2.5">
+          <label className="flex min-w-0 flex-[1_1_220px] items-center gap-2.5 border-2 border-ink bg-white px-3 lg:max-w-[420px]">
+            <Search aria-hidden size={17} />
+            <input
+              aria-label="Search patients"
+              value={q}
+              onChange={(e) => setQ(e.target.value)}
+              placeholder="Search name or phone"
+              className="min-h-12 min-w-0 flex-1 border-0 bg-transparent text-base outline-none"
+            />
+          </label>
+          {canDues && (
+            <Segmented
+              label="Show"
+              value={show}
+              onChange={setShow}
+              options={[
+                { value: 'all', label: 'All' },
+                { value: 'pending', label: 'Pending ₹' },
+              ]}
+            />
+          )}
+        </div>
 
         {isPending ? (
           <Loading label="Loading patients" />
         ) : !rows.length ? (
           <div className="flex flex-col items-start gap-3 py-4 text-sm text-neutral-700">
-            {query ? `No patient matches “${query}”.` : 'No patients yet.'}
+            {pendingOnly
+              ? 'Nobody owes anything.'
+              : query
+                ? `No patient matches “${query}”.`
+                : 'No patients yet.'}
             {canAdd && (
               <Button variant="outline" icon={UserPlus} onClick={() => setAdding(true)}>
                 New patient
@@ -86,9 +112,15 @@ export function PatientsPage() {
                           {pkgLeft(p)}
                         </span>
                       )}
+                      {!!p.pendingPaise && (
+                        <span className="border border-warn-fg bg-warn-bg px-1.5 text-[11px] font-bold whitespace-nowrap text-warn-fg">
+                          {inr(p.pendingPaise)} due
+                        </span>
+                      )}
                     </span>
                     <span className="block text-xs text-neutral-700 tabular">
                       {formatPhone(p.phone)}
+                      {planLabel(p) && ` · ${planLabel(p)}`}
                     </span>
                     <span className="block truncate text-xs text-neutral-700">
                       Last {last(p).toLowerCase()}
@@ -103,7 +135,15 @@ export function PatientsPage() {
             <table className="hidden w-full border-collapse border-2 border-ink bg-white text-sm lg:table">
               <thead>
                 <tr className="border-b-2 border-ink text-left">
-                  {['Patient', 'Phone', 'Last', 'Next appointment', 'Package'].map((h) => (
+                  {[
+                    'Patient',
+                    'Phone',
+                    'Last',
+                    'Next appointment',
+                    'Package',
+                    'Plan',
+                    ...(canDues ? ['Pending'] : []),
+                  ].map((h) => (
                     <th key={h} className="px-3 py-2.5 kicker font-semibold">
                       {h}
                     </th>
@@ -155,6 +195,18 @@ export function PatientsPage() {
                         <span className="text-neutral-600">—</span>
                       )}
                     </td>
+                    <td className="px-3 py-2.5 whitespace-nowrap tabular">
+                      {planLabel(p) ?? <span className="text-neutral-600">—</span>}
+                    </td>
+                    {canDues && (
+                      <td className="px-3 py-2.5 whitespace-nowrap tabular">
+                        {p.pendingPaise ? (
+                          <span className="font-bold text-warn-fg">{inr(p.pendingPaise)}</span>
+                        ) : (
+                          <span className="text-neutral-600">—</span>
+                        )}
+                      </td>
+                    )}
                   </tr>
                 ))}
               </tbody>

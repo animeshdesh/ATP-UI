@@ -36,6 +36,8 @@ export type ReferralSource = S['ReferralSource'];
 export type Patient = S['Patient'];
 export type PatientSummary = S['PatientSummary'];
 export type PatientProfile = S['PatientProfile'];
+/** An appointment on the profile, with its session number and payment state (D-052, D-053). */
+export type PatientVisit = S['PatientVisit'];
 export type NewPatient = S['NewPatient'];
 export type UpdatePatient = S['UpdatePatient'];
 
@@ -61,5 +63,8 @@ export type UpdateInquiry = S['UpdateInquiry'];
 export type PublicClinic = S['PublicClinic'];
 export type ConvertInquiry = S['ConvertInquiry'];
 export type ConvertResult = S['ConvertResult'];
+
+/** `PushSubscription.toJSON()` as the API takes it (D-054). */
+export type PushSubscriptionBody = S['PushSubscription'];
 
 export const PAYMENT_MODES_V2 = ['cash', 'upi', 'card'] as const;

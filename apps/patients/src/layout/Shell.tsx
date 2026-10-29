@@ -1,7 +1,9 @@
 import { ChevronDown, LogOut, MapPin, Plus, WifiOff } from 'lucide-react';
 import { Link, NavLink, Outlet, useLocation, useNavigate } from 'react-router';
 import { InstallHint, useAuthedSession, useOnline, useSession } from '@atp/core';
+import { useEffect } from 'react';
 import { brand } from '@/app/brand';
+import { dropPushSubscription, setAppBadge } from '@/app/push';
 import { Avatar, Button, cn } from '@atp/ui';
 import { useInquiryCounts } from '@/api/queries';
 import { useBranch } from '@/app/branch';
@@ -15,6 +17,9 @@ export function Shell() {
   const canInquiries = allowed(NAV.inquiries, can);
   const { data: counts } = useInquiryCounts(canInquiries);
   const fresh = counts?.new ?? 0;
+  useEffect(() => {
+    if (canInquiries && counts) setAppBadge(fresh);
+  }, [canInquiries, counts, fresh]);
 
   return (
     <div className="flex h-dvh min-h-0">
@@ -192,6 +197,7 @@ function Sidebar({ badge }: { badge: number }) {
           title="Sign out"
           aria-label="Sign out"
           onClick={async () => {
+            await dropPushSubscription();
             await signOut();
             navigate('/login');
           }}

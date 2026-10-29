@@ -4,7 +4,15 @@
  * role: `own` means appointments where I am the therapist, and patients I have an appointment with.
  */
 import { ApiError, addDays, todayIso, type PermissionKey } from '@atp/core';
-import { PEOPLE, memberIdOf, mockL2, mockScope, mockUserKey, mockMembers } from '@atp/core/mock';
+import {
+  PEOPLE,
+  memberIdOf,
+  mockL2,
+  mockRole,
+  mockScope,
+  mockUserKey,
+  mockMembers,
+} from '@atp/core/mock';
 import type {
   Appointment,
   AppointmentPatch,
@@ -34,6 +42,7 @@ import type {
   PatientSummary,
   Payment,
   PublicClinic,
+  PushSubscriptionBody,
   StatusChange,
   Therapist,
   TimeOff,
@@ -68,15 +77,32 @@ function fresh() {
     notes: seedNotes(),
     packages: seedPackages(),
     payments: seedPayments(),
+    /** Payments made before fees existed settle earlier visits (migration backfill, D-052). */
+    opening: {} as Record<string, number>,
     publicSubmits: 0,
+    /** Push endpoints saved by this browser's members (D-054). */
+    push: new Set<string>(),
     seq: 1000,
   };
 }
 
-let db = fresh();
+function isPackageSale(p: Payment) {
+  return p.description.startsWith('Package');
+}
+
+function withOpening(d: ReturnType<typeof fresh>) {
+  for (const p of d.payments)
+    if (!isPackageSale(p)) d.opening[p.patientId] = (d.opening[p.patientId] ?? 0) + p.amountPaise;
+  return d;
+}
+
+let db = withOpening(fresh());
+
+/** Endpoints the mock API holds, for tests. */
+export const mockPushEndpoints = () => [...db.push];
 
 export function resetMockPatients() {
-  db = fresh();
+  db = withOpening(fresh());
 }
 
 const latency = <T>(value: T, ms = 80): Promise<T> =>
@@ -139,6 +165,34 @@ function onLeave(therapistId: string, range: { startsAt: string; endsAt: string 
   );
 }
 
+/** Owed (+) or paid ahead (−): opening + fees of completed visits − non-package payments. */
+function owed(patientId: string) {
+  const fees = db.appointments
+    .filter((a) => a.patientId === patientId && a.status === 'completed')
+    .reduce((n, a) => n + (a.feePaise ?? 0), 0);
+  return (db.opening[patientId] ?? 0) + fees - paidFor(patientId);
+}
+const paidFor = (patientId: string) =>
+  db.payments
+    .filter((p) => p.patientId === patientId && !isPackageSale(p))
+    .reduce((n, p) => n + p.amountPaise, 0);
+
+/** Payments settle the opening, then the oldest charged visits (app.visit_dues). */
+function visitDues(patientId: string): Record<string, 'paid' | 'part' | 'pending'> {
+  const paid = paidFor(patientId);
+  let upto = db.opening[patientId] ?? 0;
+  const out: Record<string, 'paid' | 'part' | 'pending'> = {};
+  for (const a of db.appointments
+    .filter((x) => x.patientId === patientId && x.status === 'completed' && x.feePaise != null)
+    .sort((x, y) => x.startsAt.localeCompare(y.startsAt))) {
+    upto += a.feePaise!;
+    out[a.id] = upto <= paid ? 'paid' : upto - a.feePaise! < paid ? 'part' : 'pending';
+  }
+  return out;
+}
+
+const seesDues = () => mockScope('patients.manage') === 'all';
+
 function summary(p: Patient): PatientSummary {
   const appts = db.appointments
     .filter((a) => a.patientId === p.id)
@@ -157,6 +211,9 @@ function summary(p: Patient): PatientSummary {
     lastVisit: done.at(-1)?.startsAt ?? null,
     nextAppointment: next,
     activePackage: pkg,
+    sessionsDone: done.length,
+    pendingPaise: seesDues() ? Math.max(owed(p.id), 0) : null,
+    advancePaise: seesDues() ? Math.max(-owed(p.id), 0) : null,
   };
 }
 
@@ -211,6 +268,7 @@ function makeAppointment(v: NewAppointment, extra: Partial<Appointment> = {}): A
     notes: v.notes ?? null,
     inquiryId: null,
     packageId: null,
+    feePaise: null,
     ...extra,
   };
 }
@@ -447,12 +505,15 @@ export const mockPatients = {
         statusReason: null,
         statusNote: null,
         packageId: null,
+        feePaise: null,
       });
       return latency(a);
     }
     if (a.status !== 'confirmed')
       return fail(409, 'This appointment is already closed.', 'conflict');
     if (v.status === 'completed') {
+      if (v.packageId && v.feePaise != null)
+        return fail(400, 'A package visit has no fee.', 'bad_request');
       if (v.packageId) {
         const k = db.packages.find((x) => x.id === v.packageId && x.patientId === a.patientId);
         if (!k) return fail(404, 'Package not found.', 'not_found');
@@ -467,6 +528,7 @@ export const mockPatients = {
           { ...v.payment, branchId: a.branchId },
           dayMonth(dateOf(a.startsAt)),
         );
+      a.feePaise = v.packageId ? null : (v.feePaise ?? null);
       a.status = 'completed';
     } else {
       Object.assign(a, { status: v.status, statusReason: v.reason, statusNote: v.note ?? null });
@@ -529,6 +591,7 @@ export const mockPatients = {
         referralNote: 'Web request',
         chiefComplaint: i.reason,
         branchId: i.branchId,
+        plannedSessions: null,
         createdAt: new Date().toISOString(),
       };
     }
@@ -560,8 +623,9 @@ export const mockPatients = {
   },
 
   // --- patients ---------------------------------------------------------------------------------
-  async listPatients(q = ''): Promise<PatientSummary[]> {
+  async listPatients(q = '', opts: { pending?: boolean } = {}): Promise<PatientSummary[]> {
     const s = need('patients.view');
+    if (opts.pending) need('patients.manage', 'all');
     const needle = q.trim().toLowerCase();
     const digits = needle.replace(/\D/g, '');
     return latency(
@@ -574,6 +638,7 @@ export const mockPatients = {
             (digits.length >= 3 && p.phone.includes(digits)),
         )
         .map(summary)
+        .filter((p) => !opts.pending || (p.pendingPaise ?? 0) > 0)
         .sort((a, b) => (b.lastVisit ?? b.createdAt).localeCompare(a.lastVisit ?? a.createdAt)),
     );
   },
@@ -594,6 +659,7 @@ export const mockPatients = {
       referralNote: v.referralNote ?? null,
       chiefComplaint: v.chiefComplaint ?? null,
       branchId: v.branchId ?? null,
+      plannedSessions: v.plannedSessions ?? null,
       id: nextId('pt'),
       createdAt: new Date().toISOString(),
     };
@@ -607,6 +673,9 @@ export const mockPatients = {
     if (!p || !visiblePatient(s, id)) return fail(404, 'Patient not found.', 'not_found');
     if (v.phone && db.patients.some((x) => x.id !== id && samePhone(x.phone, v.phone!)))
       return fail(409, 'Another patient already has this phone.', 'phone_in_use');
+    const plan = v.plannedSessions;
+    if (plan != null && (!Number.isInteger(plan) || plan < 1 || plan > 200))
+      return fail(400, 'Plan between 1 and 200 sessions.', 'bad_request');
     Object.assign(p, v);
     return latency(p);
   },
@@ -615,11 +684,23 @@ export const mockPatients = {
     const s = need('patients.view');
     const p = db.patients.find((x) => x.id === id);
     if (!p || !visiblePatient(s, id)) return fail(404, 'Patient not found.', 'not_found');
+    const numbers = new Map(
+      db.appointments
+        .filter((a) => a.patientId === id && a.status === 'completed')
+        .sort((a, b) => a.startsAt.localeCompare(b.startsAt))
+        .map((a, i) => [a.id, i + 1]),
+    );
+    const dues = seesDues() ? visitDues(id) : {};
     return latency({
       patient: summary(p),
       appointments: db.appointments
         .filter((a) => a.patientId === id)
-        .sort((a, b) => b.startsAt.localeCompare(a.startsAt)),
+        .sort((a, b) => b.startsAt.localeCompare(a.startsAt))
+        .map((a) => ({
+          ...a,
+          sessionNo: numbers.get(a.id) ?? null,
+          paymentStatus: dues[a.id] ?? null,
+        })),
       payments: db.payments
         .filter((x) => x.patientId === id)
         .sort((a, b) => b.occurredOn.localeCompare(a.occurredOn)),
@@ -681,6 +762,20 @@ export const mockPatients = {
     need('patients.manage');
     need('finance.entry.create');
     return latency(recordIncome(patientId, v));
+  },
+
+  // --- new-request notifications ---------------------------------------------------------------
+  async getPushKey(): Promise<string | null> {
+    return latency('BMockVapidPublicKey_0123456789-abcdefghijklmnopqrstuvwxyzABCDEFGHIJ');
+  },
+  async savePushSubscription(v: PushSubscriptionBody): Promise<void> {
+    mockRole();
+    db.push.add(v.endpoint);
+    return latency(undefined);
+  },
+  async deletePushSubscription(endpoint: string): Promise<void> {
+    db.push.delete(endpoint);
+    return latency(undefined);
   },
 
   // --- users & roles: core's in-memory RBAC, shared with mockMembers() above -------------------
