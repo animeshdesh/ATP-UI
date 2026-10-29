@@ -15,7 +15,7 @@ export function AuditPage() {
         aria-label="Show changes to"
         value={table}
         onChange={(e) => setTable(e.target.value)}
-        className="min-h-11 self-start text-[13px]"
+        className="min-h-11 self-start text-base lg:text-[13px]"
       >
         {AUDIT_TABLES.map((t) => (
           <option key={t.value} value={t.value}>

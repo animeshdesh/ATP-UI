@@ -91,17 +91,20 @@ function BranchCard({ b, onEdit }: { b: Branch; onEdit: () => void }) {
           title="Edit"
           aria-label={`Edit ${b.name}`}
           onClick={onEdit}
-          className="grid size-10 place-items-center border-2 border-ink bg-white hover:bg-accent-100"
+          className="grid size-11 place-items-center border-2 border-ink bg-white hover:bg-accent-100"
         >
           <Pencil aria-hidden size={16} />
         </button>
       </div>
-      <div className="grid grid-cols-[16px_1fr] items-start gap-x-2.5 gap-y-2 px-4 py-3 text-sm">
+      <div className="grid grid-cols-[16px_minmax(0,1fr)] items-start gap-x-2.5 gap-y-2 px-4 py-3 text-sm">
         <MapPin aria-hidden size={15} className="mt-0.5" />
         <span>{b.address ?? '—'}</span>
         <Phone aria-hidden size={15} className="mt-0.5" />
         {b.phone ? (
-          <a href={telLink(b.phone)} className="tabular">
+          <a
+            href={telLink(b.phone)}
+            className="-my-3.5 inline-block py-3.5 tabular lg:my-0 lg:py-0"
+          >
             {formatPhone(b.phone)}
           </a>
         ) : (
@@ -126,7 +129,7 @@ function BranchCard({ b, onEdit }: { b: Branch; onEdit: () => void }) {
               void navigator.clipboard?.writeText(link);
               toast('Booking link copied');
             }}
-            className="border-0 bg-transparent p-0 text-sm font-bold text-accent-700"
+            className="-my-3 border-0 bg-transparent px-2 py-3 text-sm font-bold text-accent-700 lg:my-0 lg:p-0"
           >
             Copy
           </button>
@@ -159,23 +162,28 @@ function BranchCard({ b, onEdit }: { b: Branch; onEdit: () => void }) {
 
 function Switch({ on, label, onClick }: { on: boolean; label: string; onClick: () => void }) {
   return (
+    // The 44px button is the touch area; the 28px track inside is what shows.
     <button
       type="button"
       role="switch"
       aria-checked={on}
       aria-label={label}
       onClick={onClick}
-      className={cn(
-        'relative h-7 w-12 flex-none border-2 border-ink',
-        on ? 'bg-accent' : 'bg-neutral-200',
-      )}
+      className="-my-2 grid h-11 w-12 flex-none place-items-center border-0 bg-transparent p-0"
     >
       <span
         className={cn(
-          'absolute top-0.5 size-5 border-2 border-ink bg-white transition-[left]',
-          on ? 'left-[22px]' : 'left-0.5',
+          'relative block h-7 w-12 border-2 border-ink',
+          on ? 'bg-accent' : 'bg-neutral-200',
         )}
-      />
+      >
+        <span
+          className={cn(
+            'absolute top-0.5 size-5 border-2 border-ink bg-white transition-[left]',
+            on ? 'left-[22px]' : 'left-0.5',
+          )}
+        />
+      </span>
     </button>
   );
 }

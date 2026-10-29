@@ -36,6 +36,9 @@ The source is the Claude Design project `b36a94e7-c670-4def-8152-d2aecc961820`. 
 
 ## Deliberate differences
 
+- **App icon:** blue tile with a white mark (money keeps white with a blue mark), so the two installed apps differ on a phone. Tab icon `public/atp-mark-tab.svg`.
+- **Permissions on phones:** one role at a time (role chips, then a list with 44px scope buttons). The role × permission table shows from `lg` up.
+
 - **"Payment pending" tag:** dropped. It is the V2b token payment (D-045).
 - **Mobile calendar branch chips:** dropped. The header branch picker does the same job.
 - **Desktop patients:** clicking a row opens the profile instead of a preview panel.

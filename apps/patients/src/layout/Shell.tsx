@@ -76,7 +76,7 @@ export function BranchSelect({ compact }: { compact?: boolean }) {
     <label
       className={cn(
         'relative flex flex-none items-center gap-1.5 border-2 border-ink bg-white',
-        compact ? 'h-11 pr-1.5 pl-2' : 'mt-1 h-10 px-2',
+        compact ? 'h-12 pr-1.5 pl-2' : 'mt-1 h-10 px-2',
       )}
     >
       <MapPin aria-hidden size={compact ? 13 : 15} />
@@ -85,8 +85,10 @@ export function BranchSelect({ compact }: { compact?: boolean }) {
         value={current}
         onChange={(e) => setCurrent(e.target.value)}
         className={cn(
-          'h-10 appearance-none border-0 bg-transparent pr-[18px] text-ink outline-none',
-          compact ? 'text-[13px] font-bold' : 'flex-1 text-sm font-semibold',
+          'appearance-none border-0 bg-transparent pr-[18px] text-ink outline-none',
+          compact
+            ? 'h-11 text-base font-bold lg:text-[13px]'
+            : 'h-10 flex-1 text-base font-semibold lg:text-sm',
         )}
       >
         <option value="all">All branches</option>

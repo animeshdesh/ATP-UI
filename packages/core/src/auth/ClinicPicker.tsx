@@ -39,7 +39,7 @@ export function ClinicPicker({ pick }: { pick: ClinicPick }) {
             {c.name}
           </Button>
         ))}
-        <Button variant="link" className="self-start py-3" onClick={() => void signOut()}>
+        <Button variant="link" className="self-start" onClick={() => void signOut()}>
           Sign out
         </Button>
       </div>

@@ -44,3 +44,13 @@ curl -sI https://staging.<domain>/invite/abc                            # 200 (a
 ```
 
 Supabase Auth must list `https://app.<domain>` / `https://staging.<domain>` as Site URL and redirect URLs (magic links and invites); the API's `CORS_ORIGINS` must include them.
+
+## App icons and home-screen names
+
+- Money: white tile, blue mark, "ATP Money" (`apps/money/pwa-assets.config.ts`, source `public/atp-mark.svg`).
+- Patients: blue tile, white mark, "ATP Patients" (`apps/patients/pwa-assets.config.ts`, source `public/atp-mark-tab.svg`). The tile is inverted so the two installed apps differ on a phone.
+- Regenerate after changing a source: `cd apps/<app> && pnpm exec pwa-assets-generator`. Check that the maskable icon keeps the mark inside the central 80% circle.
+- iOS takes the home-screen label from `apple-mobile-web-app-title` in `index.html`; Android takes it from the manifest's `short_name`.
+- Phones that already have the app installed:
+  - **Android (Chrome):** picks up the new icon and name by itself once the app is opened. This can take up to about a day; reinstall if it doesn't.
+  - **iOS:** never refreshes a home-screen icon. Delete it, open the site in Safari, then Share → Add to Home Screen.

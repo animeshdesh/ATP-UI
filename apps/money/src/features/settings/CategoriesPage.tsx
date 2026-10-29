@@ -69,7 +69,7 @@ export function CategoriesPage() {
           value={name}
           onChange={(e) => setName(e.target.value)}
           placeholder="New category name"
-          className="min-h-[46px] flex-1 text-[15px]"
+          className="min-h-[46px] flex-1 text-base lg:text-[15px]"
         />
         <Button
           type="submit"
@@ -152,7 +152,7 @@ export function CategoriesPage() {
               <span className="text-sm text-neutral-700">{c.name}</span>
               <Button
                 variant="link"
-                className="px-2 py-3"
+                className="px-2"
                 onClick={() => m.update.mutate({ id: c.id, archived: false }, { onError: fail })}
               >
                 Restore

@@ -40,6 +40,7 @@ export function RolesPage({ tab }: { tab: Tab }) {
   usePageHeader({
     title: 'Users & roles',
     subtitle: 'Settings · applies to ATP Patients and ATP Money',
+    mobileSubtitle: 'Settings',
   });
   return (
     <>
@@ -100,6 +101,7 @@ function PermissionMatrixView() {
   const { can } = useSession();
   const toast = useToast();
   const [newRole, setNewRole] = useState<string | null>(null);
+  const [phoneRoleId, setPhoneRoleId] = useState<string | null>(null);
   if (catalog.isPending || roles.isPending) return <Loading />;
   if (!catalog.data || !roles.data)
     return <p className="text-sm text-danger-fg">Could not load roles.</p>;
@@ -108,6 +110,10 @@ function PermissionMatrixView() {
   const grid = {
     gridTemplateColumns: `minmax(200px,1.6fr) repeat(${cols.length}, minmax(96px,1fr))`,
   };
+
+  // Phones show one role at a time; start on the first role that can be edited.
+  const phoneRole =
+    cols.find((r) => r.id === phoneRoleId) ?? cols.find((r) => !isLocked(r)) ?? cols[0]!;
 
   const cycle = (p: PermissionDef, role: Role) => {
     if (!editable || isLocked(role)) return;
@@ -118,9 +124,76 @@ function PermissionMatrixView() {
     );
   };
 
+  const scopeButton = (p: PermissionDef, role: Role, className: string) => {
+    const s: Scope = role.permissions[p.key] ?? 'none';
+    return (
+      <button
+        type="button"
+        onClick={() => cycle(p, role)}
+        aria-label={`${p.label}, ${role.name}: ${SCOPE_LABEL[s]}`}
+        aria-disabled={!editable || isLocked(role)}
+        className={cn(
+          'border-2 text-xs font-bold',
+          SCOPE_STYLE[s],
+          (!editable || isLocked(role)) && 'cursor-default',
+          className,
+        )}
+      >
+        {SCOPE_LABEL[s]}
+      </button>
+    );
+  };
+
   return (
     <>
-      <div className="flex-none overflow-x-auto border-2 border-ink bg-white">
+      <section aria-label="Permissions by role" className="flex flex-col gap-3 lg:hidden">
+        <div role="group" aria-label="Role" className="flex flex-wrap gap-1.5">
+          {cols.map((r) => (
+            <button
+              key={r.id}
+              type="button"
+              aria-pressed={r.id === phoneRole.id}
+              onClick={() => setPhoneRoleId(r.id)}
+              className={cn(
+                'min-h-11 border-2 border-ink px-3 text-[13px] font-semibold text-ink',
+                r.id === phoneRole.id ? 'bg-accent' : 'bg-white',
+              )}
+            >
+              {r.name}
+              <span className="font-normal text-neutral-800"> · {r.memberCount}</span>
+            </button>
+          ))}
+        </div>
+        <div className="border-2 border-ink bg-white">
+          {GROUPS.map((g) => {
+            const perms = catalog.data.filter(g.match);
+            if (!perms.length) return null;
+            return (
+              <div key={g.label}>
+                <div className="border-b border-rule bg-canvas px-3.5 py-2 text-[11px] font-extrabold tracking-[.08em] uppercase">
+                  {g.label}
+                </div>
+                {perms.map((p) => (
+                  <div
+                    key={p.key}
+                    className={cn(
+                      'flex items-center gap-3 border-b border-rule px-3.5 py-1',
+                      !live(p) && 'opacity-55',
+                    )}
+                  >
+                    <div className="min-w-0 flex-1">
+                      <div className="text-sm font-semibold">{p.label}</div>
+                      <div className="truncate font-mono text-[11px] text-neutral-600">{p.key}</div>
+                    </div>
+                    {scopeButton(p, phoneRole, 'min-h-11 min-w-16 px-3')}
+                  </div>
+                ))}
+              </div>
+            );
+          })}
+        </div>
+      </section>
+      <div className="hidden flex-none overflow-x-auto border-2 border-ink bg-white lg:block">
         <div
           style={{ minWidth: 200 + cols.length * 110 }}
           role="table"
@@ -155,31 +228,15 @@ function PermissionMatrixView() {
                     <div className="text-[13px] font-semibold">{p.label}</div>
                     <div className="font-mono text-[11px] text-neutral-600">{p.key}</div>
                   </div>
-                  {cols.map((role) => {
-                    const s: Scope = role.permissions[p.key] ?? 'none';
-                    const locked = !editable || isLocked(role);
-                    return (
-                      <div
-                        key={role.id}
-                        role="cell"
-                        className="flex items-center border-l border-rule px-2 py-1.5"
-                      >
-                        <button
-                          type="button"
-                          onClick={() => cycle(p, role)}
-                          aria-label={`${p.label}, ${role.name}: ${SCOPE_LABEL[s]}`}
-                          aria-disabled={locked}
-                          className={cn(
-                            'border-2 px-2 py-1 text-xs font-bold',
-                            SCOPE_STYLE[s],
-                            locked && 'cursor-default',
-                          )}
-                        >
-                          {SCOPE_LABEL[s]}
-                        </button>
-                      </div>
-                    );
-                  })}
+                  {cols.map((role) => (
+                    <div
+                      key={role.id}
+                      role="cell"
+                      className="flex items-center border-l border-rule px-2 py-1.5"
+                    >
+                      {scopeButton(p, role, 'px-2 py-1')}
+                    </div>
+                  ))}
                 </div>
               ))}
             </div>
@@ -193,7 +250,7 @@ function PermissionMatrixView() {
           </Button>
         )}
         <span className="min-w-[200px] flex-1 text-xs text-neutral-700">
-          Tap a cell to cycle All → Own → None. "Own" exists only where a permission supports it:
+          Tap a scope to cycle All → Own → None. "Own" exists only where a permission supports it:
           for entries it means the ones that person logged; for patients, the ones they treat. Owner
           access can't be reduced. Later-version permissions are set now and switch on when those
           modules ship.

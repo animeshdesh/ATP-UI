@@ -232,7 +232,7 @@ function Meta({ i, known }: { i: Inquiry; known: PatientSummary | null }) {
         </>
       )}
       <Phone aria-hidden size={14} />
-      <a href={telLink(i.phone)} className="tabular">
+      <a href={telLink(i.phone)} className="-my-3.5 inline-block py-3.5 tabular lg:my-0 lg:py-0">
         {formatPhone(i.phone)}
       </a>
       {known && (
@@ -438,7 +438,11 @@ function InquiryPanel({
   const rows: Array<[string, React.ReactNode]> = [
     [
       'Phone',
-      <a key="p" href={telLink(i.phone)} className="tabular">
+      <a
+        key="p"
+        href={telLink(i.phone)}
+        className="-my-3.5 inline-block py-3.5 tabular lg:my-0 lg:py-0"
+      >
         {formatPhone(i.phone)}
       </a>,
     ],

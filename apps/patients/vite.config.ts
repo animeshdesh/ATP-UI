@@ -33,7 +33,13 @@ export default defineConfig(({ mode, command }) => {
       tailwindcss(),
       VitePWA({
         registerType: 'autoUpdate',
-        includeAssets: ['atp-mark.svg', 'atp-logo.svg', 'apple-touch-icon-180x180.png'],
+        // Blue tile + white mark (pwa-assets.config.ts): tells it apart from ATP Money on a phone.
+        includeAssets: [
+          'atp-mark-tab.svg',
+          'atp-mark.svg',
+          'atp-logo.svg',
+          'apple-touch-icon-180x180.png',
+        ],
         manifest: {
           name: 'ATP Patients',
           short_name: 'ATP Patients',

@@ -2,6 +2,8 @@ import type { InputHTMLAttributes, ReactNode, SelectHTMLAttributes } from 'react
 import { useId } from 'react';
 import { cn } from './cn';
 
+// Phones get 16px fields: iOS Safari zooms into any focused field below that. Desktop keeps the
+// design's smaller sizes via `lg:` classes.
 const control =
   'min-h-12 rounded-none border-2 border-ink bg-white px-3 text-base text-ink placeholder:text-neutral-500 disabled:border-divider disabled:bg-transparent';
 
@@ -17,7 +19,7 @@ export const Select = ({
   ...rest
 }: SelectHTMLAttributes<HTMLSelectElement> & { inline?: boolean }) => (
   <select
-    className={cn(control, 'px-2 text-sm font-semibold', !inline && 'w-full', className)}
+    className={cn(control, 'px-2 font-semibold lg:text-sm', !inline && 'w-full', className)}
     {...rest}
   >
     {children}

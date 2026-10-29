@@ -60,7 +60,7 @@ export function AvailabilityPage() {
                 aria-label="Set hours for another member"
                 value=""
                 onChange={(e) => e.target.value && setExtra((x) => [...x, e.target.value])}
-                className="h-10 rounded-none border-2 border-ink bg-white px-2 text-sm text-ink"
+                className="h-10 rounded-none border-2 border-ink bg-white px-2 text-base text-ink lg:text-sm"
               >
                 <option value="">Choose…</option>
                 {others.map((t) => (
@@ -183,7 +183,7 @@ function HoursCard({ therapist, rows }: { therapist: Therapist; rows: WorkingHou
                       aria-label="From"
                       value={r.start}
                       onChange={(e) => edit(i, { start: e.target.value })}
-                      className="h-10 rounded-none border-2 border-ink px-1.5 text-sm tabular"
+                      className="h-10 rounded-none border-2 border-ink px-1.5 text-base tabular lg:text-sm"
                     />
                     <span>–</span>
                     <input
@@ -192,13 +192,13 @@ function HoursCard({ therapist, rows }: { therapist: Therapist; rows: WorkingHou
                       aria-label="To"
                       value={r.end}
                       onChange={(e) => edit(i, { end: e.target.value })}
-                      className="h-10 rounded-none border-2 border-ink px-1.5 text-sm tabular"
+                      className="h-10 rounded-none border-2 border-ink px-1.5 text-base tabular lg:text-sm"
                     />
                     <select
                       aria-label="Branch"
                       value={r.branchId}
                       onChange={(e) => edit(i, { branchId: e.target.value })}
-                      className="h-10 rounded-none border-2 border-ink bg-white px-1.5 text-sm"
+                      className="h-10 rounded-none border-2 border-ink bg-white px-1.5 text-base lg:text-sm"
                     >
                       {branch.active.map((b) => (
                         <option key={b.id} value={b.id}>
@@ -212,7 +212,7 @@ function HoursCard({ therapist, rows }: { therapist: Therapist; rows: WorkingHou
                       onChange={(e) =>
                         edit(i, { visitType: e.target.value as WorkingHours['visitType'] })
                       }
-                      className="h-10 rounded-none border-2 border-ink bg-white px-1.5 text-sm"
+                      className="h-10 rounded-none border-2 border-ink bg-white px-1.5 text-base lg:text-sm"
                     >
                       <option value="clinic">Clinic</option>
                       <option value="home">Home visits</option>

@@ -263,7 +263,7 @@ export function AppointmentSheet({
                 value={newP.name}
                 onChange={(e) => setNewP({ ...newP, name: e.target.value })}
                 placeholder="Full name"
-                className="min-h-11 rounded-none border-2 border-ink px-3 text-[15px]"
+                className="min-h-11 rounded-none border-2 border-ink px-3 text-base lg:text-[15px]"
               />
               <div className="flex border-2 border-ink">
                 <span className="flex items-center border-r-2 border-ink px-2.5 text-sm font-semibold text-neutral-700">
@@ -277,7 +277,7 @@ export function AppointmentSheet({
                   }
                   inputMode="numeric"
                   placeholder="Phone"
-                  className="min-h-10 min-w-0 flex-1 border-0 px-3 text-[15px] tabular outline-none"
+                  className="min-h-10 min-w-0 flex-1 border-0 px-3 text-base tabular outline-none lg:text-[15px]"
                 />
               </div>
               {dup && (
@@ -303,7 +303,7 @@ export function AppointmentSheet({
                   value={q}
                   onChange={(e) => setQ(e.target.value)}
                   placeholder="Name or phone"
-                  className="min-h-11 min-w-0 flex-1 border-0 bg-transparent text-[15px] outline-none"
+                  className="min-h-11 min-w-0 flex-1 border-0 bg-transparent text-base outline-none lg:text-[15px]"
                 />
               </label>
               {q.trim() &&
@@ -381,7 +381,7 @@ export function AppointmentSheet({
           value={notes}
           onChange={(e) => setNotes(e.target.value)}
           placeholder="e.g. Bring MRI report"
-          className="min-h-11 rounded-none border-2 border-ink bg-white px-3 text-[15px]"
+          className="min-h-11 rounded-none border-2 border-ink bg-white px-3 text-base lg:text-[15px]"
         />
       </label>
     </Sheet>

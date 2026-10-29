@@ -223,7 +223,7 @@ export function SlotPicker({
             min={today}
             value={value.date}
             onChange={(e) => e.target.value && onChange({ date: e.target.value, ...reset })}
-            className="min-h-11 rounded-none border-2 border-ink bg-white px-3 text-[15px]"
+            className="min-h-11 rounded-none border-2 border-ink bg-white px-3 text-base lg:text-[15px]"
           />
         )}
       </div>
@@ -279,7 +279,7 @@ export function SlotPicker({
               step={900}
               value={value.manual}
               onChange={(e) => onChange({ manual: e.target.value, slot: null })}
-              className="min-h-11 rounded-none border-2 border-ink bg-white px-2 text-[15px] text-ink tabular"
+              className="min-h-11 rounded-none border-2 border-ink bg-white px-2 text-base text-ink tabular lg:text-[15px]"
             />
           </label>
         )}
@@ -322,7 +322,7 @@ export function SlotPicker({
             value={value.homeAddress}
             onChange={(e) => onChange({ homeAddress: e.target.value })}
             placeholder="Flat, building, area"
-            className="rounded-none border-2 border-ink bg-white px-3 py-2 text-[15px]"
+            className="rounded-none border-2 border-ink bg-white px-3 py-2 text-base lg:text-[15px]"
           />
         </label>
       )}

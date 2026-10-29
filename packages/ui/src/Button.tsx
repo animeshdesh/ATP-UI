@@ -24,7 +24,7 @@ const variants: Record<Variant, string> = {
 };
 
 const sizes: Record<Size, string> = {
-  sm: 'min-h-10 px-3 text-[13px] gap-1.5',
+  sm: 'min-h-11 px-3 text-[13px] gap-1.5 lg:min-h-10',
   md: 'min-h-11 px-4 text-sm gap-2',
   lg: 'min-h-13 px-4 text-base gap-2.5',
 };
@@ -47,7 +47,8 @@ export function Button({
         'inline-flex items-center whitespace-nowrap select-none',
         Trailing ? 'justify-between' : 'justify-center',
         variants[variant],
-        variant === 'link' ? 'min-h-0 py-1 text-[13px]' : sizes[size],
+        // Links look inline but get a 44px touch box on phones; the negative margin keeps layout.
+        variant === 'link' ? '-my-2.5 min-h-0 py-3.5 text-[13px] lg:my-0 lg:py-1' : sizes[size],
         block && 'w-full',
         className,
       )}

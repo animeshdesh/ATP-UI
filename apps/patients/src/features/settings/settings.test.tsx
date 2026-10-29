@@ -7,15 +7,34 @@ describe('users & roles (L2 shapes, mock mode)', () => {
   it('cycles a role permission but never reduces Owner', async () => {
     await signInAs('owner');
     const { user } = renderApp('/settings/roles');
-    const cell = await screen.findByRole('button', { name: 'Edit any entry, Therapist: None' });
-    await user.click(cell);
+    const table = within(await screen.findByRole('table', { name: 'Role permissions' }));
+    await user.click(table.getByRole('button', { name: 'Edit any entry, Therapist: None' }));
     expect(
-      await screen.findByRole('button', { name: 'Edit any entry, Therapist: All' }),
+      await table.findByRole('button', { name: 'Edit any entry, Therapist: All' }),
     ).toBeInTheDocument();
-    await user.click(screen.getByRole('button', { name: 'Edit any entry, Owner: All' }));
-    expect(screen.getByRole('button', { name: 'Edit any entry, Owner: All' })).toBeInTheDocument();
+    await user.click(table.getByRole('button', { name: 'Edit any entry, Owner: All' }));
+    expect(table.getByRole('button', { name: 'Edit any entry, Owner: All' })).toBeInTheDocument();
     // V2 permissions are live, not dimmed under "Later versions".
-    expect(screen.getByText('Patients & appointments')).toBeInTheDocument();
+    expect(table.getByText('Patients & appointments')).toBeInTheDocument();
+  });
+
+  it('shows one role at a time on phones, starting with an editable one', async () => {
+    await signInAs('owner');
+    const { user } = renderApp('/settings/roles');
+    const phone = within(await screen.findByRole('region', { name: 'Permissions by role' }));
+    expect(phone.getByRole('button', { name: /^Therapist/ })).toHaveAttribute(
+      'aria-pressed',
+      'true',
+    );
+    await user.click(phone.getByRole('button', { name: 'Edit any entry, Therapist: None' }));
+    expect(
+      await phone.findByRole('button', { name: 'Edit any entry, Therapist: All' }),
+    ).toBeInTheDocument();
+    await user.click(phone.getByRole('button', { name: /^Owner/ }));
+    expect(phone.getByRole('button', { name: 'Edit any entry, Owner: All' })).toHaveAttribute(
+      'aria-disabled',
+      'true',
+    );
   });
 
   it('invites a user, shows the link once, and the invitee joins', async () => {

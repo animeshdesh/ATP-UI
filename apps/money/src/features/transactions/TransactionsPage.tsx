@@ -19,7 +19,7 @@ const TYPE_OPTIONS = [
   { value: 'expense', label: 'Expense' },
 ] as const;
 
-const filterSelect = 'min-h-11 px-2 text-[13px]';
+const filterSelect = 'min-h-11 px-2 text-base lg:text-[13px]';
 
 /** Person filter value for the clinic account (`party=clinic`). */
 const CLINIC = 'clinic';
@@ -59,7 +59,7 @@ export function TransactionsPage() {
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Search description, patient, person"
             aria-label="Search entries"
-            className="min-h-[46px] w-full min-w-0 border-0 bg-transparent text-[15px] outline-none"
+            className="min-h-[46px] w-full min-w-0 border-0 bg-transparent text-base outline-none lg:text-[15px]"
           />
         </label>
         <div className="flex flex-wrap gap-2">

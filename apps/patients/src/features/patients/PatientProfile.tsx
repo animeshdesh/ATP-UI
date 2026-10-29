@@ -363,7 +363,7 @@ function Notes({ data, appointmentId }: { data: Profile; appointmentId: string |
           value={body}
           onChange={(e) => setBody(e.target.value)}
           placeholder="What did you see and do today?"
-          className="rounded-none border-2 border-ink bg-white px-3 py-2 text-[15px]"
+          className="rounded-none border-2 border-ink bg-white px-3 py-2 text-base lg:text-[15px]"
         />
         <Button
           variant="primary"

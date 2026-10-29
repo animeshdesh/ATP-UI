@@ -286,7 +286,7 @@ export function DetailSheet({
             value={note}
             onChange={(e) => setNote(e.target.value)}
             placeholder="Anything the team should know"
-            className="rounded-none border-2 border-ink bg-white px-3 py-2 text-[15px]"
+            className="rounded-none border-2 border-ink bg-white px-3 py-2 text-base lg:text-[15px]"
           />
         </div>
       )}

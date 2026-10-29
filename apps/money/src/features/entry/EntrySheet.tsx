@@ -377,7 +377,7 @@ export function EntrySheet(props: Props) {
                 value={effectiveDate}
                 max={today}
                 onChange={(e) => setDate(e.target.value || today)}
-                className="min-h-[46px] text-sm font-semibold"
+                className="min-h-[46px] text-base font-semibold lg:text-sm"
               />
             )}
           </Field>
@@ -427,7 +427,7 @@ export function EntrySheet(props: Props) {
                 value={patient}
                 onChange={(e) => setPatient(e.target.value)}
                 placeholder="e.g. Atharva Kale"
-                className="min-h-[46px] text-[15px]"
+                className="min-h-[46px] text-base lg:text-[15px]"
               />
             )}
           </Field>
@@ -437,7 +437,7 @@ export function EntrySheet(props: Props) {
           <Button
             variant="link"
             icon={Plus}
-            className="self-start py-2 text-sm"
+            className="self-start text-sm"
             onClick={() => setMore(true)}
           >
             Description, receipt photo
@@ -451,7 +451,7 @@ export function EntrySheet(props: Props) {
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
                   placeholder="What was it for?"
-                  className="min-h-[46px] text-[15px]"
+                  className="min-h-[46px] text-base lg:text-[15px]"
                 />
               )}
             </Field>

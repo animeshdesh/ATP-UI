@@ -46,8 +46,9 @@ export default defineConfig(({ mode, command }) => {
         registerType: 'autoUpdate',
         includeAssets: ['atp-mark.svg', 'atp-logo.svg', 'apple-touch-icon-180x180.png'],
         manifest: {
-          name: 'ATP Clinic OS',
-          short_name: 'ATP OS',
+          // Home-screen name; the patients app calls this app "ATP Money" too.
+          name: 'ATP Money',
+          short_name: 'ATP Money',
           description: 'Clinic finance for ATP Rehab',
           lang: 'en-IN',
           start_url: '/',
