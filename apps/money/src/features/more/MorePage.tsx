@@ -1,4 +1,4 @@
-import { ChevronRight, ExternalLink, Shield } from 'lucide-react';
+import { ChevronRight, ExternalLink, Shield, UserRound } from 'lucide-react';
 import { Link, useNavigate } from 'react-router';
 import { MORE_KEYS, NAV, PATIENTS_USERS_URL, USERS_PERMISSIONS, navAllowed } from '@/app/nav';
 import { useAuthedSession, useSession } from '@atp/core';
@@ -25,6 +25,11 @@ export function MorePage() {
             </Link>
           );
         })}
+        <Link to="/account" className={row}>
+          <UserRound aria-hidden size={20} className="w-6" />
+          <span className="flex-1">My account</span>
+          <ChevronRight aria-hidden size={18} className="text-neutral-500" />
+        </Link>
         {showUsers && (
           <a href={PATIENTS_USERS_URL} target="_blank" rel="noreferrer" className={row}>
             <Shield aria-hidden size={20} className="w-6" />

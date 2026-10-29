@@ -1,11 +1,11 @@
-import { ChevronRight, ExternalLink, Wallet } from 'lucide-react';
+import { ChevronRight, ExternalLink, UserRound, Wallet } from 'lucide-react';
 import { Link, useNavigate } from 'react-router';
 import { useAuthedSession, useSession } from '@atp/core';
 import { Avatar, Button, Note } from '@atp/ui';
 import { usePageHeader } from '@/app/header';
 import { MONEY_URL, NAV, allowed, usersNavKey } from '@/app/nav';
 
-/** Phone-only overflow: availability, branches, users & roles, link to ATP Money, sign out. */
+/** Phone-only overflow: availability, branches, users & roles, account, ATP Money, sign out. */
 export function MorePage() {
   const session = useAuthedSession();
   const { can, signOut } = useSession();
@@ -31,6 +31,11 @@ export function MorePage() {
             </Link>
           );
         })}
+        <Link to="/account" className={row}>
+          <UserRound aria-hidden size={19} />
+          <span className="flex-1">My account</span>
+          <ChevronRight aria-hidden size={17} />
+        </Link>
         <a href={MONEY_URL} target="_blank" rel="noreferrer" className={row}>
           <Wallet aria-hidden size={19} />
           <span className="flex-1">Open ATP Money</span>

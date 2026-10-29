@@ -18,6 +18,7 @@ import type {
   Session,
 } from '../../types';
 import { ApiError } from '../errors';
+import { initials, shortName } from '../session';
 import { PEOPLE, ROLE_LABEL, USER_FOR_ROLE } from './people';
 
 const SESSION_KEY = 'atp.mock.session';
@@ -248,6 +249,8 @@ function fresh() {
     members: seedMembers(roles),
     invites: [] as Array<Invite & { token: string }>,
     audit: seedAudit(),
+    /** Names changed through PATCH /v1/me, by person key. */
+    names: {} as Record<string, string>,
     seq: 100,
   };
 }
@@ -318,10 +321,16 @@ function require(key: PermissionKey) {
   if (mockScope(key) === 'none') throw new ApiError(403, 'Not allowed', 'forbidden');
 }
 
+function person(key: string) {
+  const p = PEOPLE[key]!;
+  const name = l2.names[key];
+  return name ? { ...p, fullName: name, shortName: shortName(name), initials: initials(name) } : p;
+}
+
 function buildSession(): Session {
   const role = mockRole();
   return {
-    user: PEOPLE[USER_FOR_ROLE[role]]!,
+    user: person(USER_FOR_ROLE[role]),
     role,
     roleLabel: ROLE_LABEL[role],
     clinicId: CLINIC.id,
@@ -376,6 +385,19 @@ export const mockL2 = {
     l2.invites = l2.invites.filter((i) => i.token !== token);
     setMockRole(key);
     return latency(buildSession(), 250);
+  },
+
+  async updateMe(fullName: string): Promise<Session> {
+    const key = mockUserKey();
+    l2.names[key] = fullName;
+    for (const m of l2.members) if (m.userId === key) m.fullName = fullName;
+    return latency(buildSession(), 150);
+  },
+  /** "wrong" stands for a wrong current password. */
+  async changePassword(current: string, _next: string): Promise<void> {
+    if (current === 'wrong')
+      throw new ApiError(400, 'Current password is wrong.', 'wrong_password');
+    return latency(undefined, 150);
   },
 
   async listPermissions(): Promise<PermissionDef[]> {
@@ -435,6 +457,38 @@ export const mockL2 = {
     if (!m) throw new ApiError(404, 'Member not found', 'not_found');
     m.status = active ? 'active' : 'deactivated';
     m.deactivatedAt = active ? null : new Date().toISOString();
+    return latency(m);
+  },
+  /** PATCH /v1/members/{id}: name needs settings.users.invite, roles settings.roles.manage. */
+  async updateMember(
+    memberId: string,
+    v: { displayName?: string; roleIds?: string[] },
+  ): Promise<Member> {
+    if (v.displayName !== undefined) require('settings.users.invite');
+    if (v.roleIds !== undefined) require('settings.roles.manage');
+    const m = l2.members.find((x) => x.id === memberId);
+    if (!m) throw new ApiError(404, 'Member not found', 'not_found');
+    if (v.roleIds) {
+      if (!v.roleIds.length) throw new ApiError(400, 'Pick at least one role.', 'bad_request');
+      const before = m.roles;
+      m.roles = v.roleIds.map((rid) => ref(rid, l2.roles));
+      const admin = (x: Member) =>
+        x.status === 'active' &&
+        x.roles.some(
+          (r) => l2.roles.find((role) => role.id === r.id)?.permissions['settings.roles.manage'],
+        );
+      if (!l2.members.some(admin)) {
+        m.roles = before;
+        throw new ApiError(
+          409,
+          'At least one active member must keep a role that can manage roles',
+          'last_admin',
+        );
+      }
+      for (const role of l2.roles)
+        role.memberCount = l2.members.filter((x) => x.roles.some((r) => r.id === role.id)).length;
+    }
+    if (v.displayName !== undefined) m.displayName = v.displayName.trim();
     return latency(m);
   },
   async listInvites(): Promise<Invite[]> {

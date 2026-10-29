@@ -99,4 +99,13 @@ describe('auth & RBAC (L2 shapes, mock mode)', () => {
     await screen.findAllByRole('button', { name: 'Sign out' });
     expect(screen.queryByRole('link', { name: /Manage users/ })).not.toBeInTheDocument();
   });
+  it('gives a therapist, who has no More tab, an account page from the header', async () => {
+    await signInAs('therapist');
+    const { user, router } = renderApp('/');
+    const [avatar] = await screen.findAllByRole('link', { name: 'My account' });
+    await user.click(avatar!);
+    expect(router.state.location.pathname).toBe('/account');
+    expect(await screen.findByRole('button', { name: 'Change password' })).toBeInTheDocument();
+    expect(screen.getAllByRole('button', { name: 'Sign out' }).length).toBeGreaterThan(0);
+  });
 });

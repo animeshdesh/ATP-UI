@@ -131,6 +131,7 @@ export interface AttentionItem {
 export type PermissionDef = S['Permission'];
 export type Role = S['Role'];
 export type Member = S['Member'];
+export type UpdateMember = S['UpdateMember'];
 export type Invite = S['Invite'];
 export type CreateInvite = S['CreateInvite'];
 export type CreatedInvite = S['CreatedInvite'];

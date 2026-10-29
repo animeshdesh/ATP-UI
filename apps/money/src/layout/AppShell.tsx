@@ -1,5 +1,5 @@
 import { ExternalLink, LogOut, Plus, Shield } from 'lucide-react';
-import { NavLink, Outlet, useLocation, useMatches, useNavigate } from 'react-router';
+import { Link, NavLink, Outlet, useLocation, useMatches, useNavigate } from 'react-router';
 import {
   MORE_KEYS,
   NAV,
@@ -11,6 +11,7 @@ import {
   type NavKey,
 } from '@/app/nav';
 import {
+  InstallHint,
   useAuthedSession,
   useSession,
   longDate,
@@ -19,6 +20,7 @@ import {
   todayIso,
 } from '@atp/core';
 import { Avatar, Button, cn } from '@atp/ui';
+import { brand } from '@/app/brand';
 import { useQuickAdd } from '@/features/entry/QuickAddContext';
 import { PeriodSwitch } from '@/features/dashboard/PeriodSwitch';
 import { usePrefetchEntryData } from '@/api/queries';
@@ -47,6 +49,7 @@ const subtitleFor = (key: NavKey, clinicName: string): string => {
     case 'audit':
       return 'Every create, edit and delete';
     case 'more':
+    case 'account':
       return clinicName;
   }
 };
@@ -104,10 +107,13 @@ export function AppShell() {
             </div>
             <h1 className="text-[28px]">{title}</h1>
           </div>
-          <Avatar initials={session.user.initials} />
+          <Link to="/account" aria-label="My account" className="-m-0.5 p-0.5">
+            <Avatar initials={session.user.initials} />
+          </Link>
         </header>
 
         <OfflineBanner />
+        <InstallHint appName={brand.appName} />
 
         <main
           className={cn(
@@ -191,11 +197,17 @@ function Sidebar({
         )}
       </nav>
       <div className="flex items-center gap-2.5 border-t-2 border-divider px-4 pt-3.5 pb-1.5">
-        <Avatar initials={session.user.initials} size={36} />
-        <div className="min-w-0 flex-1">
-          <div className="truncate text-[13px] font-semibold">{session.user.fullName}</div>
-          <div className="text-xs text-neutral-700">{session.roleLabel}</div>
-        </div>
+        <Link
+          to="/account"
+          title="My account"
+          className="flex min-w-0 flex-1 items-center gap-2.5 text-ink no-underline hover:text-ink"
+        >
+          <Avatar initials={session.user.initials} size={36} />
+          <div className="min-w-0 flex-1">
+            <div className="truncate text-[13px] font-semibold">{session.user.fullName}</div>
+            <div className="text-xs text-neutral-700">{session.roleLabel}</div>
+          </div>
+        </Link>
         <button
           type="button"
           title="Sign out"
@@ -257,7 +269,8 @@ function TabBar({
           t.key === 'dashboard'
             ? pathname === '/'
             : pathname.startsWith(item.path) ||
-              (t.key === 'more' && MORE_KEYS.some((k) => pathname.startsWith(NAV[k].path)));
+              (t.key === 'more' &&
+                [...MORE_KEYS, 'account' as const].some((k) => pathname.startsWith(NAV[k].path)));
         const Icon = t.icon;
         return (
           <NavLink

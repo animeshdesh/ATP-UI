@@ -690,6 +690,7 @@ export const mockPatients = {
   updateRolePermissions: mockL2.updateRolePermissions,
   listMembers: mockL2.listMembers,
   setMemberActive: mockL2.setMemberActive,
+  updateMember: mockL2.updateMember,
   listInvites: mockL2.listInvites,
   createInvite: mockL2.createInvite,
   revokeInvite: mockL2.revokeInvite,

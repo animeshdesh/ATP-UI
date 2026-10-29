@@ -165,7 +165,7 @@ export function LoginPage() {
             Email me a magic link instead
           </Button>
         )}
-        <Link to="/invite" className="py-1.5 text-sm underline">
+        <Link to="/invite" className="-my-1 self-start py-3 text-sm underline">
           Have an invite? Set your password
         </Link>
       </form>

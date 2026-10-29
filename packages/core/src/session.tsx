@@ -20,6 +20,8 @@ interface SessionValue {
   signIn: (v: { identifier: string; password: string; devRole?: RoleKey }) => Promise<void>;
   acceptInvite: (token: string, v: { fullName: string; password: string }) => Promise<void>;
   chooseClinic: (id: string) => Promise<void>;
+  /** Own name (PATCH /v1/me); the session reloads so headers show it. */
+  updateName: (fullName: string) => Promise<void>;
   signOut: () => Promise<void>;
 }
 
@@ -87,6 +89,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
       signIn: async (v) => replaceSession(qc, await auth.signIn(v)),
       acceptInvite: async (token, v) => replaceSession(qc, await auth.acceptInvite(token, v)),
       chooseClinic: async (id) => replaceSession(qc, await auth.chooseClinic(id)),
+      updateName: async (fullName) => replaceSession(qc, await auth.updateMe(fullName)),
       signOut: async () => {
         await auth.signOut();
         replaceSession(qc, null);

@@ -1,6 +1,7 @@
 import { ChevronDown, LogOut, MapPin, Plus, WifiOff } from 'lucide-react';
-import { NavLink, Outlet, useLocation, useNavigate } from 'react-router';
-import { useAuthedSession, useOnline, useSession } from '@atp/core';
+import { Link, NavLink, Outlet, useLocation, useNavigate } from 'react-router';
+import { InstallHint, useAuthedSession, useOnline, useSession } from '@atp/core';
+import { brand } from '@/app/brand';
 import { Avatar, Button, cn } from '@atp/ui';
 import { useInquiryCounts } from '@/api/queries';
 import { useBranch } from '@/app/branch';
@@ -47,6 +48,7 @@ export function Shell() {
         </header>
 
         <OfflineBanner />
+        <InstallHint appName={brand.appName} />
 
         <main
           className={cn(
@@ -65,7 +67,11 @@ export function Shell() {
 
 function MeAvatar() {
   const session = useAuthedSession();
-  return <Avatar initials={session.user.initials} filled size={40} />;
+  return (
+    <Link to="/account" aria-label="My account" className="-m-0.5 p-0.5">
+      <Avatar initials={session.user.initials} filled size={40} />
+    </Link>
+  );
 }
 
 /** "All branches" or one branch; filters the calendar, requests and patients. */
@@ -170,11 +176,17 @@ function Sidebar({ badge }: { badge: number }) {
         {users && <NavItemLink k={users} />}
       </nav>
       <div className="flex items-center gap-2.5 border-t-2 border-divider px-4 pt-3.5 pb-1.5">
-        <Avatar initials={session.user.initials} filled size={36} />
-        <div className="min-w-0 flex-1">
-          <div className="truncate text-[13px] font-semibold">{session.user.fullName}</div>
-          <div className="text-xs text-neutral-700">{session.roleLabel}</div>
-        </div>
+        <Link
+          to="/account"
+          title="My account"
+          className="flex min-w-0 flex-1 items-center gap-2.5 text-ink no-underline hover:text-ink"
+        >
+          <Avatar initials={session.user.initials} filled size={36} />
+          <div className="min-w-0 flex-1">
+            <div className="truncate text-[13px] font-semibold">{session.user.fullName}</div>
+            <div className="text-xs text-neutral-700">{session.roleLabel}</div>
+          </div>
+        </Link>
         <button
           type="button"
           title="Sign out"
@@ -247,7 +259,9 @@ function TabBar({ badge, canInquiries }: { badge: number; canInquiries: boolean 
           k === 'calendar'
             ? pathname === '/'
             : k === 'more'
-              ? ['/more', '/availability', '/settings'].some((p) => pathname.startsWith(p))
+              ? ['/more', '/availability', '/settings', '/account'].some((p) =>
+                  pathname.startsWith(p),
+                )
               : pathname.startsWith(item.path);
         return (
           <NavLink

@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react';
 import { Navigate, createBrowserRouter, type RouteObject } from 'react-router';
 import { AuthGate, InvitePage, LoginPage, useSession } from '@atp/core';
+import { AccountRoute } from '@/features/account/AccountRoute';
 import { AvailabilityPage } from '@/features/availability/AvailabilityPage';
 import { BookPage } from '@/features/book/BookPage';
 import { BranchesPage } from '@/features/branches/BranchesPage';
@@ -111,6 +112,7 @@ export const routes: RouteObject[] = [
         ),
       },
       { path: 'more', element: <MorePage /> },
+      { path: 'account', element: <AccountRoute /> },
       { path: '*', element: <Navigate to="/" replace /> },
     ],
   },

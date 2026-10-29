@@ -1,5 +1,6 @@
 import { act, screen, waitFor, within } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
+import { mockMembers } from '@atp/core/mock';
 import { renderApp, signInAs } from '@/test/render';
 
 // Users & roles moved here from ATP Money (D-051).
@@ -98,5 +99,38 @@ describe('users & roles (L2 shapes, mock mode)', () => {
     renderApp('/settings/users');
     expect(await screen.findByText("You don't have access")).toBeInTheDocument();
     expect(screen.queryByRole('link', { name: 'Users & roles' })).not.toBeInTheDocument();
+  });
+  it('renames a member and changes their roles', async () => {
+    await signInAs('owner');
+    const { user } = renderApp('/settings/users');
+    const list = within(await screen.findByRole('list', { name: 'Members' }));
+    await user.click(list.getByRole('button', { name: 'Edit Dr. Anjali Deshmukh' }));
+    const dialog = within(screen.getByRole('dialog', { name: 'Edit Dr. Anjali Deshmukh' }));
+    const name = dialog.getByLabelText('Name');
+    await user.clear(name);
+    await user.type(name, 'Dr. Anjali D.');
+    await user.click(await dialog.findByRole('button', { name: 'Owner' }));
+    await user.click(dialog.getByRole('button', { name: 'Save' }));
+    expect(await screen.findByText('Dr. Anjali D. updated')).toBeInTheDocument();
+    const row = within(list.getByText('Dr. Anjali D.').closest('li')!);
+    expect(row.getByText('Owner')).toBeInTheDocument();
+    expect(row.getByText('Therapist')).toBeInTheDocument();
+  });
+
+  it('keeps someone able to edit roles (last_admin)', async () => {
+    for (const m of mockMembers())
+      if (m.userId !== 'Sameer' && m.roles.some((r) => r.name === 'Owner'))
+        m.status = 'deactivated';
+    await signInAs('owner');
+    const { user } = renderApp('/settings/users');
+    const list = within(await screen.findByRole('list', { name: 'Members' }));
+    await user.click(list.getByRole('button', { name: 'Edit Dr. Sameer Ushkewar' }));
+    const dialog = within(screen.getByRole('dialog'));
+    await user.click(await dialog.findByRole('button', { name: 'Owner' }));
+    await user.click(dialog.getByRole('button', { name: 'Therapist' }));
+    await user.click(dialog.getByRole('button', { name: 'Save' }));
+    expect(await dialog.findByRole('alert')).toHaveTextContent(
+      'Someone must keep a role that can edit roles',
+    );
   });
 });

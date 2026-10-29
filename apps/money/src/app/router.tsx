@@ -1,6 +1,13 @@
 import { useEffect, type ReactNode } from 'react';
 import { Navigate, createBrowserRouter, type RouteObject } from 'react-router';
-import { AuthGate, InvitePage, LoginPage, useSession, type PermissionKey } from '@atp/core';
+import {
+  AccountPage,
+  AuthGate,
+  InvitePage,
+  LoginPage,
+  useSession,
+  type PermissionKey,
+} from '@atp/core';
 import { AuditPage } from '@/features/audit/AuditPage';
 import { BudgetsPage } from '@/features/budgets/BudgetsPage';
 import { DashboardPage } from '@/features/dashboard/DashboardPage';
@@ -74,6 +81,7 @@ export const routes: RouteObject[] = [
       },
       { path: 'audit', ...page('audit', <AuditPage />, 'audit.view') },
       { path: 'more', ...page('more', <MorePage />) },
+      { path: 'account', ...page('account', <AccountPage />) },
       { path: '*', element: <Navigate to="/" replace /> },
     ],
   },

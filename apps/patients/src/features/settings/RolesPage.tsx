@@ -12,6 +12,7 @@ import {
   useRoles,
   useSetMemberActive,
   useSetRolePermission,
+  useUpdateMember,
 } from '@/api/queries';
 import { usePageHeader } from '@/app/header';
 import {
@@ -24,7 +25,7 @@ import {
   features,
 } from '@atp/core';
 import { Button, Dialog, Field, Input, Loading, Segmented, useToast, cn } from '@atp/ui';
-import type { CreatedInvite, PermissionDef, Role, Scope } from '@atp/core';
+import type { CreatedInvite, Member, PermissionDef, Role, Scope, UpdateMember } from '@atp/core';
 
 type Tab = 'roles' | 'users';
 const TABS = [
@@ -311,6 +312,7 @@ function UsersView() {
   const revoke = useRevokeInvite();
   const toast = useToast();
   const [open, setOpen] = useState(false);
+  const [editing, setEditing] = useState<Member | null>(null);
   if (members.isPending) return <Loading />;
   if (!members.data) return <p className="text-sm text-danger-fg">Could not load members.</p>;
   const sorted = [...members.data].sort(
@@ -414,6 +416,14 @@ function UsersView() {
                 >
                   {active ? 'Active' : 'Deactivated'}
                 </span>
+                <Button
+                  size="sm"
+                  aria-label={`Edit ${name}`}
+                  className="mt-0.5"
+                  onClick={() => setEditing(m)}
+                >
+                  Edit
+                </Button>
                 {!self && (
                   <Button
                     variant="link"
@@ -439,6 +449,7 @@ function UsersView() {
         })}
       </ul>
       <InviteDialog open={open} onClose={() => setOpen(false)} />
+      <EditMemberDialog member={editing} onClose={() => setEditing(null)} />
     </>
   );
 }
@@ -531,31 +542,7 @@ function InviteDialog({ open, onClose }: { open: boolean; onClose: () => void })
             />
           )}
         </Field>
-        <div className="flex flex-col gap-1.5">
-          <div className="text-[13px] font-semibold">Roles</div>
-          <div className="flex flex-wrap gap-1.5">
-            {!roles.data && <span className="text-[13px] text-neutral-700">Loading roles…</span>}
-            {options.map((r) => {
-              const on = selected.includes(r.id);
-              return (
-                <button
-                  key={r.id}
-                  type="button"
-                  aria-pressed={on}
-                  onClick={() =>
-                    setRoleIds(on ? selected.filter((x) => x !== r.id) : [...selected, r.id])
-                  }
-                  className={cn(
-                    'min-h-11 border-2 border-ink px-3 py-2 text-[13px] font-semibold text-ink',
-                    on ? 'bg-accent' : 'bg-white',
-                  )}
-                >
-                  {r.name}
-                </button>
-              );
-            })}
-          </div>
-        </div>
+        <RolePicker roles={roles.data} selected={selected} onChange={setRoleIds} />
         <div className="text-xs text-neutral-700">
           You get a link to send on WhatsApp or SMS. They open it and set their own password.
         </div>
@@ -567,6 +554,139 @@ function InviteDialog({ open, onClose }: { open: boolean; onClose: () => void })
       </>
     );
   }
+}
+
+function RolePicker({
+  roles,
+  selected,
+  onChange,
+}: {
+  roles: Role[] | undefined;
+  selected: string[];
+  onChange: (ids: string[]) => void;
+}) {
+  return (
+    <div className="flex flex-col gap-1.5">
+      <div className="text-[13px] font-semibold">Roles</div>
+      <div className="flex flex-wrap gap-1.5">
+        {!roles && <span className="text-[13px] text-neutral-700">Loading roles…</span>}
+        {sortRoles(roles ?? []).map((r) => {
+          const on = selected.includes(r.id);
+          return (
+            <button
+              key={r.id}
+              type="button"
+              aria-pressed={on}
+              onClick={() =>
+                onChange(on ? selected.filter((x) => x !== r.id) : [...selected, r.id])
+              }
+              className={cn(
+                'min-h-11 border-2 border-ink px-3 py-2 text-[13px] font-semibold text-ink',
+                on ? 'bg-accent' : 'bg-white',
+              )}
+            >
+              {r.name}
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+/** Rename (settings.users.invite) and/or replace roles (settings.roles.manage). */
+function EditMemberDialog({ member, onClose }: { member: Member | null; onClose: () => void }) {
+  const { can } = useSession();
+  const roles = useRoles();
+  const update = useUpdateMember();
+  const toast = useToast();
+  const [name, setName] = useState<string | null>(null);
+  const [roleIds, setRoleIds] = useState<string[] | null>(null);
+  const [error, setError] = useState('');
+  const canRename = can('settings.users.invite');
+  const canRoles = can('settings.roles.manage');
+  const currentName = member ? member.displayName || member.fullName : '';
+  const shownName = name ?? currentName;
+  const selected = roleIds ?? member?.roles.map((r) => r.id) ?? [];
+
+  const close = () => {
+    setName(null);
+    setRoleIds(null);
+    setError('');
+    onClose();
+  };
+  const save = async () => {
+    if (!member) return;
+    const body: UpdateMember = {};
+    if (canRename && name !== null && name.trim() !== currentName) {
+      if (!name.trim()) return setError('Add their name.');
+      body.displayName = name.trim();
+    }
+    if (canRoles && roleIds !== null) {
+      if (roleIds.length === 0) return setError('Pick at least one role.');
+      body.roleIds = roleIds;
+    }
+    if (!body.displayName && !body.roleIds) return close();
+    try {
+      await update.mutateAsync({ memberId: member.id, ...body });
+      toast(`${body.displayName ?? currentName} updated`);
+      close();
+    } catch (e) {
+      setError(
+        e instanceof ApiError && e.code === 'last_admin'
+          ? 'Someone must keep a role that can edit roles, such as Owner.'
+          : e instanceof Error
+            ? e.message
+            : 'Could not save.',
+      );
+    }
+  };
+
+  return (
+    <Dialog
+      open={!!member}
+      onClose={close}
+      title={`Edit ${currentName}`}
+      actions={
+        <>
+          <Button onClick={close}>Cancel</Button>
+          <Button variant="primary" onClick={save} disabled={update.isPending}>
+            Save
+          </Button>
+        </>
+      }
+    >
+      {canRename && (
+        <Field label="Name" hint="How they appear in the calendar and lists.">
+          {(id) => (
+            <Input
+              id={id}
+              value={shownName}
+              onChange={(e) => {
+                setName(e.target.value);
+                setError('');
+              }}
+            />
+          )}
+        </Field>
+      )}
+      {canRoles && (
+        <RolePicker
+          roles={roles.data}
+          selected={selected}
+          onChange={(ids) => {
+            setRoleIds(ids);
+            setError('');
+          }}
+        />
+      )}
+      {error && (
+        <div role="alert" className="text-xs font-semibold text-danger-fg">
+          {error}
+        </div>
+      )}
+    </Dialog>
+  );
 }
 
 /** The API returns the invite link once and sends nothing itself: share it from the device. */

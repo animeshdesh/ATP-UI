@@ -9,6 +9,7 @@ import {
   Repeat,
   Scale,
   Tags,
+  UserRound,
   type LucideIcon,
 } from 'lucide-react';
 import type { PermissionKey, RoleKey } from '@atp/core';
@@ -22,7 +23,8 @@ export type NavKey =
   | 'reports'
   | 'categories'
   | 'audit'
-  | 'more';
+  | 'more'
+  | 'account';
 
 interface NavItem {
   path: string;
@@ -79,6 +81,7 @@ export const NAV: Record<NavKey, NavItem> = {
     section: 'settings',
   },
   more: { path: '/more', label: 'More', icon: Ellipsis, section: 'mobile' },
+  account: { path: '/account', label: 'My account', icon: UserRound, section: 'mobile' },
 };
 
 const ROLE_LABELS: Partial<Record<RoleKey, Partial<Record<NavKey, string>>>> = {

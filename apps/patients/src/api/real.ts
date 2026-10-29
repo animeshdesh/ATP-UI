@@ -8,6 +8,7 @@ import type {
   PermissionDef,
   Role,
   Scope,
+  UpdateMember,
 } from '@atp/core';
 import type {
   Appointment,
@@ -136,6 +137,8 @@ export const realPatients = {
         ? http.POST('/v1/members/{id}/reactivate', path(memberId))
         : http.POST('/v1/members/{id}/deactivate', path(memberId)),
     ),
+  updateMember: (memberId: string, v: UpdateMember): Promise<Member> =>
+    unwrap(http.PATCH('/v1/members/{id}', { ...path(memberId), body: v })),
   listInvites: (): Promise<Invite[]> => unwrap(http.GET('/v1/invites')),
   createInvite: (input: CreateInvite): Promise<CreatedInvite> =>
     unwrap(http.POST('/v1/invites', { body: input })),

@@ -136,6 +136,31 @@ const realAuth = {
     clinicChoice.set(id);
     return getSession();
   },
+
+  async updateMe(fullName: string): Promise<Session | ClinicPick> {
+    await unwrap(http.PATCH('/v1/me', { body: { fullName } }));
+    return requireSession();
+  },
+
+  /** Checks the current password first, so an unlocked phone alone can't change it. */
+  async changePassword(current: string, next: string): Promise<void> {
+    const { data } = await supabase().auth.getSession();
+    const user = data.session?.user;
+    if (!user) throw new ApiError(401, 'Sign in again, then retry.', 'unauthorized');
+    const id = user.email
+      ? { email: user.email }
+      : { phone: user.phone?.startsWith('+') ? user.phone : `+${user.phone ?? ''}` };
+    const check = await supabase().auth.signInWithPassword({ ...id, password: current });
+    if (check.error)
+      throw check.error.code === 'invalid_credentials'
+        ? new ApiError(400, 'Current password is wrong.', 'wrong_password')
+        : authError(check.error);
+    const { error } = await supabase().auth.updateUser({ password: next });
+    if (error)
+      throw error.code === 'same_password'
+        ? new ApiError(400, 'Use a password different from the current one.', error.code)
+        : authError(error);
+  },
 };
 
 const base =
@@ -149,6 +174,8 @@ const base =
         getInvite: mockL2.getInvite,
         acceptInvite: mockL2.acceptInvite,
         chooseClinic: mockL2.getSession,
+        updateMe: mockL2.updateMe,
+        changePassword: mockL2.changePassword,
       };
 
 /** Keep the mocks' identity in step with whoever is signed in. */
@@ -165,6 +192,9 @@ export const auth = {
   acceptInvite: async (token: string, v: { fullName: string; password: string }) =>
     track(await base.acceptInvite(token, v)),
   chooseClinic: async (id: string) => track(await base.chooseClinic(id)),
+  updateMe: async (fullName: string) => track(await base.updateMe(fullName)),
+  changePassword: (current: string, next: string): Promise<void> =>
+    base.changePassword(current, next),
   signOut: async () => {
     await base.signOut();
     setMockRole(null);

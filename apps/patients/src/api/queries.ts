@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient, type QueryClient } from '@tanstack/react-query';
-import { sessionKey, type Role, type Scope } from '@atp/core';
+import { sessionKey, type Role, type Scope, type UpdateMember } from '@atp/core';
 import type {
   AppointmentPatch,
   ConvertInquiry,
@@ -312,6 +312,24 @@ export function useRevokeInvite() {
   return useMutation({
     mutationFn: api.revokeInvite,
     onSuccess: () => qc.invalidateQueries({ queryKey: qk.invites }),
+  });
+}
+
+/** Name and/or roles. Own roles change the session's permissions; names show in pickers. */
+export function useUpdateMember() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (v: { memberId: string } & UpdateMember) => {
+      const { memberId, ...body } = v;
+      return api.updateMember(memberId, body);
+    },
+    onSuccess: () =>
+      Promise.all([
+        qc.invalidateQueries({ queryKey: qk.members }),
+        qc.invalidateQueries({ queryKey: qk.roles }),
+        qc.invalidateQueries({ queryKey: qk.session }),
+        qc.invalidateQueries({ queryKey: qk.therapists }),
+      ]),
   });
 }
 

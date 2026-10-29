@@ -8,9 +8,11 @@ export interface Brand {
   headline: string;
   /** Optional line under the sign-in form. */
   note?: string;
+  /** Home-screen name, for the install tip (e.g. "ATP Money"). */
+  appName: string;
 }
 
-const BrandContext = createContext<Brand>({ product: 'ATP Rehab', headline: '' });
+const BrandContext = createContext<Brand>({ product: 'ATP Rehab', headline: '', appName: 'ATP' });
 
 export function BrandProvider({ brand, children }: { brand: Brand; children: ReactNode }) {
   return <BrandContext value={brand}>{children}</BrandContext>;
