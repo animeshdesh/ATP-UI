@@ -194,8 +194,8 @@ function assertOnline() {
 const me = mockUserKey;
 const myMemberId = () => memberIdOf(me()) ?? 'member-0';
 const canSeeAll = () => mockScope('finance.entry.view') === 'all';
-const visible = (t: StoredTxn) =>
-  !t.deleted && (canSeeAll() || t.recordedByKey === me() || t.partyKey === me());
+/** Own scope = entries I recorded, not ones someone else logged with me as party (D-050). */
+const visible = (t: StoredTxn) => !t.deleted && (canSeeAll() || t.recordedByKey === me());
 
 function canEdit(t: StoredTxn): boolean {
   if (t.settled) return false;

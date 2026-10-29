@@ -21,6 +21,7 @@ The source is the Claude Design project `b36a94e7-c670-4def-8152-d2aecc961820`. 
 | Sell package, Record payment                                                                  | from profile                                   | `features/patients/MoneySheets.tsx`                         |
 | Availability: working hours per branch, time off                                              | `/availability`                                | `features/availability/AvailabilityPage.tsx`                |
 | Branches (Owner)                                                                              | `/settings/branches`                           | `features/branches/BranchesPage.tsx`                        |
+| Users & roles (money design 2i/2j; moved here, D-051): members, invites, permission matrix    | `/settings/users`, `/settings/roles`           | `features/settings/RolesPage.tsx`                           |
 | More (mobile), No permission, offline banner                                                  | `/more`, guards, shell                         | `features/more/*`, `layout/Shell.tsx`                       |
 
 **Shell:** `layout/Shell.tsx` provides the sidebar with its branch picker and the "Manage users in ATP Money" link, the desktop top bar, the mobile header with the branch picker, and the tab bar with the add button. Screens set the title and main action through `usePageHeader` (`app/header.tsx`). The branch picker state, remembered per user on the device, lives in `app/branch.tsx`.

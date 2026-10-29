@@ -11,6 +11,7 @@ import { MorePage } from '@/features/more/MorePage';
 import { NoPermission } from '@/features/more/NoPermission';
 import { PatientProfile } from '@/features/patients/PatientProfile';
 import { PatientsPage } from '@/features/patients/PatientsPage';
+import { RolesPage } from '@/features/settings/RolesPage';
 import { Shell } from '@/layout/Shell';
 import { BranchProvider } from './branch';
 import { HeaderProvider } from './header';
@@ -90,6 +91,22 @@ export const routes: RouteObject[] = [
         element: (
           <Guard nav="branches">
             <BranchesPage />
+          </Guard>
+        ),
+      },
+      {
+        path: 'settings/users',
+        element: (
+          <Guard nav="users">
+            <RolesPage tab="users" />
+          </Guard>
+        ),
+      },
+      {
+        path: 'settings/roles',
+        element: (
+          <Guard nav="roles">
+            <RolesPage tab="roles" />
           </Guard>
         ),
       },

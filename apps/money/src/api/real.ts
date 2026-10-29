@@ -1,4 +1,5 @@
-/* Real API for money: RBAC admin (L2) and finance (L3–L7). Sign-in lives in @atp/core. */
+/* Real API for money: audit (L2) and finance (L3–L7). Sign-in lives in @atp/core; users and roles
+ * are managed in the patients app (D-051). */
 import type {
   MonthlyReport,
   ReceiptsMode,
@@ -31,40 +32,10 @@ import type {
   UpdateRecurringItem,
   UpdateTransaction,
   AuditPage,
-  CreateInvite,
-  CreatedInvite,
-  Invite,
-  Member,
-  PermissionDef,
-  Role,
-  Scope,
 } from '@atp/core';
 import { http, unwrap, ApiError } from '@atp/core';
 
 export const realL2 = {
-  listPermissions: (): Promise<PermissionDef[]> => unwrap(http.GET('/v1/permissions')),
-  listRoles: (): Promise<Role[]> => unwrap(http.GET('/v1/roles')),
-  createRole: (name: string): Promise<Role> =>
-    unwrap(http.POST('/v1/roles', { body: { name, description: '', permissions: {} } })),
-  updateRolePermissions: (roleId: string, permissions: Record<string, Scope>): Promise<Role> =>
-    unwrap(
-      http.PATCH('/v1/roles/{id}', { params: { path: { id: roleId } }, body: { permissions } }),
-    ),
-
-  listMembers: (): Promise<Member[]> => unwrap(http.GET('/v1/members')),
-  setMemberActive: (memberId: string, active: boolean): Promise<Member> =>
-    unwrap(
-      active
-        ? http.POST('/v1/members/{id}/reactivate', { params: { path: { id: memberId } } })
-        : http.POST('/v1/members/{id}/deactivate', { params: { path: { id: memberId } } }),
-    ),
-  listInvites: (): Promise<Invite[]> => unwrap(http.GET('/v1/invites')),
-  createInvite: (input: CreateInvite): Promise<CreatedInvite> =>
-    unwrap(http.POST('/v1/invites', { body: input })),
-  revokeInvite: async (id: string): Promise<void> => {
-    await unwrap(http.DELETE('/v1/invites/{id}', { params: { path: { id } } }));
-  },
-
   listAudit: (q: { table?: string; cursor?: string; limit?: number }): Promise<AuditPage> =>
     unwrap(http.GET('/v1/audit', { params: { query: q } })),
 

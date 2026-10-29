@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient, type QueryClient } from '@tanstack/react-query';
-import { sessionKey } from '@atp/core';
+import { sessionKey, type Role, type Scope } from '@atp/core';
 import type {
   AppointmentPatch,
   ConvertInquiry,
@@ -32,6 +32,10 @@ export const qk = {
   patient: (id: string) => ['patient', id] as const,
   notes: (patientId: string) => ['notes', patientId] as const,
   publicClinic: (slug: string) => ['public-clinic', slug] as const,
+  permissionCatalog: ['permission-catalog'] as const,
+  roles: ['roles'] as const,
+  members: ['members'] as const,
+  invites: ['invites'] as const,
 };
 
 // --- reads --------------------------------------------------------------------------------------
@@ -248,3 +252,79 @@ export const useAllHours = (memberIds: string[]) =>
       ) as Record<string, WorkingHours[]>,
     enabled: memberIds.length > 0,
   });
+
+// --- users & roles (D-051) ----------------------------------------------------------------------
+
+export const usePermissionCatalog = () =>
+  useQuery({ queryKey: qk.permissionCatalog, queryFn: api.listPermissions, staleTime: Infinity });
+export const useRoles = () => useQuery({ queryKey: qk.roles, queryFn: api.listRoles });
+export const useMembers = () => useQuery({ queryKey: qk.members, queryFn: api.listMembers });
+export const useInvites = () => useQuery({ queryKey: qk.invites, queryFn: api.listInvites });
+
+/** One matrix cell. Optimistic, rolled back on error (e.g. scope_own_not_supported). */
+export function useSetRolePermission() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (v: { roleId: string; key: string; scope: Scope }) =>
+      api.updateRolePermissions(v.roleId, { [v.key]: v.scope }),
+    onMutate: async (v) => {
+      await qc.cancelQueries({ queryKey: qk.roles });
+      const prev = qc.getQueryData<Role[]>(qk.roles);
+      qc.setQueryData<Role[]>(qk.roles, (roles) =>
+        roles?.map((r) => {
+          if (r.id !== v.roleId) return r;
+          const permissions = { ...r.permissions };
+          if (v.scope === 'none') delete permissions[v.key];
+          else permissions[v.key] = v.scope;
+          return { ...r, permissions };
+        }),
+      );
+      return { prev };
+    },
+    onError: (_e, _v, ctx) => qc.setQueryData(qk.roles, ctx?.prev),
+    onSettled: () =>
+      Promise.all([
+        qc.invalidateQueries({ queryKey: qk.roles }),
+        qc.invalidateQueries({ queryKey: qk.session }),
+        qc.invalidateQueries({ queryKey: qk.therapists }),
+      ]),
+  });
+}
+
+export function useCreateRole() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: api.createRole,
+    onSuccess: () => qc.invalidateQueries({ queryKey: qk.roles }),
+  });
+}
+
+export function useCreateInvite() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: api.createInvite,
+    onSuccess: () => qc.invalidateQueries({ queryKey: qk.invites }),
+  });
+}
+
+export function useRevokeInvite() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: api.revokeInvite,
+    onSuccess: () => qc.invalidateQueries({ queryKey: qk.invites }),
+  });
+}
+
+/** Deactivated members also drop out of the therapist pickers. */
+export function useSetMemberActive() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (v: { memberId: string; active: boolean }) =>
+      api.setMemberActive(v.memberId, v.active),
+    onSuccess: () =>
+      Promise.all([
+        qc.invalidateQueries({ queryKey: qk.members }),
+        qc.invalidateQueries({ queryKey: qk.therapists }),
+      ]),
+  });
+}

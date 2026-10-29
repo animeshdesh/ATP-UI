@@ -1,5 +1,7 @@
 import { screen, waitFor, within } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
+import { memberIdOf } from '@atp/core/mock';
+import { api } from '@/api';
 import { renderApp, signInAs } from '@/test/render';
 
 const entries = () => screen.findByRole('list', { name: 'Entries' });
@@ -36,6 +38,23 @@ describe('ledger (L3 shapes, mock mode)', () => {
     await router.navigate('/audit');
     const deleted = await screen.findAllByText('Soft-deleted');
     expect(deleted[0]!.closest('li')).toHaveTextContent('Expense · Travel (home visits)');
+  });
+
+  it("hides an owner's entry from the therapist it names as payer (D-050)", async () => {
+    await signInAs('owner');
+    await api.createTransaction({
+      type: 'expense',
+      amountPaise: 45000,
+      categoryId: 'cat-consumables',
+      description: 'Owner logged for Anjali',
+      partyMemberId: memberIdOf('Anjali'),
+    });
+    await signInAs('therapist');
+    renderApp('/transactions');
+    expect(await row(/^Auto fare, Kothrud/)).toBeInTheDocument();
+    expect(
+      within(await entries()).queryByRole('button', { name: /^Owner logged for Anjali/ }),
+    ).not.toBeInTheDocument();
   });
 
   it('shows entries past the 7-day window read-only for front desk', async () => {

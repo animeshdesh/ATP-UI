@@ -335,7 +335,7 @@ export const mockFinance = {
     const prevTo = q.compareTo ?? (from.endsWith('-01') ? addMonths(to, -1) : addDays(from, -1));
     const me = mockUserKey();
     const visible = ledgerDb().transactions.filter(
-      (t) => !t.deleted && (!own || t.recordedByKey === me || t.partyKey === me),
+      (t) => !t.deleted && (!own || t.recordedByKey === me),
     );
     const inRange = (a: string, b: string) =>
       visible.filter((t) => t.entryDate >= a && t.entryDate <= b);

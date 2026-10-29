@@ -5346,7 +5346,7 @@ export interface paths {
         };
         /**
          * Ledger with search, filters and cursor pagination (finance.entry.view)
-         * @description With scope 'own' only entries the caller recorded or is the party of are returned.
+         * @description With scope 'own' only entries the caller recorded are returned (D-050).
          */
         get: {
             parameters: {

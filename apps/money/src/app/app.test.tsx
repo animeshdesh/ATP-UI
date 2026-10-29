@@ -65,18 +65,6 @@ describe('app', () => {
     await waitFor(() => expect(router.state.location.pathname).toBe('/'));
     expect(await screen.findByText('Your latest entries')).toBeInTheDocument();
   });
-
-  it('cycles a role permission but never reduces Owner', async () => {
-    await signInAs('owner');
-    const { user } = renderApp('/settings/roles');
-    const cell = await screen.findByRole('button', { name: 'Edit any entry, Therapist: None' });
-    await user.click(cell);
-    expect(
-      await screen.findByRole('button', { name: 'Edit any entry, Therapist: All' }),
-    ).toBeInTheDocument();
-    await user.click(screen.getByRole('button', { name: 'Edit any entry, Owner: All' }));
-    expect(screen.getByRole('button', { name: 'Edit any entry, Owner: All' })).toBeInTheDocument();
-  });
 });
 
 describe('auth & RBAC (L2 shapes, mock mode)', () => {
@@ -96,52 +84,19 @@ describe('auth & RBAC (L2 shapes, mock mode)', () => {
     expect(screen.queryByRole('button', { name: 'Log now' })).not.toBeInTheDocument();
   });
 
-  it('invites a user, shows the link once, and the invitee joins', async () => {
+  it('links owners to user management in ATP Patients (D-051)', async () => {
     await signInAs('owner');
-    const { user, router } = renderApp('/settings/users');
-    await user.click(await screen.findByRole('button', { name: 'Invite user' }));
-    const dialog = await screen.findByRole('dialog', { name: 'Invite user' });
-    await user.type(within(dialog).getByLabelText('Name'), 'Dr. Neha Joshi');
-    await user.type(within(dialog).getByLabelText('Phone or email'), '98765 43210');
-    await waitFor(() =>
-      expect(within(dialog).getByRole('button', { name: 'Create invite' })).toBeEnabled(),
-    );
-    expect(within(dialog).getByRole('button', { name: 'Therapist' })).toHaveAttribute(
-      'aria-pressed',
-      'true',
-    );
-    await user.click(within(dialog).getByRole('button', { name: 'Create invite' }));
-
-    const share = await screen.findByRole('dialog', { name: 'Send the invite' });
-    const url = within(share).getByLabelText('Invite link').textContent!;
-    expect(url).toMatch(/\/invite\/mock-inv-\d+$/);
-    await user.click(within(share).getByRole('button', { name: 'Done' }));
-    expect(
-      within(await screen.findByRole('region', { name: 'Pending invites' })).getByText(
-        'Dr. Neha Joshi',
-      ),
-    ).toBeInTheDocument();
-
-    await user.click(screen.getByRole('button', { name: 'Sign out' }));
-    await waitFor(() => expect(router.state.location.pathname).toBe('/login'));
-    await screen.findByRole('heading', { name: 'Sign in' });
-    await act(() => router.navigate(new URL(url).pathname));
-    expect(await screen.findByRole('heading', { name: 'Set your password' })).toBeInTheDocument();
-    await user.type(screen.getByLabelText('New password'), 'short');
-    await user.click(screen.getByRole('button', { name: 'Join ATP Rehab' }));
-    expect(screen.getByRole('alert')).toHaveTextContent('Use at least 8 characters.');
-    await user.type(screen.getByLabelText('New password'), '-enough');
-    await user.click(screen.getByRole('button', { name: 'Join ATP Rehab' }));
-    expect(await screen.findAllByRole('heading', { name: 'My summary' })).not.toHaveLength(0);
+    renderApp('/more');
+    // Sidebar and More both carry the link.
+    const links = await screen.findAllByRole('link', { name: /Manage users in ATP Patients/ });
+    for (const link of links)
+      expect(link).toHaveAttribute('href', 'https://patient.atprehab.si/settings/users');
   });
 
-  it('deactivates a member', async () => {
-    await signInAs('owner');
-    const { user } = renderApp('/settings/users');
-    const list = await screen.findByRole('list', { name: 'Members' });
-    const pooja = within(list).getByText('Pooja Shinde').closest('li')!;
-    await user.click(within(pooja).getByRole('button', { name: 'Deactivate' }));
-    expect(await within(pooja).findByText('Deactivated')).toBeInTheDocument();
-    expect(within(list).getByText('(you)')).toBeInTheDocument();
+  it('hides the user management link from a therapist', async () => {
+    await signInAs('therapist');
+    renderApp('/more');
+    await screen.findAllByRole('button', { name: 'Sign out' });
+    expect(screen.queryByRole('link', { name: /Manage users/ })).not.toBeInTheDocument();
   });
 });

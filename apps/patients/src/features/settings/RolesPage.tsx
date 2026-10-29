@@ -13,6 +13,7 @@ import {
   useSetMemberActive,
   useSetRolePermission,
 } from '@/api/queries';
+import { usePageHeader } from '@/app/header';
 import {
   initials,
   parseIdentifier,
@@ -31,10 +32,15 @@ const TABS = [
   { value: 'users', label: 'Users' },
 ] as const;
 
+/** Users (invites, members) and the role × permission matrix; moved here from money (D-051). */
 export function RolesPage({ tab }: { tab: Tab }) {
   const navigate = useNavigate();
   const { can } = useSession();
   const showTabs = can('settings.roles.manage') && can('settings.users.invite');
+  usePageHeader({
+    title: 'Users & roles',
+    subtitle: 'Settings · applies to ATP Patients and ATP Money',
+  });
   return (
     <>
       {showTabs && (
@@ -61,10 +67,18 @@ const sortRoles = (roles: Role[]) =>
     return (ia < 0 ? 99 : ia) - (ib < 0 ? 99 : ib) || a.name.localeCompare(b.name);
   });
 
+/** Releases whose modules have shipped; later ones are set now and dimmed. */
+const LIVE: ReadonlyArray<PermissionDef['release']> = ['v1', 'v2'];
+const live = (p: PermissionDef) => LIVE.includes(p.release);
+const CLINICAL = ['patients', 'appointments'];
 const GROUPS: Array<{ label: string; match: (p: PermissionDef) => boolean }> = [
-  { label: 'Finance', match: (p) => p.release === 'v1' && p.module === 'finance' },
-  { label: 'Settings', match: (p) => p.release === 'v1' && p.module !== 'finance' },
-  { label: 'Later versions', match: (p) => p.release !== 'v1' },
+  { label: 'Patients & appointments', match: (p) => live(p) && CLINICAL.includes(p.module) },
+  { label: 'Finance', match: (p) => live(p) && p.module === 'finance' },
+  {
+    label: 'Settings',
+    match: (p) => live(p) && p.module !== 'finance' && !CLINICAL.includes(p.module),
+  },
+  { label: 'Later versions', match: (p) => !live(p) },
 ];
 
 const nextScope = (s: Scope, supportsOwn: boolean): Scope =>
@@ -134,7 +148,7 @@ function PermissionMatrixView() {
                 <div
                   key={p.key}
                   role="row"
-                  className={cn('grid border-b border-rule', p.release !== 'v1' && 'opacity-55')}
+                  className={cn('grid border-b border-rule', !live(p) && 'opacity-55')}
                   style={grid}
                 >
                   <div className="px-3.5 py-2" role="rowheader">
@@ -179,9 +193,10 @@ function PermissionMatrixView() {
           </Button>
         )}
         <span className="min-w-[200px] flex-1 text-xs text-neutral-700">
-          Tap a cell to cycle All → Own → None. "Own" exists only where a permission supports it.
-          Owner access can't be reduced. Later-version permissions are set now and switch on when
-          those modules ship.
+          Tap a cell to cycle All → Own → None. "Own" exists only where a permission supports it:
+          for entries it means the ones that person logged; for patients, the ones they treat. Owner
+          access can't be reduced. Later-version permissions are set now and switch on when those
+          modules ship.
         </span>
       </div>
       <Dialog

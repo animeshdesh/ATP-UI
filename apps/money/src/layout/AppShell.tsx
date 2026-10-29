@@ -1,6 +1,15 @@
-import { LogOut, Plus } from 'lucide-react';
+import { ExternalLink, LogOut, Plus, Shield } from 'lucide-react';
 import { NavLink, Outlet, useLocation, useMatches, useNavigate } from 'react-router';
-import { MORE_KEYS, NAV, TABS, navAllowed, navLabel, type NavKey } from '@/app/nav';
+import {
+  MORE_KEYS,
+  NAV,
+  PATIENTS_USERS_URL,
+  TABS,
+  USERS_PERMISSIONS,
+  navAllowed,
+  navLabel,
+  type NavKey,
+} from '@/app/nav';
 import {
   useAuthedSession,
   useSession,
@@ -34,7 +43,6 @@ const subtitleFor = (key: NavKey, clinicName: string): string => {
     case 'reports':
       return 'Monthly report for the CA';
     case 'categories':
-    case 'roles':
       return 'Settings';
     case 'audit':
       return 'Every create, edit and delete';
@@ -65,11 +73,12 @@ export function AppShell() {
   const settingsKeys = (Object.keys(NAV) as NavKey[]).filter(
     (k) => NAV[k].section === 'settings' && visible(k),
   );
-  const hasMore = MORE_KEYS.some(visible);
+  const showUsers = navAllowed(USERS_PERMISSIONS, (key) => can(key));
+  const hasMore = MORE_KEYS.some(visible) || showUsers;
 
   return (
     <div className="flex h-dvh min-h-0">
-      <Sidebar mainKeys={mainKeys} settingsKeys={settingsKeys} />
+      <Sidebar mainKeys={mainKeys} settingsKeys={settingsKeys} showUsers={showUsers} />
 
       <div className="flex min-h-0 min-w-0 flex-1 flex-col">
         {/* Desktop top bar */}
@@ -138,7 +147,15 @@ function NavButton({ k }: { k: NavKey }) {
   );
 }
 
-function Sidebar({ mainKeys, settingsKeys }: { mainKeys: NavKey[]; settingsKeys: NavKey[] }) {
+function Sidebar({
+  mainKeys,
+  settingsKeys,
+  showUsers,
+}: {
+  mainKeys: NavKey[];
+  settingsKeys: NavKey[];
+  showUsers: boolean;
+}) {
   const session = useAuthedSession();
   const { signOut } = useSession();
   const navigate = useNavigate();
@@ -152,12 +169,24 @@ function Sidebar({ mainKeys, settingsKeys }: { mainKeys: NavKey[]; settingsKeys:
         {mainKeys.map((k) => (
           <NavButton key={k} k={k} />
         ))}
-        {settingsKeys.length > 0 && (
+        {(settingsKeys.length > 0 || showUsers) && (
           <>
             <div className="mx-5 mt-3.5 mb-1.5 kicker text-neutral-600">Settings</div>
             {settingsKeys.map((k) => (
               <NavButton key={k} k={k} />
             ))}
+            {showUsers && (
+              <a
+                href={PATIENTS_USERS_URL}
+                target="_blank"
+                rel="noreferrer"
+                className="flex min-h-[42px] items-center gap-3 border-l-4 border-transparent px-4 py-2.5 text-sm text-ink no-underline hover:bg-accent-100 hover:text-ink"
+              >
+                <Shield aria-hidden size={17} />
+                <span className="flex-1 leading-tight">Manage users in ATP Patients</span>
+                <ExternalLink aria-hidden size={13} className="text-neutral-600" />
+              </a>
+            )}
           </>
         )}
       </nav>

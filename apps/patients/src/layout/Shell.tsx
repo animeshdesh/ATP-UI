@@ -1,19 +1,11 @@
-import {
-  ChevronDown,
-  ExternalLink,
-  LogOut,
-  MapPin,
-  Plus,
-  ShieldCheck,
-  WifiOff,
-} from 'lucide-react';
+import { ChevronDown, LogOut, MapPin, Plus, WifiOff } from 'lucide-react';
 import { NavLink, Outlet, useLocation, useNavigate } from 'react-router';
 import { useAuthedSession, useOnline, useSession } from '@atp/core';
 import { Avatar, Button, cn } from '@atp/ui';
 import { useInquiryCounts } from '@/api/queries';
 import { useBranch } from '@/app/branch';
 import { useHeaderState } from '@/app/header';
-import { MONEY_USERS_URL, NAV, allowed, type NavKey } from '@/app/nav';
+import { NAV, allowed, usersNavKey, type NavKey } from '@/app/nav';
 import { useBooking } from '@/features/calendar/booking';
 
 export function Shell() {
@@ -113,7 +105,10 @@ function NavItemLink({ k, badge }: { k: NavKey; badge?: number }) {
   const item = NAV[k];
   const Icon = item.icon;
   const { pathname } = useLocation();
-  const active = k === 'calendar' ? pathname === '/' : pathname.startsWith(item.path);
+  const active =
+    k === 'calendar'
+      ? pathname === '/'
+      : [item.path, ...(item.match ?? [])].some((p) => pathname.startsWith(p));
   return (
     <NavLink
       to={item.path}
@@ -154,6 +149,7 @@ function Sidebar({ badge }: { badge: number }) {
     allowed(NAV[k], can),
   );
   const showBranches = allowed(NAV.branches, can);
+  const users = usersNavKey(can);
   return (
     <aside className="hidden w-[236px] flex-none flex-col border-r-2 border-divider bg-white lg:flex">
       <div className="flex flex-col gap-1.5 border-b-2 border-divider px-5 pt-[18px] pb-4">
@@ -165,22 +161,11 @@ function Sidebar({ badge }: { badge: number }) {
         {main.map((k) => (
           <NavItemLink key={k} k={k} badge={k === 'inquiries' ? badge : undefined} />
         ))}
-        {(showBranches || can('settings.roles.manage')) && (
+        {(showBranches || users) && (
           <div className="mx-5 mt-3.5 mb-1.5 kicker text-neutral-600">Settings</div>
         )}
         {showBranches && <NavItemLink k="branches" />}
-        {can('settings.roles.manage') && (
-          <a
-            href={MONEY_USERS_URL}
-            target="_blank"
-            rel="noreferrer"
-            className="flex min-h-[42px] items-center gap-3 border-l-4 border-transparent px-4 py-2.5 text-sm text-ink no-underline hover:bg-accent-100 hover:text-ink"
-          >
-            <ShieldCheck aria-hidden size={17} />
-            <span className="flex-1 leading-tight">Manage users in ATP Money</span>
-            <ExternalLink aria-hidden size={13} className="text-neutral-600" />
-          </a>
-        )}
+        {users && <NavItemLink k={users} />}
       </nav>
       <div className="flex items-center gap-2.5 border-t-2 border-divider px-4 pt-3.5 pb-1.5">
         <Avatar initials={session.user.initials} filled size={36} />

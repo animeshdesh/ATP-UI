@@ -1,6 +1,15 @@
 /* Patients app on the real API (backend L9–L12, docs/V2.md). Same signatures as mock/patients.ts. */
 import { http, unwrap } from '@atp/core';
 import type {
+  CreateInvite,
+  CreatedInvite,
+  Invite,
+  Member,
+  PermissionDef,
+  Role,
+  Scope,
+} from '@atp/core';
+import type {
   Appointment,
   AppointmentPatch,
   Branch,
@@ -111,4 +120,26 @@ export const realPatients = {
     unwrap(http.POST('/v1/patients/{id}/packages', { ...path(patientId), body: v })),
   recordPayment: (patientId: string, v: NewPayment): Promise<Payment> =>
     unwrap(http.POST('/v1/patients/{id}/payments', { ...path(patientId), body: v })),
+
+  // --- users & roles (L2; managed here since D-051) ---------------------------------------------
+  listPermissions: (): Promise<PermissionDef[]> => unwrap(http.GET('/v1/permissions')),
+  listRoles: (): Promise<Role[]> => unwrap(http.GET('/v1/roles')),
+  createRole: (name: string): Promise<Role> =>
+    unwrap(http.POST('/v1/roles', { body: { name, description: '', permissions: {} } })),
+  updateRolePermissions: (roleId: string, permissions: Record<string, Scope>): Promise<Role> =>
+    unwrap(http.PATCH('/v1/roles/{id}', { ...path(roleId), body: { permissions } })),
+
+  listMembers: (): Promise<Member[]> => unwrap(http.GET('/v1/members')),
+  setMemberActive: (memberId: string, active: boolean): Promise<Member> =>
+    unwrap(
+      active
+        ? http.POST('/v1/members/{id}/reactivate', path(memberId))
+        : http.POST('/v1/members/{id}/deactivate', path(memberId)),
+    ),
+  listInvites: (): Promise<Invite[]> => unwrap(http.GET('/v1/invites')),
+  createInvite: (input: CreateInvite): Promise<CreatedInvite> =>
+    unwrap(http.POST('/v1/invites', { body: input })),
+  revokeInvite: async (id: string): Promise<void> => {
+    await unwrap(http.DELETE('/v1/invites/{id}', path(id)));
+  },
 };

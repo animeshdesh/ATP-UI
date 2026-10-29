@@ -8,7 +8,6 @@ import {
   PiggyBank,
   Repeat,
   Scale,
-  Shield,
   Tags,
   type LucideIcon,
 } from 'lucide-react';
@@ -22,7 +21,6 @@ export type NavKey =
   | 'recurring'
   | 'reports'
   | 'categories'
-  | 'roles'
   | 'audit'
   | 'more';
 
@@ -73,13 +71,6 @@ export const NAV: Record<NavKey, NavItem> = {
     permission: 'settings.categories.manage',
     section: 'settings',
   },
-  roles: {
-    path: '/settings/roles',
-    label: 'Users & roles',
-    icon: Shield,
-    permission: 'settings.roles.manage',
-    section: 'settings',
-  },
   audit: {
     path: '/audit',
     label: 'Audit log',
@@ -107,13 +98,14 @@ export const TABS: Array<{ key: NavKey; label: string; icon: LucideIcon } | 'add
 ];
 
 /** Screens reached through the More tab on mobile. */
-export const MORE_KEYS: NavKey[] = [
-  'budgets',
-  'recurring',
-  'reports',
-  'categories',
-  'roles',
-  'audit',
+export const MORE_KEYS: NavKey[] = ['budgets', 'recurring', 'reports', 'categories', 'audit'];
+
+/** Users & roles are managed in ATP Patients (D-051); money links there. */
+export const PATIENTS_URL = 'https://patient.atprehab.si';
+export const PATIENTS_USERS_URL = `${PATIENTS_URL}/settings/users`;
+export const USERS_PERMISSIONS: PermissionKey[] = [
+  'settings.users.invite',
+  'settings.roles.manage',
 ];
 
 /** Whether a nav item (or route) is open to the user. */

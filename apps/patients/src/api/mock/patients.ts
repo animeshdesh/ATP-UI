@@ -4,7 +4,7 @@
  * role: `own` means appointments where I am the therapist, and patients I have an appointment with.
  */
 import { ApiError, addDays, todayIso, type PermissionKey } from '@atp/core';
-import { PEOPLE, memberIdOf, mockScope, mockUserKey, mockMembers } from '@atp/core/mock';
+import { PEOPLE, memberIdOf, mockL2, mockScope, mockUserKey, mockMembers } from '@atp/core/mock';
 import type {
   Appointment,
   AppointmentPatch,
@@ -682,6 +682,17 @@ export const mockPatients = {
     need('finance.entry.create');
     return latency(recordIncome(patientId, v));
   },
+
+  // --- users & roles: core's in-memory RBAC, shared with mockMembers() above -------------------
+  listPermissions: mockL2.listPermissions,
+  listRoles: mockL2.listRoles,
+  createRole: mockL2.createRole,
+  updateRolePermissions: mockL2.updateRolePermissions,
+  listMembers: mockL2.listMembers,
+  setMemberActive: mockL2.setMemberActive,
+  listInvites: mockL2.listInvites,
+  createInvite: mockL2.createInvite,
+  revokeInvite: mockL2.revokeInvite,
 };
 
 const shortOf = (fullName: string) => {

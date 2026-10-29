@@ -18,7 +18,7 @@ export function NoPermission() {
       <h3 className="text-xl">You don't have access</h3>
       <div className="text-sm text-neutral-800">Ask an owner for access to Patients.</div>
       <div className="text-[13px] text-neutral-700">
-        Owners can change roles in ATP Money under Users &amp; roles.
+        Owners can change roles under Settings → Users &amp; roles.
       </div>
       {allowed(NAV.calendar, can) && (
         <Button variant="outline" onClick={() => navigate('/')}>

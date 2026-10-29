@@ -1,17 +1,21 @@
-import { ChevronRight, ExternalLink, ShieldCheck, Wallet } from 'lucide-react';
+import { ChevronRight, ExternalLink, Wallet } from 'lucide-react';
 import { Link, useNavigate } from 'react-router';
 import { useAuthedSession, useSession } from '@atp/core';
 import { Avatar, Button, Note } from '@atp/ui';
 import { usePageHeader } from '@/app/header';
-import { MONEY_URL, MONEY_USERS_URL, NAV, allowed } from '@/app/nav';
+import { MONEY_URL, NAV, allowed, usersNavKey } from '@/app/nav';
 
-/** Phone-only overflow: availability, branches, links to ATP Money, sign out. */
+/** Phone-only overflow: availability, branches, users & roles, link to ATP Money, sign out. */
 export function MorePage() {
   const session = useAuthedSession();
   const { can, signOut } = useSession();
   const navigate = useNavigate();
   usePageHeader({ title: 'More', subtitle: 'ATP Patients' });
-  const items = (['availability', 'branches'] as const).filter((k) => allowed(NAV[k], can));
+  const users = usersNavKey(can);
+  const items = [
+    ...(['availability', 'branches'] as const).filter((k) => allowed(NAV[k], can)),
+    ...(users ? [users] : []),
+  ];
   const row =
     'flex min-h-13 items-center gap-3 border-0 border-b border-rule bg-white px-4 text-[15px] font-semibold text-ink no-underline last:border-b-0 hover:bg-accent-100 hover:text-ink';
   return (
@@ -32,13 +36,6 @@ export function MorePage() {
           <span className="flex-1">Open ATP Money</span>
           <ExternalLink aria-hidden size={15} />
         </a>
-        {can('settings.roles.manage') && (
-          <a href={MONEY_USERS_URL} target="_blank" rel="noreferrer" className={row}>
-            <ShieldCheck aria-hidden size={19} />
-            <span className="flex-1">Manage users in ATP Money</span>
-            <ExternalLink aria-hidden size={15} />
-          </a>
-        )}
       </div>
       <div className="flex items-center gap-3 border-2 border-ink bg-white px-4 py-3">
         <Avatar initials={session.user.initials} filled size={40} />

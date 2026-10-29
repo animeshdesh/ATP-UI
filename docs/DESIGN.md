@@ -26,8 +26,8 @@ Local copies (reference only, not bundled): `design/`.
 | 2f         | Recurring items                      | `/recurring`           | `features/recurring/RecurringPage`       | 5.2             |
 | 2g, 3d     | CA report / export                   | `/reports`             | `features/reports/ReportsPage`           | F-20…F-24       |
 | 2h         | Categories                           | `/settings/categories` | `features/settings/CategoriesPage`       | 5.2             |
-| 2i, 3e     | Roles & permissions                  | `/settings/roles`      | `features/settings/RolesPage`            | §3              |
-| 2j         | Users + invite dialog                | `/settings/users`      | `features/settings/RolesPage`            | §3              |
+| 2i, 3e     | Roles & permissions                  | moved to ATP Patients  | link "Manage users in ATP Patients"      | §3, D-051       |
+| 2j         | Users + invite dialog                | moved to ATP Patients  | link "Manage users in ATP Patients"      | §3, D-051       |
 | 2k         | Audit log                            | `/audit`               | `features/audit/AuditPage`               | §8 NFR          |
 | 2l         | More (mobile)                        | `/more`                | `features/more/MorePage`                 | F-07            |
 | 4a         | Therapist · My summary               | `/`                    | `DashboardPage` (own scope)              | §3, 5.7         |

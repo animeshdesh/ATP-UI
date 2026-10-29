@@ -2,7 +2,7 @@
  * Single data-access surface for the UI. Feature code imports `api` and the query hooks,
  * never the mock or the HTTP client directly.
  * Sign-in and session come from `@atp/core` (`auth`). Every finance level (L3 ledger … L7 reports)
- * and the RBAC admin screens come from the real API when `authMode === 'supabase'`, else from
+ * and the audit log come from the real API when `authMode === 'supabase'`, else from
  * contract-shaped in-memory mocks (tests, or working without the backend; D-012). The mocks follow
  * the signed-in role (core's `setMockRole`).
  */
