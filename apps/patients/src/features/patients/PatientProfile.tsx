@@ -31,11 +31,11 @@ import {
 import { RecordPaymentSheet, SellPackageSheet } from './MoneySheets';
 import { GENDER_LABEL, REFERRAL_LABEL } from './NewPatientSheet';
 
-type Tab = 'overview' | 'notes' | 'visits' | 'payments';
+type Tab = 'overview' | 'notes' | 'sessions' | 'payments';
 const TABS: Array<[Tab, string]> = [
   ['overview', 'Overview'],
   ['notes', 'Notes'],
-  ['visits', 'Visits'],
+  ['sessions', 'Sessions'],
   ['payments', 'Payments'],
 ];
 
@@ -56,7 +56,9 @@ const NOTE_TAG: Record<NoteKind, string> = {
 export function PatientProfile() {
   const { id = '' } = useParams();
   const [params, setParams] = useSearchParams();
-  const tab = (params.get('tab') as Tab | null) ?? 'overview';
+  // `visits` was the Sessions tab's old name; keep old links working.
+  const tab = ((params.get('tab') === 'visits' ? 'sessions' : params.get('tab')) ??
+    'overview') as Tab;
   const { data, isPending, error } = usePatient(id);
   const booking = useBooking();
   const p = data?.patient;
@@ -174,7 +176,7 @@ export function PatientProfile() {
 
       {tab === 'overview' && <Overview data={data} onBook={book} />}
       {tab === 'notes' && <Notes data={data} appointmentId={params.get('appointment')} />}
-      {tab === 'visits' && <Visits data={data} />}
+      {tab === 'sessions' && <Sessions data={data} onBook={book} />}
       {tab === 'payments' && <Payments data={data} />}
     </div>
   );
@@ -348,11 +350,13 @@ function Overview({ data, onBook }: { data: Profile; onBook: () => void }) {
       : p.advancePaise
         ? [['Advance', inr(p.advancePaise), false]]
         : [['Pending', inr(p.pendingPaise), p.pendingPaise > 0]];
+  // A package is paid ahead in sessions, not rupees: shown apart from the advance.
+  const prepaid = p.activePackage && p.activePackage.sessionsTotal - p.activePackage.sessionsUsed;
   const stats: Array<[string, string, boolean]> = [
-    ['Visits', String(p.visits), false],
+    ['Sessions', String(p.visits), false],
     ['Paid', inr(data.payments.reduce((s, x) => s + x.amountPaise, 0)), false],
     ...balance,
-    ['No-shows', String(p.noShows), false],
+    prepaid ? ['Prepaid', `${prepaid} left`, false] : ['No-shows', String(p.noShows), false],
   ];
   return (
     <div className="grid gap-4 lg:grid-cols-2">
@@ -457,7 +461,7 @@ function Notes({ data, appointmentId }: { data: Profile; appointmentId: string |
         <Lock aria-hidden size={26} />
         <div className="font-extrabold">Clinical notes are visible to therapists and owners.</div>
         <div className="text-sm text-neutral-700">
-          You can still see visits, payments and contact details for {p.fullName}.
+          You can still see sessions, payments and contact details for {p.fullName}.
         </div>
       </div>
     );
@@ -542,42 +546,80 @@ function Notes({ data, appointmentId }: { data: Profile; appointmentId: string |
   );
 }
 
-function Visits({ data }: { data: Profile }) {
+/**
+ * Sessions: the active package as numbered sessions (done, booked, not booked yet), then every
+ * other visit. Upcoming bookings fill the package's sessions left in date order, as completing
+ * them uses the package by default.
+ */
+function Sessions({ data, onBook }: { data: Profile; onBook: () => void }) {
   const therapists = useTherapistMap();
   const booking = useBooking();
   const now = new Date().toISOString();
-  const upcoming = data.appointments
-    .filter((a) => a.status === 'confirmed' && a.endsAt >= now)
-    .reverse();
-  const past = data.appointments.filter((a) => !(a.status === 'confirmed' && a.endsAt >= now));
+  const isUpcoming = (a: PatientVisit) => a.status === 'confirmed' && a.endsAt >= now;
   const plan = data.patient.plannedSessions;
-  const row = (a: PatientVisit, clickable: boolean) => (
+  const k = data.patient.activePackage;
+
+  // Oldest first. Sessions used without a linked visit (sold before visits were recorded) come first.
+  const used = k
+    ? data.appointments.filter((a) => a.packageId === k.id && a.status === 'completed').reverse()
+    : [];
+  const done = k ? Math.max(k.sessionsUsed, used.length) : 0;
+  const booked = k
+    ? data.appointments
+        .filter(isUpcoming)
+        .reverse()
+        .slice(0, k.sessionsTotal - done)
+    : [];
+  const inPackage = new Set([...used, ...booked].map((a) => a.id));
+  const upcoming = data.appointments.filter((a) => isUpcoming(a) && !inPackage.has(a.id)).reverse();
+  const past = data.appointments.filter((a) => !isUpcoming(a) && !inPackage.has(a.id));
+
+  const row = (a: PatientVisit, session: string | null, inPkg = false) => (
     <button
       key={a.id}
       type="button"
-      disabled={!clickable}
       onClick={() => booking.openDetail(a)}
-      className="flex items-center gap-3 border-0 border-b border-rule bg-white px-3.5 py-2.5 text-left text-ink last:border-b-0 enabled:hover:bg-accent-100"
+      className="flex items-center gap-3 border-0 border-b border-rule bg-white px-3.5 py-2.5 text-left text-ink last:border-b-0 hover:bg-accent-100"
     >
       <span className="min-w-0 flex-1">
         <span className="block font-semibold">
           {dayLabel(dateOf(a.startsAt))} · {timeRange(a.startsAt, a.endsAt)}
         </span>
         <span className="block text-xs text-neutral-700">
-          {a.sessionNo && (
-            <b className="text-ink">
-              Session {a.sessionNo}
-              {plan && ` of ${plan}`} ·{' '}
-            </b>
-          )}
+          {session && <b className="text-ink">{session} · </b>}
           {therapists.short(a.therapistId)}
           {a.visitType === 'home' && ' · Home visit'}
-          <VisitPayment a={a} />
+          {!inPkg && <VisitPayment a={a} />}
         </span>
       </span>
       <StatusTag status={a.status} />
     </button>
   );
+  const visitRow = (a: PatientVisit) =>
+    row(a, a.sessionNo ? `Session ${a.sessionNo}${plan ? ` of ${plan}` : ''}` : null);
+
+  const unlinked = done - used.length;
+  const packageRows = k
+    ? Array.from({ length: k.sessionsTotal }, (_, i) => {
+        const label = `Session ${i + 1} of ${k.sessionsTotal}`;
+        if (i < done) {
+          const a = used[i - unlinked];
+          return a ? row(a, label, true) : <PlainRow key={i} title={label} note="Used" />;
+        }
+        const a = booked[i - done];
+        if (a) return row(a, label, true);
+        return (
+          <PlainRow key={i} title={label} note="Not booked">
+            {i === done + booked.length && (
+              <Button size="sm" variant="outline" icon={CalendarPlus} onClick={onBook}>
+                Book
+              </Button>
+            )}
+          </PlainRow>
+        );
+      })
+    : [];
+
   return (
     <div className="flex flex-col gap-4">
       <div className="grid grid-cols-3 border-2 border-ink bg-white">
@@ -594,22 +636,60 @@ function Visits({ data }: { data: Profile }) {
           </div>
         ))}
       </div>
-      <h4 className="text-base">Upcoming</h4>
-      {upcoming.length ? (
-        <div className="flex flex-col border-2 border-ink bg-white">
-          {upcoming.map((a) => row(a, true))}
-        </div>
-      ) : (
-        <div className="text-sm text-neutral-700">Nothing booked.</div>
+      {k && (
+        <section
+          aria-label="Package sessions"
+          className="flex flex-col border-2 border-ink bg-white"
+        >
+          <div className="border-b-2 border-ink px-3.5 py-3">
+            <PackageLine k={k} />
+          </div>
+          {packageRows}
+        </section>
       )}
-      <h4 className="text-base">Past</h4>
-      {past.length ? (
-        <div className="flex flex-col border-2 border-ink bg-white">
-          {past.map((a) => row(a, true))}
-        </div>
-      ) : (
-        <div className="text-sm text-neutral-700">No visits yet.</div>
+      {(upcoming.length > 0 || !k) && (
+        <>
+          <h4 className="text-base">Upcoming</h4>
+          {upcoming.length ? (
+            <div className="flex flex-col border-2 border-ink bg-white">
+              {upcoming.map(visitRow)}
+            </div>
+          ) : (
+            <div className="text-sm text-neutral-700">Nothing booked.</div>
+          )}
+        </>
       )}
+      {(past.length > 0 || !k) && (
+        <>
+          <h4 className="text-base">{k ? 'Other sessions' : 'Past'}</h4>
+          {past.length ? (
+            <div className="flex flex-col border-2 border-ink bg-white">{past.map(visitRow)}</div>
+          ) : (
+            <div className="text-sm text-neutral-700">No sessions yet.</div>
+          )}
+        </>
+      )}
+    </div>
+  );
+}
+
+/** A package session with no visit to open: used before visits were recorded, or not booked. */
+function PlainRow({
+  title,
+  note,
+  children,
+}: {
+  title: string;
+  note: string;
+  children?: React.ReactNode;
+}) {
+  return (
+    <div className="flex min-h-14 items-center gap-3 border-b border-rule px-3.5 py-2 last:border-b-0">
+      <span className="min-w-0 flex-1">
+        <span className="block font-semibold">{title}</span>
+        <span className="block text-xs text-neutral-700">{note}</span>
+      </span>
+      {children}
     </div>
   );
 }
@@ -630,7 +710,7 @@ function Payments({ data }: { data: Profile }) {
           className="flex flex-wrap items-center gap-3 border-2 border-warn-fg bg-warn-bg px-3.5 py-3 text-warn-fg"
         >
           <span className="flex-1 font-semibold">
-            <b className="text-lg tabular">{inr(pending)}</b> pending for completed visits
+            <b className="text-lg tabular">{inr(pending)}</b> pending for completed sessions
           </span>
           {canMoney && (
             <Button size="sm" variant="outline" onClick={() => setSheet('dues')}>
@@ -641,7 +721,7 @@ function Payments({ data }: { data: Profile }) {
       )}
       {!!p.advancePaise && (
         <div className="text-sm font-semibold text-accent-800">
-          {inr(p.advancePaise)} paid ahead: the next visit fees come out of it.
+          {inr(p.advancePaise)} paid ahead: the next session fees come out of it.
         </div>
       )}
       {canMoney && (

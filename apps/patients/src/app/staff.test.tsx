@@ -74,8 +74,9 @@ describe('patients app (staff)', () => {
     await signInAs('owner');
     const { user } = renderApp('/patients');
     await user.click((await screen.findAllByText('Priya Kulkarni'))[0]!);
-    expect(await screen.findByText('4 left')).toBeInTheDocument();
-    await user.click(screen.getByRole('tab', { name: 'Visits' }));
+    expect(await screen.findByText('Prepaid')).toBeInTheDocument();
+    expect(screen.getAllByText('4 left')).toHaveLength(2);
+    await user.click(screen.getByRole('tab', { name: 'Sessions' }));
     // Friday's confirmed session.
     const upcoming = await screen.findAllByRole('button', { name: /Fri .* 09:00–09:45/ });
     await user.click(upcoming[0]!);

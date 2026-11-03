@@ -28,7 +28,7 @@ describe('dues and session plan', () => {
 
     await user.click(screen.getByRole('tab', { name: 'Payments' }));
     const banner = await screen.findByRole('status');
-    expect(banner).toHaveTextContent('₹800 pending for completed visits');
+    expect(banner).toHaveTextContent('₹800 pending for completed sessions');
     await user.click(within(banner).getByRole('button', { name: 'Collect ₹800' }));
     // Exactly what is pending: no amount to edit (no part payments).
     const pay = await screen.findByRole('dialog', { name: /Collect pending/ });
@@ -36,7 +36,7 @@ describe('dues and session plan', () => {
     await user.click(within(pay).getByRole('button', { name: 'Collect ₹800' }));
     await user.click(screen.getByRole('tab', { name: 'Overview' }));
     expect(await screen.findByText('Pending')).toBeInTheDocument();
-    expect(screen.queryByText('₹800 pending for completed visits')).not.toBeInTheDocument();
+    expect(screen.queryByText('₹800 pending for completed sessions')).not.toBeInTheDocument();
   });
 
   it('pay now records the full fee, with only the payment mode to pick', async () => {
@@ -76,8 +76,16 @@ describe('dues and session plan', () => {
     await user.click(within(dialog).getByRole('button', { name: 'Save' }));
     expect(await screen.findByText('6 of 8 sessions')).toBeInTheDocument();
 
-    await user.click(screen.getByRole('tab', { name: 'Visits' }));
-    expect(await screen.findByText(/Session 6 of 8/)).toBeInTheDocument();
+    // The package lists all its sessions: 6 used, Friday's booking takes the 7th, 3 to book.
+    await user.click(screen.getByRole('tab', { name: 'Sessions' }));
+    const sessions = await screen.findByRole('region', { name: 'Package sessions' });
+    expect(within(sessions).getByRole('button', { name: /Session 6 of 10/ })).toBeInTheDocument();
+    expect(
+      within(sessions).getByRole('button', { name: /Fri .*Session 7 of 10/ }),
+    ).toBeInTheDocument();
+    expect(within(sessions).getAllByText('Not booked')).toHaveLength(3);
+    expect(within(sessions).getAllByRole('button', { name: 'Book' })).toHaveLength(1);
+    expect(screen.queryByText('Other sessions')).not.toBeInTheDocument();
     await user.click(screen.getByRole('tab', { name: 'Payments' }));
     const packages = await screen.findByRole('region', { name: 'Packages' });
     expect(within(packages).getByText('Active')).toBeInTheDocument();

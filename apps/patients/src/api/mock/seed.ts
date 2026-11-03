@@ -250,7 +250,8 @@ export function seedAppointments(patients: Patient[]): Appointment[] {
       source: id === 'a5' ? 'web' : 'phone',
       notes: null,
       inquiryId: null,
-      packageId: null,
+      // Priya's six completed sessions used her 10-session package (seedPackages).
+      packageId: patientId === 'pt-priya' && status === 'completed' ? 'pk-priya' : null,
       // Today's home visit to Sunita was done on "pay later" (D-052).
       feePaise: id === 'b2' ? 120000 : null,
     };

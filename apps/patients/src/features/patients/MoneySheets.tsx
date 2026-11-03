@@ -199,7 +199,7 @@ export function RecordPaymentSheet({
     >
       {dues ? (
         <div className="flex flex-col gap-0.5 border-2 border-ink bg-white px-3 py-2.5">
-          <span className="kicker">Pending for completed visits</span>
+          <span className="kicker">Pending for completed sessions</span>
           <span className="text-[28px] font-extrabold tabular">{inr(paise)}</span>
         </div>
       ) : (
