@@ -23,7 +23,7 @@ Screens are built ahead of the contract on the in-memory mock (D-012); an F3 lev
 | F9    | Patients: list, profile, notes, visits, packages, payments; money patient picker   | Claude Design, L9/L12 | done (real API); money picker todo   |
 | F10   | Staff phone features: account, member edit, install tip, dues + plan, push         | backend L15, L16      | released 2026-11-03                  |
 | F11   | Bills: issue, share, void; Settings → Billing; /verify                             | backend L17           | on branch `bills`                    |
-| F12   | Packages on pay later, part payments (Collect any amount)                          | backend L18           | done (not released)                  |
+| F12   | Packages on pay later, part payments (Collect any amount)                          | backend L18           | released 2026-11-03                  |
 
 ## F0 — Design import · `done`
 
