@@ -4,7 +4,6 @@ import { useNavigate } from 'react-router';
 import { inr, useSession } from '@atp/core';
 import { Avatar, Button, Loading, Segmented } from '@atp/ui';
 import { usePatients } from '@/api/queries';
-import { useBranch } from '@/app/branch';
 import { usePageHeader } from '@/app/header';
 import type { PatientSummary } from '@/domain/types';
 import { formatPhone, initialsOf } from '@/lib/contact';
@@ -24,7 +23,6 @@ const planLabel = (p: PatientSummary) =>
 export function PatientsPage() {
   const { can } = useSession();
   const navigate = useNavigate();
-  const branch = useBranch();
   const therapists = useTherapistMap();
   const [q, setQ] = useState('');
   const query = useDeferredValue(q.trim());
@@ -33,10 +31,8 @@ export function PatientsPage() {
   const canDues = can('patients.manage', 'all');
   const [show, setShow] = useState<'all' | 'pending'>('all');
   const pendingOnly = canDues && show === 'pending';
-  const { data = [], isPending } = usePatients(query, pendingOnly);
-  const rows = data.filter(
-    (p) => branch.current === 'all' || p.branchId === branch.current || !p.branchId,
-  );
+  // Every patient whatever branch is picked (per Animesh); the picker filters Calendar and Inquiries.
+  const { data: rows = [], isPending } = usePatients(query, pendingOnly);
   const canAdd = can('patients.manage');
 
   usePageHeader({

@@ -201,3 +201,16 @@ describe('write off what is pending on a visit (D-058)', () => {
     await expect(api.writeOffFee('b2')).rejects.toMatchObject({ code: 'forbidden' });
   });
 });
+
+describe('patients list and the branch picker', () => {
+  it('lists patients of every branch even when one branch is picked', async () => {
+    await signInAs('owner');
+    const { user } = renderApp('/patients');
+    await screen.findAllByText('Priya Kulkarni');
+    const count = () => screen.getAllByText(/^\d+ patients?$/)[0]!.textContent;
+    const all = count();
+    await user.selectOptions(screen.getAllByLabelText('Branch')[0]!, 'Kothrud');
+    expect(screen.getAllByLabelText('Branch')[0]).toHaveValue('br-ktd');
+    expect(count()).toBe(all);
+  });
+});
