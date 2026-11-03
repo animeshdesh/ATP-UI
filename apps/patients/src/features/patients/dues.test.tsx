@@ -1,5 +1,6 @@
 import { screen, within } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
+import { api } from '@/api';
 import { renderApp, signInAs } from '@/test/render';
 
 // Visit fees and dues (D-052), treatment plan and session numbers (D-053).
@@ -27,16 +28,30 @@ describe('dues and session plan', () => {
     ).toBeInTheDocument();
 
     await user.click(screen.getByRole('tab', { name: 'Payments' }));
-    const banner = await screen.findByRole('status');
-    expect(banner).toHaveTextContent('₹800 pending for completed sessions');
+    let banner = await screen.findByRole('status');
+    expect(banner).toHaveTextContent('₹800 pending');
     await user.click(within(banner).getByRole('button', { name: 'Collect ₹800' }));
-    // Exactly what is pending: no amount to edit (no part payments).
-    const pay = await screen.findByRole('dialog', { name: /Collect pending/ });
-    expect(within(pay).queryByLabelText('Amount')).not.toBeInTheDocument();
-    await user.click(within(pay).getByRole('button', { name: 'Collect ₹800' }));
+    // Part payments (D-057): the amount starts at what is pending and can be lowered.
+    let pay = await screen.findByRole('dialog', { name: /Collect pending/ });
+    expect(within(pay).getByLabelText('Amount')).toHaveValue('800');
+    await user.clear(within(pay).getByLabelText('Amount'));
+    await user.type(within(pay).getByLabelText('Amount'), '900');
+    expect(within(pay).getByRole('alert')).toHaveTextContent('Collect up to ₹800');
+    expect(within(pay).getByRole('button', { name: 'Collect ₹900' })).toBeDisabled();
+    await user.clear(within(pay).getByLabelText('Amount'));
+    await user.type(within(pay).getByLabelText('Amount'), '500');
+    expect(within(pay).getByRole('status')).toHaveTextContent('₹300 stays pending');
+    await user.click(within(pay).getByRole('button', { name: 'Collect ₹500' }));
+
+    banner = await screen.findByText(
+      (_, el) => el?.getAttribute('role') === 'status' && /₹300 pending/.test(el.textContent ?? ''),
+    );
+    await user.click(within(banner).getByRole('button', { name: 'Collect ₹300' }));
+    pay = await screen.findByRole('dialog', { name: /Collect pending/ });
+    await user.click(within(pay).getByRole('button', { name: 'Collect ₹300' }));
     await user.click(screen.getByRole('tab', { name: 'Overview' }));
     expect(await screen.findByText('Pending')).toBeInTheDocument();
-    expect(screen.queryByText('₹800 pending for completed sessions')).not.toBeInTheDocument();
+    expect(screen.queryByText(/₹300 pending/)).not.toBeInTheDocument();
   });
 
   it('pay now records the full fee, with only the payment mode to pick', async () => {
@@ -98,5 +113,67 @@ describe('dues and session plan', () => {
     expect(await screen.findByText('Since')).toBeInTheDocument();
     expect(screen.queryByText('Pending')).not.toBeInTheDocument();
     expect(screen.queryByText('Advance')).not.toBeInTheDocument();
+  });
+});
+
+describe('packages on pay later (D-057)', () => {
+  it('owes the price from the sale and takes it in parts', async () => {
+    await signInAs('frontdesk');
+    const { user } = renderApp('/patients/pt-rohan?tab=payments');
+    await user.click(await screen.findByRole('button', { name: 'Sell package' }));
+    const sheet = await screen.findByRole('dialog', { name: 'Sell package' });
+    const field = (label: string) =>
+      within(sheet).getByText(label).closest('label')!.querySelector('input')!;
+    await user.clear(field('Sessions'));
+    await user.type(field('Sessions'), '12');
+    await user.clear(field('Price ₹'));
+    await user.type(field('Price ₹'), '9600');
+    await user.click(within(sheet).getByRole('radio', { name: 'Pay later' }));
+    expect(within(sheet).getByRole('status')).toHaveTextContent('₹9,600 pending from today');
+    await user.click(within(sheet).getByRole('button', { name: 'Sell · ₹9,600 pending' }));
+
+    const packages = await screen.findByRole('region', { name: 'Packages' });
+    expect(await within(packages).findByText(/₹9,600 pending/)).toBeInTheDocument();
+    let banner = screen.getByText(
+      (_, el) =>
+        el?.getAttribute('role') === 'status' && /₹9,600 pending/.test(el.textContent ?? ''),
+    );
+    await user.click(within(banner).getByRole('button', { name: 'Collect ₹9,600' }));
+    let pay = await screen.findByRole('dialog', { name: /Collect pending/ });
+    // Filed under Package income: the package is the oldest charge still owed.
+    expect(within(pay).getByText(/as Package income/)).toBeInTheDocument();
+    await user.clear(within(pay).getByLabelText('Amount'));
+    await user.type(within(pay).getByLabelText('Amount'), '5000');
+    await user.click(within(pay).getByRole('button', { name: 'Collect ₹5,000' }));
+    expect(await within(packages).findByText(/₹5,000 of ₹9,600 paid/)).toBeInTheDocument();
+
+    banner = screen.getByText(
+      (_, el) =>
+        el?.getAttribute('role') === 'status' && /₹4,600 pending/.test(el.textContent ?? ''),
+    );
+    await user.click(within(banner).getByRole('button', { name: 'Collect ₹4,600' }));
+    pay = await screen.findByRole('dialog', { name: /Collect pending/ });
+    await user.click(within(pay).getByRole('button', { name: 'Collect ₹4,600' }));
+    expect(await within(packages).findByText(/₹9,600 paid/)).toBeInTheDocument();
+
+    await user.click(screen.getByRole('tab', { name: 'Overview' }));
+    expect(await screen.findByText('Prepaid')).toBeInTheDocument();
+    expect(screen.getAllByText('12 left')).toHaveLength(2);
+  });
+
+  it('shows an unpaid package as Package, not Prepaid', async () => {
+    await signInAs('owner');
+    await api.sellPackage('pt-rohan', {
+      name: '6 sessions',
+      sessionsTotal: 6,
+      pricePaise: 480000,
+      paidPaise: 100000,
+      mode: 'cash',
+      branchId: 'br-kvn',
+    });
+    renderApp('/patients/pt-rohan');
+    expect(await screen.findByText('Package')).toBeInTheDocument();
+    expect(screen.queryByText('Prepaid')).not.toBeInTheDocument();
+    expect(screen.getByText(/₹1,000 of ₹4,800 paid/)).toBeInTheDocument();
   });
 });

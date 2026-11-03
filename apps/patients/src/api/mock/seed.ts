@@ -424,7 +424,15 @@ export function seedNotes(): PatientNote[] {
   ];
 }
 
-export function seedPackages(): Package[] {
+/** A package as the mock keeps it: payment figures are worked out on read (D-057). */
+export type StoredPackage = Omit<Package, 'paidPaise' | 'paymentStatus'> & {
+  /** The Package income entry from the sale, if anything was paid then. */
+  transactionId: string | null;
+  createdAt: string;
+};
+
+export function seedPackages(): StoredPackage[] {
+  const soldOn = addDays(todayIso(), -16);
   return [
     {
       id: 'pk-priya',
@@ -433,7 +441,9 @@ export function seedPackages(): Package[] {
       sessionsTotal: 10,
       sessionsUsed: 6,
       pricePaise: 600000,
-      soldOn: addDays(todayIso(), -16),
+      soldOn,
+      transactionId: 'pay-2',
+      createdAt: at(soldOn, 8 * 60),
     },
   ];
 }

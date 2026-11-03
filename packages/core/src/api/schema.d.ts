@@ -4097,7 +4097,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Sell a package; records Package income in money (patients.manage + finance.entry.create) */
+        /** Sell a package; what is paid now is Package income in money, the rest is owed (D-057; patients.manage + finance.entry.create) */
         post: {
             parameters: {
                 query?: never;
@@ -6253,6 +6253,9 @@ export interface components {
              * @example 2026-10-14
              */
             soldOn: string;
+            paidPaise: number | null;
+            /** @enum {string|null} */
+            paymentStatus: "paid" | "part" | "pending" | null;
         };
         Appointment: {
             /** Format: uuid */
@@ -6890,7 +6893,8 @@ export interface components {
              * @example 60000
              */
             pricePaise: number;
-            mode: components["schemas"]["PaymentMode"];
+            paidPaise?: number;
+            mode?: components["schemas"]["PaymentMode"];
             /** Format: uuid */
             branchId: string;
         };

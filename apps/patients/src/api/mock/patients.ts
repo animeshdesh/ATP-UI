@@ -61,6 +61,7 @@ import {
   seedPatients,
   seedPayments,
   seedTimeOff,
+  type StoredPackage,
 } from './seed';
 
 export const PUBLIC_SLUG = 'atp-rehab';
@@ -165,30 +166,76 @@ function onLeave(therapistId: string, range: { startsAt: string; endsAt: string 
   );
 }
 
-/** Owed (+) or paid ahead (−): opening + fees of completed visits − non-package payments. */
+type PayStatus = 'paid' | 'part' | 'pending';
+interface Charge {
+  id: string;
+  amount: number;
+  paid: number;
+  status: PayStatus;
+}
+
+/**
+ * Every charge with what is paid on it (app.patient_charges, D-057): a package's own sale money
+ * pays it first; other payments settle the opening, then the oldest charges.
+ */
+function charges(patientId: string): Charge[] {
+  const pays = db.payments.filter((p) => p.patientId === patientId);
+  const list = [
+    ...db.appointments
+      .filter((a) => a.patientId === patientId && a.status === 'completed' && a.feePaise != null)
+      .map((a) => ({ id: a.id, at: a.startsAt, amount: a.feePaise!, direct: 0 })),
+    ...db.packages
+      .filter((k) => k.patientId === patientId)
+      .map((k) => ({
+        id: k.id,
+        at: k.createdAt,
+        amount: k.pricePaise,
+        direct: Math.min(
+          pays.find((p) => p.id === k.transactionId)?.amountPaise ?? 0,
+          k.pricePaise,
+        ),
+      })),
+  ].sort((x, y) => Date.parse(x.at) - Date.parse(y.at) || x.id.localeCompare(y.id));
+  const avail =
+    pays.reduce((n, p) => n + p.amountPaise, 0) -
+    list.reduce((n, c) => n + c.direct, 0) -
+    (db.opening[patientId] ?? 0);
+  let used = 0;
+  return list.map((c) => {
+    const rest = c.amount - c.direct;
+    const paid = c.direct + Math.max(0, Math.min(rest, avail - used));
+    used += rest;
+    return {
+      id: c.id,
+      amount: c.amount,
+      paid,
+      status: paid >= c.amount ? 'paid' : paid > 0 ? 'part' : 'pending',
+    };
+  });
+}
+
+/** Owed (+) or paid ahead (−): opening + visit fees + package prices − every payment. */
 function owed(patientId: string) {
   const fees = db.appointments
     .filter((a) => a.patientId === patientId && a.status === 'completed')
     .reduce((n, a) => n + (a.feePaise ?? 0), 0);
-  return (db.opening[patientId] ?? 0) + fees - paidFor(patientId);
-}
-const paidFor = (patientId: string) =>
-  db.payments
-    .filter((p) => p.patientId === patientId && !isPackageSale(p))
+  const prices = db.packages
+    .filter((k) => k.patientId === patientId)
+    .reduce((n, k) => n + k.pricePaise, 0);
+  const paid = db.payments
+    .filter((p) => p.patientId === patientId)
     .reduce((n, p) => n + p.amountPaise, 0);
+  return (db.opening[patientId] ?? 0) + fees + prices - paid;
+}
 
-/** Payments settle the opening, then the oldest charged visits (app.visit_dues). */
-function visitDues(patientId: string): Record<string, 'paid' | 'part' | 'pending'> {
-  const paid = paidFor(patientId);
-  let upto = db.opening[patientId] ?? 0;
-  const out: Record<string, 'paid' | 'part' | 'pending'> = {};
-  for (const a of db.appointments
-    .filter((x) => x.patientId === patientId && x.status === 'completed' && x.feePaise != null)
-    .sort((x, y) => x.startsAt.localeCompare(y.startsAt))) {
-    upto += a.feePaise!;
-    out[a.id] = upto <= paid ? 'paid' : upto - a.feePaise! < paid ? 'part' : 'pending';
-  }
-  return out;
+function visitDues(patientId: string): Record<string, PayStatus> {
+  return Object.fromEntries(charges(patientId).map((c) => [c.id, c.status]));
+}
+
+/** The contract shape, with payment figures for patients.manage = all only. */
+function packageView({ transactionId: _t, createdAt: _c, ...k }: StoredPackage): Package {
+  const c = seesDues() ? charges(k.patientId).find((x) => x.id === k.id) : undefined;
+  return { ...k, paidPaise: c?.paid ?? null, paymentStatus: c?.status ?? null };
 }
 
 const seesDues = () => mockScope('patients.manage') === 'all';
@@ -210,7 +257,7 @@ function summary(p: Patient): PatientSummary {
     noShows: appts.filter((a) => a.status === 'no_show').length,
     lastVisit: done.at(-1)?.startsAt ?? null,
     nextAppointment: next,
-    activePackage: pkg,
+    activePackage: pkg && packageView(pkg),
     sessionsDone: done.length,
     pendingPaise: seesDues() ? Math.max(owed(p.id), 0) : null,
     advancePaise: seesDues() ? Math.max(-owed(p.id), 0) : null,
@@ -704,7 +751,10 @@ export const mockPatients = {
       payments: db.payments
         .filter((x) => x.patientId === id)
         .sort((a, b) => b.occurredOn.localeCompare(a.occurredOn)),
-      packages: db.packages.filter((k) => k.patientId === id),
+      packages: db.packages
+        .filter((k) => k.patientId === id)
+        .sort((a, b) => b.soldOn.localeCompare(a.soldOn))
+        .map(packageView),
     });
   },
 
@@ -740,7 +790,19 @@ export const mockPatients = {
   async sellPackage(patientId: string, v: NewPackage): Promise<Package> {
     need('patients.manage');
     need('finance.entry.create');
-    const k: Package = {
+    const paid = v.paidPaise ?? (v.mode ? v.pricePaise : 0);
+    if (paid > v.pricePaise)
+      return fail(400, 'Paid now can’t be more than the price', 'bad_request');
+    if (paid > 0 && !v.mode) return fail(400, 'Choose how the payment was made', 'bad_request');
+    const pay =
+      paid > 0 && v.mode
+        ? recordIncome(
+            patientId,
+            { amountPaise: paid, mode: v.mode, kind: 'package', branchId: v.branchId },
+            v.name,
+          )
+        : null;
+    const k: StoredPackage = {
       id: nextId('pk'),
       patientId,
       name: v.name,
@@ -748,14 +810,11 @@ export const mockPatients = {
       sessionsUsed: 0,
       pricePaise: v.pricePaise,
       soldOn: todayIso(),
+      transactionId: pay?.id ?? null,
+      createdAt: new Date().toISOString(),
     };
     db.packages.push(k);
-    recordIncome(
-      patientId,
-      { amountPaise: v.pricePaise, mode: v.mode, kind: 'package', branchId: v.branchId },
-      v.name,
-    );
-    return latency(k);
+    return latency(packageView(k));
   },
 
   async recordPayment(patientId: string, v: NewPayment): Promise<Payment> {

@@ -21,7 +21,9 @@ Screens are built ahead of the contract on the in-memory mock (D-012); an F3 lev
 | F7    | Public `/book` + inquiry queue                                                     | Claude Design, L11    | done (real API)                      |
 | F8    | Calendar, appointment sheet, availability                                          | Claude Design, L10    | done (real API)                      |
 | F9    | Patients: list, profile, notes, visits, packages, payments; money patient picker   | Claude Design, L9/L12 | done (real API); money picker todo   |
-| F10   | Staff phone features: account, member edit, install tip, dues + plan, push         | backend L15, L16      | done (B needs backend release)       |
+| F10   | Staff phone features: account, member edit, install tip, dues + plan, push         | backend L15, L16      | released 2026-11-03                  |
+| F11   | Bills: issue, share, void; Settings → Billing; /verify                             | backend L17           | on branch `bills`                    |
+| F12   | Packages on pay later, part payments (Collect any amount)                          | backend L18           | done (not released)                  |
 
 ## F0 — Design import · `done`
 
@@ -117,6 +119,13 @@ Release B (needs backend L15 dues + plan, L16 push):
 - [x] New-request phone notifications for `patients.manage = all` (web push, service worker `push-sw.js`), app badge, sign-out drops the device — 2026-10-29
 - [x] Per Animesh: profile tab Visits → Sessions; the active package lists every session (done, booked, not booked with Book); Overview shows Prepaid sessions left beside Pending / Advance — 2026-11-03
 
+## F12 — Packages on pay later, part payments · `done` (D-057)
+
+- [x] Sell package: Pay now (paid-now amount, default the price; the rest pending) / Pay later (no money entry) — 2026-11-03
+- [x] Collect takes any amount up to what is pending ("₹X stays pending"), filed under the oldest charge owed (Package / Home visit / Clinic session) — 2026-11-03
+- [x] Package payment state on Packages cards, the Sessions-tab package and Overview's active package; Overview says Prepaid only for a paid package, else Package — 2026-11-03
+- [x] Mock mirrors `app.patient_charges` (own sale money pays its package first, then oldest first); `dues.test.tsx` part collect + pay-later package — 2026-11-03
+
 ### How to swap a level from mock to API
 
 1. Backend publishes the level → `pnpm api:types` (root; writes `packages/core/src/api/schema.d.ts`).
@@ -147,3 +156,4 @@ Release B (needs backend L15 dues + plan, L16 push):
 | 2026-10-29 | F10 release A: `/account` in both apps (name via `PATCH /v1/me`, password via Supabase `updateUser` after re-checking the current one), reached from the header avatar, so money therapists and front desk can sign out on phones; member edit (rename, roles, `last_admin`) in Users & roles; iPhone Safari install tip in both shells and on sign-in. 81 tests; new screens checked at 360/390 px (no overflow, no small targets, no iOS-zoom fields).                                                                                                           | Release A; then backend L15/L16 and F10 release B.                                                                                                                     |
 | 2026-10-29 | F10 release B on backend L15/L16: fee + paid now / pay later on completion, pending / advance and "Collect" on the profile, Pending filter and badges on the list, treatment plan card and session numbers, package history; notifications (setting on My account, nudge on Inquiries, `push-sw.js`, app badge, sign-out drops the device). 89 tests; new screens clean at 360/390 px.                                                                                                                                                                             | Release B: backend migrations + VAPID keys, then both repos to production.                                                                                             |
 | 2026-11-03 | Per Animesh, before release B: "Visits" becomes "Sessions" on the patient profile (tab, stat, copy; old `?tab=visits` links still open it). The active package lists sessions 1–N: used ones with their visit, upcoming bookings fill the next numbers in date order, the rest "Not booked" with Book on the first; other visits stay below. Overview: Prepaid = package sessions left (replaces No-shows while a package is active), kept apart from the rupee advance. Bills (F11) moved to branch `bills` until reviewed. 33 patients tests; checked at 360 px. | Released 2026-11-03 (`52a6c76`; `Prepaid` in the live patients bundle). Next: VAPID keys; bills from branch `bills`.                                                   |
+| 2026-11-03 | F12 on backend L18 (D-057): Sell package with Pay now (part allowed) / Pay later; Collect any amount up to pending; package paid / part / pending on cards and the Sessions tab; Prepaid only when paid. 35 patients tests; sell, collect and payments checked at 360 px.                                                                                                                                                                                                                                                                                          | Review; release with backend L18 (migration + both repos).                                                                                                             |

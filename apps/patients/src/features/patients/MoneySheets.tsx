@@ -49,7 +49,19 @@ function ModeAndBranch({
   );
 }
 
-/** Prepaid sessions; the price goes to ATP Money as Package income (L12). */
+/** Income category in ATP Money for each kind (backend `CATEGORY`). */
+const CATEGORY: Record<PaymentKind, string> = {
+  session: 'Clinic session',
+  assessment: 'Clinic session',
+  home_visit: 'Home visit',
+  package: 'Package',
+  other: 'Other',
+};
+
+/**
+ * Sessions sold together (L12). What is paid now goes to ATP Money as Package income; the rest is
+ * owed from today (D-057), and the sessions can be used before it is paid.
+ */
 export function SellPackageSheet({
   patientId,
   patientName,
@@ -65,10 +77,14 @@ export function SellPackageSheet({
   const [sessions, setSessions] = useState('10');
   const [name, setName] = useState('');
   const [price, setPrice] = useState('6000');
+  const [when, setWhen] = useState<'now' | 'later'>('now');
+  const [paid, setPaid] = useState<string | null>(null);
   const [mode, setMode] = useState<PaymentMode>('upi');
   const [branchId, setBranchId] = useState(branch.defaultId);
   const n = Number(sessions) || 0;
   const paise = rupeesToPaise(price);
+  const paidPaise = when === 'later' ? 0 : rupeesToPaise(paid ?? price);
+  const owing = paise - paidPaise;
 
   const save = async () => {
     try {
@@ -76,10 +92,11 @@ export function SellPackageSheet({
         name: name.trim() || `${n} sessions`,
         sessionsTotal: n,
         pricePaise: paise,
-        mode,
+        paidPaise,
+        ...(paidPaise > 0 ? { mode } : {}),
         branchId,
       });
-      toast(`Package sold · ${patientName}`);
+      toast(`Package sold · ${patientName}${owing > 0 ? ` · ${inr(owing)} pending` : ''}`);
       onClose();
     } catch (e) {
       toast(e instanceof Error ? e.message : 'Could not save.', { danger: true });
@@ -97,10 +114,10 @@ export function SellPackageSheet({
           variant="primary"
           size="lg"
           icon={Check}
-          disabled={n < 1 || paise < 1 || !branchId || sell.isPending}
+          disabled={n < 1 || paise < 1 || owing < 0 || !branchId || sell.isPending}
           onClick={save}
         >
-          Sell package · {inr(paise)}
+          {owing > 0 ? `Sell · ${inr(owing)} pending` : `Sell package · ${inr(paise)}`}
         </Button>
       }
     >
@@ -133,17 +150,56 @@ export function SellPackageSheet({
           />
         </label>
       </div>
-      <ModeAndBranch mode={mode} setMode={setMode} branchId={branchId} setBranchId={setBranchId} />
+      <Segmented
+        block
+        label="Payment"
+        value={when}
+        onChange={setWhen}
+        options={[
+          { value: 'now', label: 'Pay now' },
+          { value: 'later', label: 'Pay later' },
+        ]}
+      />
+      {when === 'now' && (
+        <>
+          <label className="flex flex-col gap-1.5">
+            <span className="text-[13px] font-semibold">Paid now ₹</span>
+            <input
+              value={paid ?? price}
+              onChange={(e) => setPaid(e.target.value.replace(/\D/g, ''))}
+              inputMode="numeric"
+              className={input}
+            />
+          </label>
+          <ModeAndBranch
+            mode={mode}
+            setMode={setMode}
+            branchId={branchId}
+            setBranchId={setBranchId}
+          />
+        </>
+      )}
+      {owing < 0 ? (
+        <div role="alert" className="text-[13px] font-semibold text-danger-fg">
+          Paid now can’t be more than the price.
+        </div>
+      ) : owing > 0 ? (
+        <div role="status" className="text-[13px] font-semibold text-warn-fg">
+          {inr(owing)} pending from today; sessions can be used before it is paid.
+        </div>
+      ) : null}
       <div className="text-[13px] text-neutral-700">
-        Recorded in ATP Money as Package income, tagged with this branch.
+        {paidPaise > 0
+          ? 'What is paid now goes to ATP Money as Package income, tagged with this branch.'
+          : 'Nothing goes to ATP Money until it is collected.'}
       </div>
     </Sheet>
   );
 }
 
 /**
- * Manual payment (A-05): an income row in ATP Money with this patient. `dues` collects exactly
- * what is pending (D-052: no part payments), so the amount can't be edited.
+ * Manual payment (A-05): an income row in ATP Money with this patient. `dues` collects up to what
+ * is pending, all or part (D-057); payments settle the oldest charges first.
  */
 export function RecordPaymentSheet({
   patientId,
@@ -168,6 +224,7 @@ export function RecordPaymentSheet({
   const [what, setWhat] = useState<PaymentKind>(defaultKind);
   const [branchId, setBranchId] = useState(branch.defaultId);
   const paise = rupeesToPaise(amount);
+  const over = dues && paise > defaultPaise;
 
   const save = async () => {
     try {
@@ -190,30 +247,38 @@ export function RecordPaymentSheet({
           variant="primary"
           size="lg"
           icon={Check}
-          disabled={paise < 1 || !branchId || record.isPending}
+          disabled={paise < 1 || over || !branchId || record.isPending}
           onClick={save}
         >
           {dues ? 'Collect' : 'Record'} {inr(paise)}
         </Button>
       }
     >
-      {dues ? (
-        <div className="flex flex-col gap-0.5 border-2 border-ink bg-white px-3 py-2.5">
-          <span className="kicker">Pending for completed sessions</span>
-          <span className="text-[28px] font-extrabold tabular">{inr(paise)}</span>
+      {dues && (
+        <div className="flex items-baseline justify-between gap-2 border-2 border-ink bg-white px-3 py-2.5">
+          <span className="kicker">Pending</span>
+          <span className="text-lg font-extrabold tabular">{inr(defaultPaise)}</span>
         </div>
-      ) : (
-        <label className="flex items-center border-2 border-ink bg-white">
-          <span className="px-3 text-2xl font-extrabold">₹</span>
-          <input
-            aria-label="Amount"
-            inputMode="numeric"
-            value={amount}
-            onChange={(e) => setAmount(e.target.value.replace(/\D/g, ''))}
-            className="min-h-14 min-w-0 flex-1 border-0 text-[28px] font-extrabold tabular outline-none"
-          />
-        </label>
       )}
+      <label className="flex items-center border-2 border-ink bg-white">
+        <span className="px-3 text-2xl font-extrabold">₹</span>
+        <input
+          aria-label="Amount"
+          inputMode="numeric"
+          value={amount}
+          onChange={(e) => setAmount(e.target.value.replace(/\D/g, ''))}
+          className="min-h-14 min-w-0 flex-1 border-0 text-[28px] font-extrabold tabular outline-none"
+        />
+      </label>
+      {over ? (
+        <div role="alert" className="text-[13px] font-semibold text-danger-fg">
+          Collect up to {inr(defaultPaise)}. To take money ahead, use Record payment.
+        </div>
+      ) : dues && paise > 0 && paise < defaultPaise ? (
+        <div role="status" className="text-[13px] font-semibold text-warn-fg">
+          {inr(defaultPaise - paise)} stays pending.
+        </div>
+      ) : null}
       {!dues && (
         <div className="flex flex-col gap-1.5">
           <Kicker>For</Kicker>
@@ -235,7 +300,7 @@ export function RecordPaymentSheet({
       )}
       <ModeAndBranch mode={mode} setMode={setMode} branchId={branchId} setBranchId={setBranchId} />
       <div className="text-[13px] text-neutral-700">
-        Recorded in ATP Money as Clinic session income, tagged with this branch.
+        Recorded in ATP Money as {CATEGORY[what]} income, tagged with this branch.
       </div>
     </Sheet>
   );

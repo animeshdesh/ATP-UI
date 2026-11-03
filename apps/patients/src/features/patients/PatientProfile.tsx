@@ -17,7 +17,13 @@ import { useCreateNote, useNotes, usePatient, useUpdatePatient } from '@/api/que
 import { useBranch } from '@/app/branch';
 import { usePageHeader } from '@/app/header';
 import { MONEY_URL } from '@/app/nav';
-import type { NoteKind, Package, PatientProfile as Profile, PatientVisit } from '@/domain/types';
+import type {
+  NoteKind,
+  Package,
+  PatientProfile as Profile,
+  PatientVisit,
+  PaymentKind,
+} from '@/domain/types';
 import { formatPhone, initialsOf, telLink, waLink } from '@/lib/contact';
 import { dateOf, dayLabel, dayMonth, relativeDay, timeRange } from '@/lib/time';
 import { useBooking } from '@/features/calendar/booking';
@@ -213,8 +219,24 @@ function PackageLine({ k }: { k: Package }) {
       </div>
       <div className="text-xs text-neutral-700">
         {k.sessionsUsed} of {k.sessionsTotal} used · sold {dayMonth(k.soldOn)}
+        <PackagePayment k={k} />
       </div>
     </div>
+  );
+}
+
+/** How much of the package is paid (D-057); only for Owner and Front desk (null otherwise). */
+function PackagePayment({ k }: { k: Package }) {
+  if (!k.paymentStatus || k.paidPaise == null) return null;
+  if (k.paymentStatus === 'paid') return <> · {inr(k.pricePaise)} paid</>;
+  return (
+    <b className="text-warn-fg">
+      {' '}
+      ·{' '}
+      {k.paymentStatus === 'part'
+        ? `${inr(k.paidPaise)} of ${inr(k.pricePaise)} paid`
+        : `${inr(k.pricePaise)} pending`}
+    </b>
   );
 }
 
@@ -350,13 +372,16 @@ function Overview({ data, onBook }: { data: Profile; onBook: () => void }) {
       : p.advancePaise
         ? [['Advance', inr(p.advancePaise), false]]
         : [['Pending', inr(p.pendingPaise), p.pendingPaise > 0]];
-  // A package is paid ahead in sessions, not rupees: shown apart from the advance.
-  const prepaid = p.activePackage && p.activePackage.sessionsTotal - p.activePackage.sessionsUsed;
+  // Package sessions left, apart from the rupee advance; "Prepaid" once the package is paid.
+  const k = p.activePackage;
+  const left = k && k.sessionsTotal - k.sessionsUsed;
   const stats: Array<[string, string, boolean]> = [
     ['Sessions', String(p.visits), false],
     ['Paid', inr(data.payments.reduce((s, x) => s + x.amountPaise, 0)), false],
     ...balance,
-    prepaid ? ['Prepaid', `${prepaid} left`, false] : ['No-shows', String(p.noShows), false],
+    left
+      ? [k.paymentStatus === 'paid' ? 'Prepaid' : 'Package', `${left} left`, false]
+      : ['No-shows', String(p.noShows), false],
   ];
   return (
     <div className="grid gap-4 lg:grid-cols-2">
@@ -702,6 +727,16 @@ function Payments({ data }: { data: Profile }) {
   const canMoney = can('patients.manage') && can('finance.entry.create');
   const last = data.appointments.find((a) => a.status !== 'cancelled');
   const pending = p.pendingPaise ?? 0;
+  // Collect is filed under the oldest charge still owed (payments settle the oldest first).
+  const owes = (s: string | null) => s === 'pending' || s === 'part';
+  const oldVisit = data.appointments.findLast((a) => owes(a.paymentStatus));
+  const oldPkg = data.packages.findLast((k) => owes(k.paymentStatus));
+  const duesKind: PaymentKind =
+    oldPkg && (!oldVisit || oldPkg.soldOn <= dateOf(oldVisit.startsAt))
+      ? 'package'
+      : oldVisit?.visitType === 'home'
+        ? 'home_visit'
+        : 'session';
   return (
     <div className="flex flex-col gap-4">
       {pending > 0 && (
@@ -710,7 +745,7 @@ function Payments({ data }: { data: Profile }) {
           className="flex flex-wrap items-center gap-3 border-2 border-warn-fg bg-warn-bg px-3.5 py-3 text-warn-fg"
         >
           <span className="flex-1 font-semibold">
-            <b className="text-lg tabular">{inr(pending)}</b> pending for completed sessions
+            <b className="text-lg tabular">{inr(pending)}</b> pending
           </span>
           {canMoney && (
             <Button size="sm" variant="outline" onClick={() => setSheet('dues')}>
@@ -795,7 +830,9 @@ function Payments({ data }: { data: Profile }) {
           patientName={p.fullName}
           defaultPaise={sheet === 'dues' ? pending : last ? defaultFeePaise(last) : 80_000}
           dues={sheet === 'dues'}
-          defaultKind={last?.visitType === 'home' ? 'home_visit' : 'session'}
+          defaultKind={
+            sheet === 'dues' ? duesKind : last?.visitType === 'home' ? 'home_visit' : 'session'
+          }
           onClose={() => setSheet(null)}
         />
       )}
