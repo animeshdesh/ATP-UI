@@ -14,7 +14,7 @@ import {
 import { useNavigate } from 'react-router';
 import { ApiError, PAYMENT_MODE_LABEL, inr, rupeesToPaise, useSession } from '@atp/core';
 import { Avatar, Button, Segmented, Sheet, cn, useToast } from '@atp/ui';
-import { usePatient, useSetStatus } from '@/api/queries';
+import { usePatient, useSetStatus, useWriteOff } from '@/api/queries';
 import { useBranch } from '@/app/branch';
 import {
   PAYMENT_MODES_V2,
@@ -36,7 +36,7 @@ import {
   useTherapistMap,
 } from './common';
 
-export type DetailMode = 'view' | 'complete' | 'no_show' | 'cancelled';
+export type DetailMode = 'view' | 'complete' | 'no_show' | 'cancelled' | 'write_off';
 
 /** One appointment: details, contact, and the status change (complete / no-show / cancel). */
 export function DetailSheet({
@@ -56,6 +56,7 @@ export function DetailSheet({
   const branches = useBranch();
   const therapists = useTherapistMap();
   const setStatus = useSetStatus();
+  const writeOffFee = useWriteOff();
   const [a, setA] = useState(appointment);
   const [mode, setMode] = useState<DetailMode>(initialMode);
   const [reason, setReason] = useState<StatusReason | null>(
@@ -87,6 +88,14 @@ export function DetailSheet({
         ? (feePaise ?? 0)
         : 0;
   const pendingAfter = feePaise == null ? 0 : Math.max(feePaise - received, 0);
+  // What is still owed on this completed visit; Owner and Front desk can write it off (D-058).
+  const visit = profile.data?.appointments.find((x) => x.id === a.id);
+  const paidOnVisit = visit?.paidPaise ?? 0;
+  const owedOnVisit =
+    a.status === 'completed' && a.feePaise != null && visit?.paymentStatus
+      ? Math.max(a.feePaise - paidOnVisit, 0)
+      : 0;
+  const busy = setStatus.isPending || writeOffFee.isPending;
 
   const commit = async () => {
     try {
@@ -128,6 +137,16 @@ export function DetailSheet({
       toast(e instanceof ApiError || e instanceof Error ? e.message : 'Could not save.', {
         danger: true,
       });
+    }
+  };
+
+  const writeOff = async () => {
+    try {
+      setA(await writeOffFee.mutateAsync(a.id));
+      toast(`Written off ${inr(owedOnVisit)} · ${a.patientName}`);
+      setMode('view');
+    } catch (e) {
+      toast(e instanceof Error ? e.message : 'Could not write off.', { danger: true });
     }
   };
 
@@ -179,11 +198,15 @@ export function DetailSheet({
         ) : (
           <button
             type="button"
-            disabled={setStatus.isPending}
-            onClick={commit}
+            disabled={busy}
+            onClick={mode === 'write_off' ? writeOff : commit}
             className="min-h-13 flex-[2] border-2 border-danger-fg bg-danger-bg text-base font-extrabold text-danger-fg"
           >
-            {mode === 'cancelled' ? 'Cancel appointment' : 'Mark no-show'}
+            {mode === 'write_off'
+              ? `Write off ${inr(owedOnVisit)}`
+              : mode === 'cancelled'
+                ? 'Cancel appointment'
+                : 'Mark no-show'}
           </button>
         )}
       </div>
@@ -247,8 +270,21 @@ export function DetailSheet({
           ) : (
             <div className="flex items-center gap-2.5 border-2 border-ink bg-white px-3.5 py-3 text-sm">
               <span className="flex-1">Marked {STATUS_LABEL[a.status].toLowerCase()}.</span>
-              <Button size="sm" variant="outline" disabled={setStatus.isPending} onClick={undo}>
+              <Button size="sm" variant="outline" disabled={busy} onClick={undo}>
                 Undo
+              </Button>
+            </div>
+          )}
+          {owedOnVisit > 0 && can('patients.manage', 'all') && (
+            <div className="flex items-center gap-2.5 border-2 border-warn-fg bg-warn-bg px-3.5 py-3 text-sm text-warn-fg">
+              <span className="flex-1 font-semibold">{inr(owedOnVisit)} pending on this visit</span>
+              <Button
+                size="sm"
+                variant="outline"
+                disabled={busy}
+                onClick={() => setMode('write_off')}
+              >
+                Write off
               </Button>
             </div>
           )}
@@ -285,6 +321,22 @@ export function DetailSheet({
             )}
           </div>
         </>
+      )}
+
+      {mode === 'write_off' && (
+        <div
+          role="status"
+          className="flex flex-col gap-1 border-2 border-danger-fg bg-danger-bg px-3.5 py-3 text-sm text-danger-fg"
+        >
+          <b className="text-base">Write off {inr(owedOnVisit)}?</b>
+          <span>
+            {a.patientName} will no longer owe it.{' '}
+            {paidOnVisit > 0
+              ? `The ${inr(paidOnVisit)} already paid becomes this visit's fee.`
+              : 'The visit stays completed, with no fee.'}{' '}
+            Payments in ATP Money don't change.
+          </span>
+        </div>
       )}
 
       {(mode === 'no_show' || mode === 'cancelled') && (

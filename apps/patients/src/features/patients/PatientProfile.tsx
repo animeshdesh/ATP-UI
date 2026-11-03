@@ -250,7 +250,10 @@ function VisitPayment({ a }: { a: PatientVisit }) {
   return (
     <b className="text-warn-fg">
       {' '}
-      · {fee} {a.paymentStatus === 'part' ? 'part-paid' : 'pending'}
+      ·{' '}
+      {a.paymentStatus === 'part' && a.paidPaise != null
+        ? `${inr(a.paidPaise)} of ${fee} paid`
+        : `${fee} pending`}
     </b>
   );
 }

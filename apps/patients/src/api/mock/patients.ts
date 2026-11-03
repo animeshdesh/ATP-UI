@@ -228,8 +228,8 @@ function owed(patientId: string) {
   return (db.opening[patientId] ?? 0) + fees + prices - paid;
 }
 
-function visitDues(patientId: string): Record<string, PayStatus> {
-  return Object.fromEntries(charges(patientId).map((c) => [c.id, c.status]));
+function visitDues(patientId: string): Record<string, Charge> {
+  return Object.fromEntries(charges(patientId).map((c) => [c.id, c]));
 }
 
 /** The contract shape, with payment figures for patients.manage = all only. */
@@ -537,6 +537,19 @@ export const mockPatients = {
     return latency(a);
   },
 
+  async writeOffFee(id: string): Promise<Appointment> {
+    need('appointments.manage');
+    if (!seesDues())
+      return fail(403, 'Only the front desk and owners can write off dues', 'forbidden');
+    const a = db.appointments.find((x) => x.id === id);
+    if (!a) return fail(404, 'Appointment not found.', 'not_found');
+    const c = charges(a.patientId).find((x) => x.id === id);
+    if (!c || c.status === 'paid')
+      return fail(409, 'Nothing is pending on this visit', 'nothing_pending');
+    a.feePaise = c.paid > 0 ? c.paid : null;
+    return latency(a);
+  },
+
   async setAppointmentStatus(id: string, v: StatusChange): Promise<Appointment> {
     const s = need('appointments.manage');
     const a = db.appointments.find((x) => x.id === id);
@@ -746,7 +759,8 @@ export const mockPatients = {
         .map((a) => ({
           ...a,
           sessionNo: numbers.get(a.id) ?? null,
-          paymentStatus: dues[a.id] ?? null,
+          paymentStatus: dues[a.id]?.status ?? null,
+          paidPaise: dues[a.id]?.paid ?? null,
         })),
       payments: db.payments
         .filter((x) => x.patientId === id)

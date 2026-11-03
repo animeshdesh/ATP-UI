@@ -93,6 +93,8 @@ export const realPatients = {
     unwrap(http.PATCH('/v1/appointments/{id}', { ...path(id), body: v })),
   setAppointmentStatus: (id: string, v: StatusChange): Promise<Appointment> =>
     unwrap(http.POST('/v1/appointments/{id}/status', { ...path(id), body: v })),
+  writeOffFee: (id: string): Promise<Appointment> =>
+    unwrap(http.POST('/v1/appointments/{id}/write-off', path(id))),
 
   // --- inquiries --------------------------------------------------------------------------------
   listInquiries: (status?: InquiryStatus): Promise<Inquiry[]> =>

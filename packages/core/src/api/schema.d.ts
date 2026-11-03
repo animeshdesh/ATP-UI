@@ -1796,6 +1796,83 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/appointments/{id}/write-off": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Write off what is still owed on a completed visit: the fee drops to what is paid on it (D-058; patients.manage = all). 409 nothing_pending */
+        post: {
+            parameters: {
+                query?: never;
+                header?: {
+                    /** @description Active clinic. Optional when the user belongs to exactly one clinic. */
+                    "x-clinic-id"?: string;
+                };
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Appointment"];
+                    };
+                };
+                /** @description Unauthenticated */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Forbidden */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Not found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Conflict */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/categories": {
         parameters: {
             query?: never;
@@ -6813,6 +6890,7 @@ export interface components {
             sessionNo: number | null;
             /** @enum {string|null} */
             paymentStatus: "paid" | "part" | "pending" | null;
+            paidPaise: number | null;
         };
         PatientProfile: {
             patient: components["schemas"]["PatientSummary"];

@@ -132,6 +132,15 @@ export function useSetStatus() {
   });
 }
 
+/** Deletes what is still pending on a completed visit (D-058). */
+export function useWriteOff() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => api.writeOffFee(id),
+    onSettled: () => scheduleChanged(qc),
+  });
+}
+
 export function useUpdateInquiry() {
   const qc = useQueryClient();
   return useMutation({

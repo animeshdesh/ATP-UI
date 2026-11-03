@@ -177,3 +177,27 @@ describe('packages on pay later (D-057)', () => {
     expect(screen.getByText(/₹1,000 of ₹4,800 paid/)).toBeInTheDocument();
   });
 });
+
+describe('write off what is pending on a visit (D-058)', () => {
+  it('lets the front desk delete a pending visit fee, after a confirmation', async () => {
+    await signInAs('frontdesk');
+    const { user } = renderApp('/patients/pt-sunita?tab=sessions');
+    // Today's home visit was left on "pay later" (seed).
+    await user.click(await screen.findByRole('button', { name: /₹1,200 pending/ }));
+    const sheet = await screen.findByRole('dialog', { name: 'Appointment' });
+    expect(await within(sheet).findByText('₹1,200 pending on this visit')).toBeInTheDocument();
+    await user.click(within(sheet).getByRole('button', { name: 'Write off' }));
+    expect(within(sheet).getByRole('status')).toHaveTextContent(
+      'The visit stays completed, with no fee.',
+    );
+    await user.click(within(sheet).getByRole('button', { name: 'Write off ₹1,200' }));
+    expect(await screen.findByText('Written off ₹1,200 · Sunita Pawar')).toBeInTheDocument();
+    expect(within(sheet).queryByText(/pending on this visit/)).not.toBeInTheDocument();
+    expect((await api.getPatient('pt-sunita')).patient.pendingPaise).toBe(0);
+  });
+
+  it('is refused to a therapist', async () => {
+    await signInAs('therapist');
+    await expect(api.writeOffFee('b2')).rejects.toMatchObject({ code: 'forbidden' });
+  });
+});
